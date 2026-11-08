@@ -1,0 +1,16 @@
+---
+import NovaShell from '../layouts/NovaShell.astro';
+const docs = [
+  { title: '如何阅读一个实验记录', kind: 'METHOD', text: '文档尚未发布。正式内容将包含输入、步骤、测量值、误差与复现条件。' },
+  { title: '工具使用说明', kind: 'REFERENCE', text: '文档尚未发布。工具页面会明确公式、单位、边界与不适用场景。' },
+  { title: '安全与验证清单', kind: 'SAFETY', text: '文档尚未发布。涉及电气、机械和现场操作时，以专业验收与适用标准为准。' },
+];
+---
+<NovaShell title="Docs" description="DIY Engineering Lab 的方法与文档索引。" active="/docs">
+  <section class="intro"><p class="eyebrow">FIELD NOTES / 02</p><h1>Docs<span class="dot">.</span></h1><p>面向实际动手的短文档索引。先给边界，再给步骤；未完成的内容不会伪装成指南。</p></section>
+  <section class="docs">{docs.map((doc, i) => <article class="doc"><span class="num">0{i+1}</span><div><span class="kind">{doc.kind}</span><h2>{doc.title}</h2><p>{doc.text}</p></div><span class="arrow" aria-hidden="true">—</span></article>)}</section>
+  <p id="pending" class="footnote">文档索引已建立，正文待基于真实实验和可核查资料补充。</p>
+</NovaShell>
+<style>
+.intro,.docs,.footnote{max-width:1120px;margin-left:auto;margin-right:auto}.intro{padding:clamp(70px,12vw,150px) clamp(20px,5vw,72px) 72px}.eyebrow,.kind,.num{color:#79d7ef;font:11px ui-monospace,monospace;letter-spacing:.16em}.intro h1{font-size:clamp(50px,9vw,112px);line-height:.9;letter-spacing:-.07em;margin:18px 0}.dot{color:#79d7ef}.intro p{max-width:600px;color:#a9b6c0;line-height:1.8;font-size:17px}.docs{padding:0 clamp(20px,5vw,72px)}.doc{display:grid;grid-template-columns:70px 1fr 30px;gap:20px;padding:30px 0;border-top:1px solid #293744;color:inherit;text-decoration:none}.doc:last-child{border-bottom:1px solid #293744}.doc h2{color:#dcecf0}.num{color:#71808c}.doc h2{margin:10px 0;font-size:24px;transition:color .2s}.doc p{margin:0;max-width:650px;color:#91a0ab;line-height:1.7;font-size:14px}.arrow{color:#79d7ef;font-size:22px}.footnote{padding:36px clamp(20px,5vw,72px);color:#71808c;font-size:13px}@media(max-width:600px){.doc{grid-template-columns:42px 1fr}.arrow{display:none}}
+</style>

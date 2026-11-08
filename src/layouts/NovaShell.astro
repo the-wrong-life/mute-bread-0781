@@ -1,0 +1,31 @@
+---
+export interface Props { title: string; description?: string; active?: string; }
+const { title, description = 'DIY Engineering Lab — 工程、实验与可复用工具。', active = '' } = Astro.props;
+const links = [
+  { href: '/projects', label: 'Projects' }, { href: '/docs', label: 'Docs' },
+  { href: '/tools', label: 'Tools' }, { href: '/ai', label: 'AI' }, { href: '/blog', label: 'Journal' }, { href: '/about', label: 'About' }
+];
+---
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content={description} />
+    <meta name="theme-color" content="#0a0c0f" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <title>{title} · DIY Engineering Lab</title>
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="brand" href="/" aria-label="返回实验室首页"><span class="brand-mark" aria-hidden="true">✦</span><span>DIY ENGINEERING LAB</span></a>
+      <nav aria-label="主导航">{links.map((link) => <a class:list={{ active: active === link.href }} href={link.href}>{link.label}</a>)}</nav>
+    </header>
+    <main><slot /></main>
+    <footer><span>DIY ENGINEERING LAB</span><span>工程想法 → 可验证现实</span></footer>
+  </body>
+</html>
+<style>
+  :global(html){background:#0a0c0f;color:#e9edf2} :global(body){margin:0;min-width:320px;background:radial-gradient(circle at 70% 0%,#15202b 0,#0a0c0f 48%);font-family:Inter,ui-sans-serif,system-ui,sans-serif} :global(*){box-sizing:border-box}
+  .site-header{display:flex;justify-content:space-between;align-items:center;max-width:1280px;margin:auto;padding:28px clamp(20px,5vw,72px);border-bottom:1px solid #26303a}.brand{display:flex;gap:11px;align-items:center;color:#f4f7f9;text-decoration:none;font-size:12px;letter-spacing:.18em;font-weight:600}.brand-mark{color:#9fe8ff;font-size:18px}nav{display:flex;gap:clamp(12px,2.5vw,30px)}nav a{color:#8d9ba7;text-decoration:none;font-size:12px;letter-spacing:.12em;text-transform:uppercase}nav a:hover,nav a.active{color:#eafaff}footer{display:flex;justify-content:space-between;max-width:1280px;margin:80px auto 0;padding:28px clamp(20px,5vw,72px);border-top:1px solid #26303a;color:#71808c;font:11px ui-monospace,monospace;letter-spacing:.08em}@media(max-width:720px){.site-header{display:block;padding-top:22px}.brand{margin-bottom:20px}nav{flex-wrap:wrap;gap:14px}footer{display:block;line-height:2.2}}
+</style>

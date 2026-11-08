@@ -1,21 +1,20 @@
 ---
-import BaseLayout from '@/layouts/BaseLayout.astro';
-import Header from '@/components/Header.astro';
-import Hero from '@/components/Hero.astro';
-import Features from '@/components/Features.astro';
-import Testimonials from '@/components/Testimonials.astro';
-import CTA from '@/components/CTA.astro';
-import Footer from '@/components/Footer.astro';
-import '@/styles/global.css';
+import NovaShell from '../layouts/NovaShell.astro';
+import NovaCore from '../components/NovaCore.astro';
 ---
-
-<BaseLayout title="ESA Pages - Deploy Faster Than Ever">
-  <Header />
-  <main>
-    <Hero />
-    <Features />
-    <Testimonials />
-    <CTA />
-  </main>
-  <Footer />
-</BaseLayout>
+<NovaShell title="DIY Engineering Lab" description="DIY Engineering Lab：工程、实验与可复用工具。">
+  <section class="hero">
+    <div class="intro">
+      <p class="eyebrow">PROJECT NOVA / 01</p>
+      <h1>Engineering<br /><em>Ideas</em> Into<br />Reality<span>.</span></h1>
+      <p class="lede">一个面向真实工程问题的个人实验室。记录假设，制作原型，用可复现的测试把想法推进到现实。</p>
+      <a class="enter" href="/projects">进入实验室 <span aria-hidden="true">↗</span></a>
+    </div>
+    <div class="core-stage"><NovaCore size="min(70vw, 38rem)" label="NOVA Core：实验室核心视觉" /><p class="core-caption"><span>NOVA CORE</span><span>OPTICAL FIELD / ONLINE</span></p></div>
+    <nav class="domains" aria-label="工程领域入口"><p class="eyebrow">DOMAINS</p><a href="/projects">船舶电气 <span>01</span></a><a href="/projects">机械设计 <span>02</span></a><a href="/ai">AI 工程 <span>03</span></a><a href="/tools">工程工具 <span>04</span></a></nav>
+  </section>
+  <section class="signal" aria-label="实验室状态"><span>RESEARCH / OPEN</span><span>STATIC-FIRST / ASTRO</span><span>WEBGL / GRACEFUL FALLBACK</span></section>
+</NovaShell>
+<style>
+.hero{min-height:calc(100vh - 92px);max-width:1440px;margin:auto;display:grid;grid-template-columns:minmax(220px,1fr) minmax(360px,1.4fr) minmax(160px,.65fr);align-items:center;gap:clamp(18px,4vw,68px);padding:clamp(32px,6vw,88px) clamp(20px,5vw,72px)}.intro{position:relative;z-index:1}.eyebrow{color:#79d7ef;font:11px ui-monospace,monospace;letter-spacing:.18em}.intro h1{margin:26px 0 30px;color:#edf5f7;font-size:clamp(44px,5.8vw,92px);line-height:.91;letter-spacing:-.075em;font-weight:500}.intro h1 em{color:#91e6f4;font-style:normal}.intro h1 span{color:#79d7ef}.lede{max-width:360px;color:#8e9da8;font-size:14px;line-height:1.8}.enter{display:inline-flex;gap:30px;margin-top:28px;padding:13px 0;color:#dffaff;text-decoration:none;border-bottom:1px solid #4d7180;font:12px ui-monospace,monospace;letter-spacing:.12em}.enter span{color:#79d7ef;font-size:17px}.core-stage{position:relative;display:grid;place-items:center}.core-caption{position:absolute;bottom:2%;left:50%;width:min(70vw,38rem);transform:translateX(-50%);display:flex;justify-content:space-between;color:#637984;font:10px ui-monospace,monospace;letter-spacing:.12em}.domains{display:flex;flex-direction:column;gap:0}.domains .eyebrow{margin-bottom:24px}.domains a{display:flex;justify-content:space-between;gap:12px;padding:16px 0;border-bottom:1px solid #26333b;color:#aab9c0;text-decoration:none;font-size:13px}.domains a:hover{color:#eafcff;border-color:#79d7ef}.domains span{color:#61717a;font:10px ui-monospace,monospace}.signal{display:flex;justify-content:space-between;max-width:1440px;margin:auto;padding:18px clamp(20px,5vw,72px) 28px;color:#52636c;font:10px ui-monospace,monospace;letter-spacing:.1em}@media(max-width:900px){.hero{grid-template-columns:1fr 1fr;min-height:auto;padding-top:70px}.core-stage{grid-column:2;grid-row:1 / span 2}.domains{grid-column:1}.signal{flex-wrap:wrap;gap:10px}}@media(max-width:620px){.hero{display:flex;flex-direction:column;align-items:stretch;padding-top:48px}.intro{order:1}.core-stage{order:2;margin:8px 0}.domains{order:3}.core-caption{bottom:1%;font-size:8px}.signal{display:none}}
+</style>
