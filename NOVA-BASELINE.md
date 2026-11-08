@@ -20,3 +20,9 @@ PROJECT NOVA 生产与源码基线
 - 首次 npm run build 的 Astro check 为 20 文件、0 errors、0 warnings、0 hints，但构建因系统临时目录 node-jiti 写入 EPERM 失败。将 TEMP、TMP 和 TMPDIR 指向独立工作树内临时目录后，npm run build 通过并生成 7 页。此结果不等于 ESA 生产构建验证；安装未运行生命周期脚本。
 - 原开发工作树曾因工作目录误用执行 npm ci，遇到 node_modules unlink EPERM；后续 pnpm 依赖恢复亦遇到 Rollup 文件 EPERM，原工作树目前不能重新构建。源码提交保持不变；不得将仍在运行的旧预览服务视为依赖已恢复。
 - 独立工作树内的 .npm-cache 和 .tmp 为本机验证临时产物，不应提交。依赖安全审计、锁文件统一、移动端与发布门禁仍未完成。
+
+单位换算修复复核（2026-11-08）：
+- 开发分支提交 4a6fa724e2fb98a393127d461f6e95acea8de01c 已推送。工具补充绝对温标与温差区别、有符号数、精度说明，关联输入提示，无效单位清除旧结果。aria-invalid 尚未实现，屏幕阅读器验证待完成。
+- 隔离工作树基于 f50ac16，仅同步该工具页面的源码改动，执行 Astro check：20 文件、零错误警告和提示；Astro build 静态生成 7 页通过。依赖安装仍是 --ignore-scripts，不代表 ESA 生产构建。
+- Edge 对隔离预览工具页抽测：25.4 mm = 2.54 cm；切换温度后 −300 °C 被拒绝。浏览器真实移动视口、控制台、键盘及屏幕阅读器尚待验证。
+- 预览地址 http://127.0.0.1:4328/ 为本机临时进程；不是 ESA 预览部署。main 未合并，生产未改动。
