@@ -1,5 +1,24 @@
 # PROJECT NOVA 发布验证补充记录
 
+## 22:07 依赖迁移已提交开发分支（发布仍 NO-GO）
+
+- 五个依赖迁移文件已独立提交并推送：5559ce5e4ca815a54258bf27bbf6ba24786f0eca，分支 nova/v1-foundation；未包含 _work/、缓存或本记录。
+- 本地 main 仍为 3c9faeca80fa8ef6255bfca681510dd8cd3be9be；未执行合并或生产部署。依赖迁移回退方式：在开发分支 git revert 5559ce5e4ca815a54258bf27bbf6ba24786f0eca。
+- 当前唯一 npm 锁已纳入版本控制；旧工作树安装残留问题未修复。后续验证继续使用已核验的干净副本，或新建干净检出。
+
+## 22:03 当前源码干净副本验证（独立审核有条件通过）
+
+- 全新目录：C:/Users/33126/Documents/DIY/_work/nova-clean-20261108-2203，从正式工作树当前跟踪且存在的文件复制，不复用旧 node_modules。
+- Node v24.16.0、npm 11.13.0；npm ci --ignore-scripts 安装268包成功；npm ls --depth=0 成功；npm audit --package-lock-only --ignore-scripts 0漏洞；npm run build退出0，check20文件零诊断，静态7页。
+- package.json、package-lock.json、astro.config.mjs、首页、壳层、核心SVG及生命周期脚本均与正式树逐文件SHA256一致。该结果验证当前源码在干净副本可构建，不声称旧依赖目录已修复。
+- 独立只读审查结论：可作为开发分支候选提交，不构成上线批准。锁文件含 registry.npmjs.org 321项与 registry.npmmirror.com 21项，均有 integrity；发布前需确认并验证 CI registry 策略。anymatch → picomatch 2.3.2 override 的公告及兼容性依据待补充。旧 global.css 无活动页面入口，保留待后续单独清理。
+- ESA Node/预览、跨引擎、辅助技术、Lighthouse、安全头与发布票据仍未完成。生产/main不动。
+
+## 22:01 依赖迁移工作树状态（历史失败记录）
+
+已将隔离候选 package.json、package-lock.json、astro.config.mjs 同步至正式开发树；删除旧 pnpm-lock.yaml 和 tailwind.config.mjs，形成唯一 npm 锁候选。锁版本3，根dependencies与package.json一致，Astro7.4.7要求Node>=22.23.4/npm>=9.6.5。正式树 npm ci --ignore-scripts 失败：EPERM unlink node_modules/.pnpm/acorn@8.19.0/node_modules/acorn/CHANGELOG.md。安装未完成，后续依赖树/审计命令未执行，不能声称正式树通过。未修改权限或提权。五个依赖配置变更保留未提交，下轮应在新隔离目录用当前正式源码和唯一锁干净安装验证，成功并独立审查后才提交；生产/main不动。
+
+
 ## 2026-11-08 21:53 最新状态（下方记录均为历史）
 
 - 开发分支 nova/v1-foundation 已提交并推送 8b245539195ead890ee91d458910abdb79731945；main和生产未修改。
