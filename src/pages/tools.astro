@@ -11,7 +11,7 @@ import NovaShell from '../layouts/NovaShell.astro';
   <section class="tool" aria-label="单位换算工具">
     <div class="controls">
       <label>类别<select id="kind"><option value="length">长度</option><option value="mass">质量</option><option value="temperature">温度</option><option value="power">功率</option></select></label>
-      <label>数值<input id="value" type="number" inputmode="decimal" step="any" placeholder="输入数值" aria-describedby="hint" /></label>
+      <label>数值<input id="value" type="number" inputmode="decimal" step="any" placeholder="输入数值" aria-describedby="hint" aria-invalid="false" /></label>
       <label>从<select id="from"></select></label>
       <label>到<select id="to"></select></label>
     </div>
@@ -42,16 +42,19 @@ import NovaShell from '../layouts/NovaShell.astro';
     const raw = value.value.trim();
     const n = Number(raw);
     if (!raw || value.validity.badInput || !Number.isFinite(n) || Math.abs(n) > 1e15) {
-      label.textContent = raw || value.validity.badInput ? '输入无效' : '等待输入';
+      const invalid = Boolean(raw) || value.validity.badInput;
+      value.setAttribute('aria-invalid', invalid ? 'true' : 'false');
+      label.textContent = invalid ? '输入无效' : '等待输入';
       result.textContent = '—';
       hint.textContent = '请输入有限数字，绝对值不超过 1×10¹⁵。';
       return;
     }
+    value.setAttribute('aria-invalid', 'false');
     let out: number;
     if (kind.value === 'temperature') {
       if (!tempUnits.includes(from.value) || !tempUnits.includes(to.value)) { label.textContent = '单位无效'; result.textContent = '—'; hint.textContent = '请选择有效的温度单位。'; return; }
       const c = from.value === '°C' ? n : from.value === '°F' ? (n - 32) * 5 / 9 : n - 273.15;
-      if (c < -273.15) { label.textContent = '温度低于绝对零度'; result.textContent = '—'; hint.textContent = '输入必须不低于 −273.15 °C；此工具不用于温差换算。'; return; }
+      if (c < -273.15) { value.setAttribute('aria-invalid', 'true'); label.textContent = '温度低于绝对零度'; result.textContent = '—'; hint.textContent = '输入必须不低于 −273.15 °C；此工具不用于温差换算。'; return; }
       out = to.value === '°C' ? c : to.value === '°F' ? c * 9 / 5 + 32 : c + 273.15;
     } else {
       const category = Object.hasOwn(units, kind.value) ? units[kind.value] : undefined;
