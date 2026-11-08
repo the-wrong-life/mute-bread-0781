@@ -44,3 +44,12 @@
 新建隔离工作树 work/project-nova-astro7-minimal，保留 NovaShell 与各页面现有 scoped CSS，移除未被当前路由使用的 Tailwind 集成、Tailwind 3 配置、Typography、Autoprefixer 与独立 PostCSS 依赖；只升级 Astro 7.4.7、@astrojs/check 0.9.12、TypeScript 5.9.3，使用唯一 npm package-lock。修正 PowerShell UTF-8 BOM 后，干净 npm ci 成功；npm ls --depth=0 无直接依赖缺失或 invalid；astro check 20文件、0 errors/0 warnings/0 hints；astro build 静态7页成功。
 
 但 npm audit --package-lock-only 仍为 total=1、low0、moderate0、high1、critical0。高危为 picomatch <=2.3.1（GHSA-c2c7-rcm5-vvqj，ReDoS），路径为 Astro 7 -> unstorage -> anymatch 3.1.3 -> picomatch 2.3.1；npm explain 另显示 Astro 主路径使用 picomatch 4.0.7。fixAvailable=true，但该传递依赖处置尚未完成，且不采用未经验证的 overrides/audit fix。故最小候选仍未通过安全门禁，正式分支未复制，发布继续 NO-GO。
+## 2026-11-08 18:57–18:59 最小候选独立复核
+
+独立只读审核结论：依赖/源码候选“有条件通过”，不能解除整体发布 NO-GO。候选 package.json 使用 @astrojs/check 0.9.12、astro 7.4.7、typescript 5.9.3；唯一覆盖为 anymatch -> picomatch 2.3.2。审核确认该覆盖仅作用于 anymatch 3.1.3 的 picomatch 2.x 分支；Astro/Vite 及其他 ^4.0.7 消费者仍保持 picomatch 4.0.7，未采用全局降级。候选在本机已重新 clean npm ci、npm ls、audit 与 build：audit total=0；npm ls 未报告 invalid/ELSPROBLEMS；astro check 20文件、0 errors/0 warnings/0 hints；astro build 静态7页。
+
+独立审核指出 Astro 7.4.7 要求 Node >=22.23.4、npm >=9.6.5；候选 package.json 尚未声明 engines。esa.jsonc 仍为 installCommand=npm install、assets.directory=./dist，未取得 ESA 构建镜像 Node/npm、实际锁文件选择或预览构建日志，因此不能据本地成功推断 ESA 可部署。正式仓库仍存在 package-lock.json 与旧 pnpm-lock.yaml 双锁；候选亦保留未接入的 src/styles/global.css Tailwind 旧样式文件，但当前页面使用 scoped CSS，astro.config.mjs 未启用 Tailwind/PostCSS。
+
+候选浏览器证据：Edge agent tab tb1707aedf7d83846 打开 http://127.0.0.1:4330/，无障碍树显示品牌、主导航、NOVA Core 图片替代文本、四个工程入口和状态区域；1600x1042 截图 SHA256 91db3e0db6e87e3884430fd0145a8bd794f323a8478b3cab0d94f0dd763d9fef。PowerShell 直达检查 /、/projects/、/docs/、/tools/、/ai/、/blog/、/about/ 均 HTTP 200 text/html。该证据仅为本机候选，不是 ESA 预览或生产证据。
+
+仍未满足：ESA 非生产预览与构建日志、固定 Node/npm 与唯一包管理器治理、Firefox/WebKit、屏幕阅读器、Lighthouse、预览 HTTPS/安全头、外部生产变更票据、生产回滚演练。整体继续 NO-GO；正式分支/main/生产未改。
