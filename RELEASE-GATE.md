@@ -39,3 +39,8 @@
 ## 2026-11-08 18:39 编码修复与候选状态更正
 
 已将本文件从错误的系统默认编码安全转换为 UTF-8；原始字节备份为 RELEASE-GATE.legacy-encoding.bak，不作为发布产物。更正：此前 Astro 7/Tailwind 4 候选的 audit=0、check=22、build=7 只对应候选完整依赖树；后续精简候选因 Windows EPERM unlink 原生 lightningcss 文件而损坏，当前不能复用旧结果。独立审查确认 global.css 未接入 NovaShell、旧 Tailwind 配置残留已移除插件引用，候选不得直接复制正式分支。门禁继续 NO-GO。
+## 2026-11-08 18:49 最小 Astro 7 候选复核
+
+新建隔离工作树 work/project-nova-astro7-minimal，保留 NovaShell 与各页面现有 scoped CSS，移除未被当前路由使用的 Tailwind 集成、Tailwind 3 配置、Typography、Autoprefixer 与独立 PostCSS 依赖；只升级 Astro 7.4.7、@astrojs/check 0.9.12、TypeScript 5.9.3，使用唯一 npm package-lock。修正 PowerShell UTF-8 BOM 后，干净 npm ci 成功；npm ls --depth=0 无直接依赖缺失或 invalid；astro check 20文件、0 errors/0 warnings/0 hints；astro build 静态7页成功。
+
+但 npm audit --package-lock-only 仍为 total=1、low0、moderate0、high1、critical0。高危为 picomatch <=2.3.1（GHSA-c2c7-rcm5-vvqj，ReDoS），路径为 Astro 7 -> unstorage -> anymatch 3.1.3 -> picomatch 2.3.1；npm explain 另显示 Astro 主路径使用 picomatch 4.0.7。fixAvailable=true，但该传递依赖处置尚未完成，且不采用未经验证的 overrides/audit fix。故最小候选仍未通过安全门禁，正式分支未复制，发布继续 NO-GO。
