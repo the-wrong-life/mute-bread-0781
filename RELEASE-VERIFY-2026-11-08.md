@@ -1,5 +1,11 @@
 # PROJECT NOVA 发布验证补充记录
 
+## 22:13 七路由移动端浏览器抽查（隔离候选）
+
+- 在全新副本 C:/Users/33126/Documents/DIY/_work/nova-clean-20261108-2203 的 Astro 7.4.7 预览（127.0.0.1:4340）运行系统 Chrome headless，视口390×844。
+- `/`、`/projects`、`/docs`、`/tools`、`/ai`、`/blog`、`/about` 全部 HTTP 200；每页 1 个 main；document scrollWidth=390；pageerror=[]；requestfailed=[]；页面标题和 h1 均存在；内部链接均为站内绝对路径。
+- 这是 Chromium 移动视口抽查，不等同于 Firefox/WebKit、屏幕阅读器或 Lighthouse 验收；预览任务已停止。
+
 ## 22:10 生产只读健康抽查
 
 - 通过 Invoke-WebRequest -UseBasicParsing 对 https://www.token-xxo.cn/ 发出 HTTPS HEAD：HTTP 200，Server ESA。远程 main 仍为 3c9faeca80fa8ef6255bfca681510dd8cd3be9be。
