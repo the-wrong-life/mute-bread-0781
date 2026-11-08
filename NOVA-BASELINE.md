@@ -29,3 +29,4 @@ PROJECT NOVA 生产与源码基线
 - 依赖独立审查确认 package-lock.json 与 pnpm-lock.yaml 解析图存在版本漂移，Astro AVIF 公告仍需按实际构建链复核；在统一唯一锁文件、干净隔离安装、公告例外台账和 ESA 预览验证前，发布门禁保持阻断。
 - 2026-11-08：导航当前项增加 aria-current="page"；隔离 npm 工作树同步后 Astro check 20 文件零错误、零警告、零提示，Astro build 生成 7 页成功。该结果不代表移动端交互、屏幕阅读器或 ESA 已验证。
 - 第10轮复核：隔离 npm audit --package-lock-only 仍报告 68 项（低5、中33、高29、严重1），严重项为直接依赖 astro；静态产物 7 个路由均存在 title。审计非零退出符合漏洞发现，未执行自动修复。
+- 第10轮敏感信息扫描：未发现私钥、AWS Access Key 等凭据模式；命中项为锁文件中的普通依赖名称和文档中的公开 URL，未发现需撤销的秘密。
