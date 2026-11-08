@@ -78,7 +78,8 @@ import NovaShell from '../layouts/NovaShell.astro';
     convert();
   }
   kind?.addEventListener('change', populate);
-  [value, from, to].forEach((el) => el?.addEventListener('input', convert));
+  value?.addEventListener('input', convert);
+  [from, to].forEach((el) => el?.addEventListener('change', convert));
   populate();
 </script>
 
