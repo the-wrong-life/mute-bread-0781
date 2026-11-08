@@ -1,0 +1,93 @@
+---
+// Hero component
+---
+
+<section id="home" class="hero-section bg-gradient-to-br from-gray-50 via-white to-blue-50">
+  <!-- Background Elements -->
+  <div class="absolute inset-0 overflow-hidden">
+    <div class="absolute -top-40 -right-32 w-96 h-96 bg-gradient-to-br from-primary-200 to-blue-200 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-bounce-slow"></div>
+    <div class="absolute -bottom-32 -left-40 w-96 h-96 bg-gradient-to-br from-purple-200 to-primary-200 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-bounce-slow" style="animation-delay: 1s;"></div>
+  </div>
+
+  <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+    <div class="animate-slide-up">
+      <!-- Badge -->
+      <div class="inline-flex items-center px-4 py-2 rounded-full bg-primary-50 text-primary-700 text-sm font-medium mb-8">
+        🚀 New: Deploy with one click
+      </div>
+
+      <!-- Main Heading -->
+      <h1 class="text-4xl sm:text-5xl lg:text-7xl font-bold text-gray-900 mb-6">
+        Build modern websites
+        <span class="gradient-text">faster than ever</span>
+      </h1>
+
+      <!-- Subheading -->
+      <p class="text-xl sm:text-2xl text-gray-600 mb-8 max-w-3xl mx-auto text-balance">
+        ESA Pages provides the fastest way to deploy static websites with automatic builds,
+        global CDN, and seamless Git integration.
+      </p>
+
+      <!-- CTA Buttons -->
+      <div class="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12">
+        <a href="#get-started" class="btn-primary text-lg px-8 py-3">
+          Start Building Free
+        </a>
+        <a href="#demo" class="btn-secondary text-lg px-8 py-3 flex items-center gap-2">
+          <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd"></path>
+          </svg>
+          Watch Demo
+        </a>
+      </div>
+
+      <!-- Stats -->
+      <div class="flex flex-col sm:flex-row justify-center items-center gap-8 text-sm text-gray-600">
+        <div class="flex items-center gap-2">
+          <div class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+          <span>99.95% uptime guaranteed</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <div class="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+          <span>Global CDN included</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <div class="w-2 h-2 bg-purple-500 rounded-full animate-pulse"></div>
+          <span>SSL certificates automatically</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Demo Preview -->
+    <div class="mt-16 animate-slide-up" style="animation-delay: 0.2s;">
+      <div class="relative max-w-4xl mx-auto">
+        <div class="bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden">
+          <div class="flex items-center gap-2 px-4 py-3 bg-gray-50 border-b border-gray-200">
+            <div class="flex gap-1.5">
+              <div class="w-3 h-3 bg-red-400 rounded-full"></div>
+              <div class="w-3 h-3 bg-yellow-400 rounded-full"></div>
+              <div class="w-3 h-3 bg-green-400 rounded-full"></div>
+            </div>
+            <div class="flex-1 text-center">
+              <div class="inline-flex items-center gap-2 text-sm text-gray-600">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+                </svg>
+                your-site.er.aliyun-esa.net
+              </div>
+            </div>
+          </div>
+          <div class="p-8 bg-gradient-to-br from-gray-900 to-gray-800 text-white">
+            <div class="font-mono text-sm">
+              <div class="text-green-400">$ git push origin main</div>
+              <div class="text-gray-400 mt-2">✨ Deploying to ESA Pages...</div>
+              <div class="text-gray-400">📦 Building your site...</div>
+              <div class="text-gray-400">🚀 Deployed to https://your-site.er.aliyun-esa.net</div>
+              <div class="text-green-400 mt-2">✅ Done in 32s</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

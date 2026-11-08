@@ -1,0 +1,120 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import Header from '@/components/Header.astro';
+import Footer from '@/components/Footer.astro';
+import '@/styles/global.css';
+---
+
+<BaseLayout title="About - ESA Pages" description="Learn more about ESA Pages and our mission to make web deployment faster and easier.">
+  <Header />
+  <main>
+    <!-- Hero Section -->
+    <section class="pt-32 pb-16 bg-gradient-to-br from-gray-50 via-white to-blue-50">
+      <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+        <h1 class="text-4xl sm:text-5xl lg:text-6xl font-bold text-gray-900 mb-6">
+          About <span class="gradient-text">ESA Pages</span>
+        </h1>
+        <p class="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
+          We're on a mission to make web deployment accessible, fast, and reliable for developers everywhere.
+        </p>
+      </div>
+    </section>
+
+    <!-- Story Section -->
+    <section class="py-16 bg-white">
+      <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="prose prose-lg mx-auto">
+          <h2 class="text-3xl font-bold text-gray-900 mb-8">Our Story</h2>
+          <p class="text-gray-600 mb-6">
+            ESA Pages was born from frustration with complex deployment processes that slowed down development teams. 
+            We believed there had to be a better way – a way that would let developers focus on building great experiences 
+            rather than wrestling with infrastructure.
+          </p>
+          <p class="text-gray-600 mb-6">
+            Today, we serve thousands of developers worldwide, providing them with lightning-fast deployments, 
+            global CDN distribution, and the reliability they need to ship with confidence.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Values Section -->
+    <section class="py-16 bg-gray-50">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-12">
+          <h2 class="text-3xl font-bold text-gray-900 mb-4">Our Values</h2>
+          <p class="text-xl text-gray-600">The principles that guide everything we do</p>
+        </div>
+        
+        <div class="grid gap-8 md:grid-cols-3">
+          <div class="text-center">
+            <div class="w-16 h-16 bg-gradient-to-br from-primary-500 to-blue-500 rounded-full flex items-center justify-center text-white mx-auto mb-4">
+              <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+              </svg>
+            </div>
+            <h3 class="text-xl font-semibold text-gray-900 mb-2">Speed First</h3>
+            <p class="text-gray-600">Every feature we build is designed with performance in mind. Fast deployments, fast sites, fast support.</p>
+          </div>
+          
+          <div class="text-center">
+            <div class="w-16 h-16 bg-gradient-to-br from-green-500 to-primary-500 rounded-full flex items-center justify-center text-white mx-auto mb-4">
+              <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+            </div>
+            <h3 class="text-xl font-semibold text-gray-900 mb-2">Reliability</h3>
+            <p class="text-gray-600">Your sites deserve 99.95% uptime. We've built our infrastructure to deliver on that promise.</p>
+          </div>
+          
+          <div class="text-center">
+            <div class="w-16 h-16 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center text-white mx-auto mb-4">
+              <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
+              </svg>
+            </div>
+            <h3 class="text-xl font-semibold text-gray-900 mb-2">Developer Love</h3>
+            <p class="text-gray-600">We're developers too. We build tools that we'd want to use every day.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Team Section -->
+    <section class="py-16 bg-white">
+      <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-12">
+          <h2 class="text-3xl font-bold text-gray-900 mb-4">Meet the Team</h2>
+          <p class="text-xl text-gray-600">The people behind ESA Pages</p>
+        </div>
+        
+        <div class="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+          <div class="text-center">
+            <div class="w-24 h-24 bg-gradient-to-br from-primary-500 to-blue-500 rounded-full flex items-center justify-center text-white text-xl font-bold mx-auto mb-4">
+              JD
+            </div>
+            <h3 class="text-lg font-semibold text-gray-900">Jane Doe</h3>
+            <p class="text-gray-600">Co-founder & CEO</p>
+          </div>
+          
+          <div class="text-center">
+            <div class="w-24 h-24 bg-gradient-to-br from-green-500 to-primary-500 rounded-full flex items-center justify-center text-white text-xl font-bold mx-auto mb-4">
+              JS
+            </div>
+            <h3 class="text-lg font-semibold text-gray-900">John Smith</h3>
+            <p class="text-gray-600">Co-founder & CTO</p>
+          </div>
+          
+          <div class="text-center">
+            <div class="w-24 h-24 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center text-white text-xl font-bold mx-auto mb-4">
+              AB
+            </div>
+            <h3 class="text-lg font-semibold text-gray-900">Alice Brown</h3>
+            <p class="text-gray-600">Head of Engineering</p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+  <Footer />
+</BaseLayout>

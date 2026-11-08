@@ -1,0 +1,103 @@
+---
+// Features section showcasing key capabilities
+interface Feature {
+  icon: string;
+  title: string;
+  description: string;
+  color: string;
+}
+
+const features: Feature[] = [
+  {
+    icon: `<svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+    </svg>`,
+    title: "Lightning Fast",
+    description: "Deploy your sites in seconds with our optimized build pipeline and global CDN.",
+    color: "text-yellow-500"
+  },
+  {
+    icon: `<svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+    </svg>`,
+    title: "Always Secure",
+    description: "Automatic HTTPS, DDoS protection, and security headers included by default.",
+    color: "text-green-500"
+  },
+  {
+    icon: `<svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
+    </svg>`,
+    title: "Git Integration",
+    description: "Connect any Git repository and deploy automatically on every push.",
+    color: "text-red-500"
+  },
+  {
+    icon: `<svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+    </svg>`,
+    title: "Global CDN",
+    description: "Serve your content from 300+ edge locations worldwide for maximum performance.",
+    color: "text-blue-500"
+  },
+  {
+    icon: `<svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+    </svg>`,
+    title: "Analytics Built-in",
+    description: "Monitor your site's performance with detailed analytics and real-time metrics.",
+    color: "text-purple-500"
+  },
+  {
+    icon: `<svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4"></path>
+    </svg>`,
+    title: "Easy Customization",
+    description: "Flexible configuration options and custom domains with full control.",
+    color: "text-indigo-500"
+  }
+];
+---
+
+<section id="features" class="py-24 bg-white">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <!-- Section Header -->
+    <div class="text-center mb-16">
+      <h2 class="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mb-4">
+        Everything you need to 
+        <span class="gradient-text">ship faster</span>
+      </h2>
+      <p class="text-xl text-gray-600 max-w-2xl mx-auto">
+        From development to deployment, we've got you covered with enterprise-grade features 
+        that scale with your needs.
+      </p>
+    </div>
+
+    <!-- Features Grid -->
+    <div class="feature-grid">
+      {features.map((feature, index) => (
+        <div 
+          class="card group hover:scale-105 transform transition-all duration-300 animate-slide-up"
+          style={`animation-delay: ${index * 0.1}s;`}
+        >
+          <div class={`${feature.color} mb-4 group-hover:scale-110 transition-transform duration-300`}>
+            <Fragment set:html={feature.icon} />
+          </div>
+          <h3 class="text-xl font-semibold text-gray-900 mb-2">
+            {feature.title}
+          </h3>
+          <p class="text-gray-600 leading-relaxed">
+            {feature.description}
+          </p>
+        </div>
+      ))}
+    </div>
+
+    <!-- Bottom CTA -->
+    <div class="text-center mt-16">
+      <a href="#get-started" class="btn-primary text-lg px-8 py-3">
+        Start Building Today
+      </a>
+    </div>
+  </div>
+</section>
