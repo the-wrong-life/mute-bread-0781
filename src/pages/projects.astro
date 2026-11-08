@@ -1,0 +1,16 @@
+---
+import NovaShell from '../layouts/NovaShell.astro';
+const projects = [
+  { code: 'P-001', name: '项目档案位', note: '项目资料尚未录入。这里将记录目标、约束、实验记录与验收结论。' },
+  { code: 'P-002', name: '原型档案位', note: '暂无已核实原型。新增内容前会标注证据来源与验证状态。' },
+  { code: 'P-003', name: '工具档案位', note: '暂无已发布工具。仅在完成测试后提供可复现入口。' },
+];
+---
+<NovaShell title="Projects" description="DIY Engineering Lab 的项目档案入口。" active="/projects">
+  <section class="page-head"><p class="eyebrow">PROJECT REGISTRY / 01</p><h1>Projects<span class="dot">.</span></h1><p class="lede">把想法拆成假设、原型和可验证结果。当前目录为空，以下是明确的内容占位，不代表已完成项目。</p></section>
+  <section class="grid" aria-label="项目档案占位">{projects.map((project) => <article class="card"><span class="code">{project.code}</span><h2>{project.name}</h2><p>{project.note}</p><span class="status">STATUS / EMPTY</span></article>)}</section>
+  <p class="note">项目页面会优先展示原始记录、测试方法和失败条件，而不是未经证实的成果。</p>
+</NovaShell>
+<style>
+.page-head,.grid,.note{max-width:1120px;margin-left:auto;margin-right:auto}.page-head{padding:clamp(70px,12vw,150px) clamp(20px,5vw,72px) 70px}.eyebrow,.code,.status{color:#79d7ef;font:11px ui-monospace,monospace;letter-spacing:.16em}.page-head h1{margin:18px 0;font-size:clamp(50px,9vw,112px);line-height:.9;letter-spacing:-.07em}.dot{color:#79d7ef}.lede{max-width:620px;color:#a9b6c0;line-height:1.8;font-size:17px}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;padding:0 clamp(20px,5vw,72px)}.card{min-height:245px;padding:25px;border:1px solid #293744;background:#11181e}.card h2{margin:48px 0 12px;font-size:21px}.card p{color:#91a0ab;line-height:1.7;font-size:14px}.status{display:block;margin-top:28px;color:#73818d}.note{padding:40px clamp(20px,5vw,72px);color:#71808c;font-size:13px;line-height:1.8}@media(max-width:760px){.grid{grid-template-columns:1fr}.card{min-height:190px}}
+</style>

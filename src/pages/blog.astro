@@ -1,0 +1,14 @@
+---
+import NovaShell from '../layouts/NovaShell.astro';
+const entries = [
+  { date: '待发布', title: '研究日志将在这里开始', text: '当前没有可公开的日志。后续记录会保留问题、尝试、数据和未解决部分。' },
+  { date: '待发布', title: '从灵感到可证伪实验', text: '内容尚未发布。不会用概念草图替代实际测量，也不会把计划写成结果。' },
+];
+---
+<NovaShell title="Journal" description="DIY Engineering Lab 的研究日志。" active="/blog">
+  <section class="head"><p class="eyebrow">WORKING JOURNAL / 03</p><h1>Journal<span class="dot">.</span></h1><p>记录过程，而不是只展示结论。这里暂时没有公开文章。</p></section>
+  <section class="entries" aria-label="研究日志">{entries.map((entry) => <article><div class="date">{entry.date}</div><div><h2>{entry.title}</h2><p>{entry.text}</p><span class="tag">DRAFT / EMPTY</span></div></article>)}</section>
+</NovaShell>
+<style>
+.head,.entries{max-width:1120px;margin-left:auto;margin-right:auto}.head{padding:clamp(70px,12vw,150px) clamp(20px,5vw,72px) 72px}.eyebrow,.date,.tag{color:#79d7ef;font:11px ui-monospace,monospace;letter-spacing:.16em}.head h1{font-size:clamp(50px,9vw,112px);line-height:.9;letter-spacing:-.07em;margin:18px 0}.dot{color:#79d7ef}.head p{color:#a9b6c0;font-size:17px;line-height:1.8}.entries{padding:0 clamp(20px,5vw,72px)}article{display:grid;grid-template-columns:150px 1fr;gap:30px;border-top:1px solid #293744;padding:34px 0}article:last-child{border-bottom:1px solid #293744}h2{margin:0 0 12px;font-size:25px;color:#e9edf2}article p{max-width:650px;margin:0 0 22px;color:#91a0ab;line-height:1.8;font-size:14px}.tag{color:#71808c}@media(max-width:600px){article{display:block}.date{margin-bottom:18px}}
+</style>

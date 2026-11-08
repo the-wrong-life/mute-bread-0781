@@ -1,0 +1,12 @@
+---
+import NovaShell from '../layouts/NovaShell.astro';
+const principles = ['先定义问题与验收条件', '区分模型推断与真实测量', '凭证不进入提示词、日志或仓库', '高风险操作必须人工确认'];
+---
+<NovaShell title="AI" description="DIY Engineering Lab 的 AI 实验与使用边界。" active="/ai">
+  <section class="hero"><p class="eyebrow">ASSISTED RESEARCH / 04</p><h1>AI<span class="dot">.</span></h1><p>把人工智能作为研究工具，而不是证据本身。这个页面记录方法边界，当前没有对外 AI 服务。</p></section>
+  <section class="panel"><p class="label">OPERATING PRINCIPLES</p><ul>{principles.map((item, i) => <li><span>0{i+1}</span>{item}</li>)}</ul></section>
+  <section class="callout"><span class="signal">●</span><div><h2>实验入口尚未开放</h2><p>没有已发布的模型接口、知识库或自动化流程。未来新增能力时，会同时说明数据来源、权限、成本与验证状态。</p></div></section>
+</NovaShell>
+<style>
+.hero,.panel,.callout{max-width:1120px;margin-left:auto;margin-right:auto}.hero{padding:clamp(70px,12vw,150px) clamp(20px,5vw,72px) 72px}.eyebrow,.label,.signal{color:#79d7ef;font:11px ui-monospace,monospace;letter-spacing:.16em}.hero h1{font-size:clamp(50px,9vw,112px);line-height:.9;letter-spacing:-.07em;margin:18px 0}.dot{color:#79d7ef}.hero p{max-width:650px;color:#a9b6c0;font-size:17px;line-height:1.8}.panel{margin:0 clamp(20px,5vw,72px);padding:30px;border:1px solid #293744;background:#11181e}.label{margin:0 0 18px;color:#71808c}.panel ul{list-style:none;padding:0;margin:0}.panel li{display:flex;gap:24px;padding:18px 0;border-top:1px solid #293744;color:#d9e1e6}.panel li span{color:#79d7ef;font:12px ui-monospace,monospace}.callout{display:flex;gap:20px;padding:42px clamp(20px,5vw,72px)}.signal{font-size:12px}.callout h2{margin:0 0 8px;font-size:21px}.callout p{margin:0;color:#91a0ab;line-height:1.8;font-size:14px;max-width:680px}
+</style>

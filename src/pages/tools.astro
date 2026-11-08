@@ -1,0 +1,92 @@
+---
+import NovaShell from '../layouts/NovaShell.astro';
+---
+
+<NovaShell title="工程单位换算" description="长度、质量、温度与功率的常用单位换算工具。" active="/tools">
+  <section class="hero">
+    <p class="eyebrow">UTILITY / 01</p>
+    <h1>单位换算<br /><em>把量纲说清楚。</em></h1>
+    <p class="lede">用于快速估算与沟通的常用换算。结果仅供工程前期参考，不替代设备手册、校准仪器或安全验算。</p>
+  </section>
+  <section class="tool" aria-label="单位换算工具">
+    <div class="controls">
+      <label>类别<select id="kind"><option value="length">长度</option><option value="mass">质量</option><option value="temperature">温度</option><option value="power">功率</option></select></label>
+      <label>数值<input id="value" type="number" inputmode="decimal" step="any" placeholder="输入数值" aria-describedby="hint" aria-invalid="false" /></label>
+      <label>从<select id="from"></select></label>
+      <label>到<select id="to"></select></label>
+    </div>
+    <div class="result" aria-live="polite"><span id="result-label">等待输入</span><strong id="result">—</strong></div>
+    <p class="hint" id="hint" role="status">请输入有限数字；输入与结果绝对值均不得超过 1×10¹⁵。</p>
+    <p class="hint">温度仅适用于绝对温标，不适用于温差；负值按有符号数换算，请自行判断物理意义。结果最多显示 12 位有效数字；hp 为机械马力。</p>
+  </section>
+  <section class="notes"><h2>换算范围</h2><div class="grid"><div><b>长度</b><span>mm · cm · m · km · in · ft</span></div><div><b>质量</b><span>g · kg · oz · lb</span></div><div><b>温度</b><span>°C · °F · K</span></div><div><b>功率</b><span>W · kW · hp</span></div></div></section>
+</NovaShell>
+
+<script>
+  const units: Record<string, Record<string, number>> = {
+    length: { mm: 0.001, cm: 0.01, m: 1, km: 1000, in: 0.0254, ft: 0.3048 },
+    mass: { g: 0.001, kg: 1, oz: 0.028349523125, lb: 0.45359237 },
+    power: { W: 1, kW: 1000, hp: 745.6998715822702 }
+  };
+  const kind = document.querySelector<HTMLSelectElement>('#kind');
+  const value = document.querySelector<HTMLInputElement>('#value');
+  const from = document.querySelector<HTMLSelectElement>('#from');
+  const to = document.querySelector<HTMLSelectElement>('#to');
+  const result = document.querySelector<HTMLElement>('#result');
+  const label = document.querySelector<HTMLElement>('#result-label');
+  const hint = document.querySelector<HTMLElement>('#hint');
+  const tempUnits = ['°C', '°F', 'K'];
+
+  function convert() {
+    if (!kind || !value || !from || !to || !result || !label || !hint) return;
+    const raw = value.value.trim();
+    const n = Number(raw);
+    if (!raw || value.validity.badInput || !Number.isFinite(n) || Math.abs(n) > 1e15) {
+      const invalid = Boolean(raw) || value.validity.badInput;
+      value.setAttribute('aria-invalid', invalid ? 'true' : 'false');
+      label.textContent = invalid ? '输入无效' : '等待输入';
+      result.textContent = '—';
+      hint.textContent = '请输入有限数字，绝对值不超过 1×10¹⁵。';
+      return;
+    }
+    value.setAttribute('aria-invalid', 'false');
+    let out: number;
+    if (kind.value === 'temperature') {
+      if (!tempUnits.includes(from.value) || !tempUnits.includes(to.value)) { label.textContent = '单位无效'; result.textContent = '—'; hint.textContent = '请选择有效的温度单位。'; return; }
+      const c = from.value === '°C' ? n : from.value === '°F' ? (n - 32) * 5 / 9 : n - 273.15;
+      if (c < -273.15) { value.setAttribute('aria-invalid', 'true'); label.textContent = '温度低于绝对零度'; result.textContent = '—'; hint.textContent = '输入必须不低于 −273.15 °C；此工具不用于温差换算。'; return; }
+      out = to.value === '°C' ? c : to.value === '°F' ? c * 9 / 5 + 32 : c + 273.15;
+    } else {
+      const category = Object.hasOwn(units, kind.value) ? units[kind.value] : undefined;
+      if (!category || !Object.hasOwn(category, from.value) || !Object.hasOwn(category, to.value)) { label.textContent = '单位无效'; result.textContent = '—'; hint.textContent = '请选择有效的单位。'; return; }
+      out = n * category[from.value] / category[to.value];
+    }
+    if (!Number.isFinite(out) || Math.abs(out) > 1e15) {
+      label.textContent = '结果超出安全范围';
+      result.textContent = '—';
+      hint.textContent = '结果绝对值不能超过 1×10¹⁵。';
+      return;
+    }
+    label.textContent = n + ' ' + from.value + ' =';
+    result.textContent = out.toLocaleString('zh-CN', { maximumSignificantDigits: 12 }) + ' ' + to.value;
+    hint.textContent = '温度采用标准换算公式；功率 hp 采用机械马力（745.6998715822702 W）。';
+  }
+  function populate() {
+    if (!kind || !from || !to) return;
+    const category = Object.hasOwn(units, kind.value) ? units[kind.value] : undefined;
+    const list = kind.value === 'temperature' ? tempUnits : category ? Object.keys(category) : [];
+    from.replaceChildren();
+    to.replaceChildren();
+    list.forEach((u) => { from.add(new Option(u, u)); to.add(new Option(u, u)); });
+    if (list.length > 1) to.selectedIndex = 1;
+    convert();
+  }
+  kind?.addEventListener('change', populate);
+  value?.addEventListener('input', convert);
+  [from, to].forEach((el) => el?.addEventListener('change', convert));
+  populate();
+</script>
+
+<style>
+  .hero,.tool,.notes{max-width:1120px;margin:auto;padding-left:clamp(20px,5vw,72px);padding-right:clamp(20px,5vw,72px)} .hero{padding-top:clamp(60px,10vw,130px)} .eyebrow{color:#9fe8ff;font:11px ui-monospace,monospace;letter-spacing:.2em} h1{margin:18px 0;font-size:clamp(44px,8vw,96px);line-height:.95;letter-spacing:-.06em} h1 em{color:#9fe8ff;font-style:normal} .lede{max-width:620px;color:#aab6c0;line-height:1.8;font-size:16px}.tool{margin-top:58px}.controls{display:grid;grid-template-columns:1fr 1.3fr 1fr 1fr;gap:12px}label{display:grid;gap:8px;color:#8d9ba7;font:11px ui-monospace,monospace;letter-spacing:.1em}input,select{width:100%;padding:14px;background:#111820;border:1px solid #2c3a46;border-radius:3px;color:#edfaff;font:15px ui-monospace,monospace}input:focus,select:focus{outline:2px solid #9fe8ff;outline-offset:2px}.result{display:flex;justify-content:space-between;gap:20px;align-items:baseline;margin-top:18px;padding:24px;border:1px solid #344754;background:#101820}.result span{color:#8d9ba7;font:12px ui-monospace,monospace}.result strong{color:#dff9ff;font:clamp(18px,3vw,30px) ui-monospace,monospace;text-align:right}.hint{color:#71808c;font-size:12px;line-height:1.6}.notes{margin-top:72px}.notes h2{font-size:20px}.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:#2a3740}.grid div{display:grid;gap:12px;padding:18px;background:#0d1217}.grid b{color:#e9edf2}.grid span{color:#80909c;font:12px ui-monospace,monospace}@media(max-width:760px){.controls{grid-template-columns:1fr 1fr}.grid{grid-template-columns:1fr 1fr}.result{display:block}.result strong{display:block;margin-top:12px;text-align:left}}@media(max-width:440px){.controls{grid-template-columns:1fr}.grid{grid-template-columns:1fr}}
+</style>
