@@ -30,3 +30,4 @@ PROJECT NOVA 生产与源码基线
 - 2026-11-08：导航当前项增加 aria-current="page"；隔离 npm 工作树同步后 Astro check 20 文件零错误、零警告、零提示，Astro build 生成 7 页成功。该结果不代表移动端交互、屏幕阅读器或 ESA 已验证。
 - 第10轮复核：隔离 npm audit --package-lock-only 仍报告 68 项（低5、中33、高29、严重1），严重项为直接依赖 astro；静态产物 7 个路由均存在 title。审计非零退出符合漏洞发现，未执行自动修复。
 - 第10轮有限敏感信息扫描：对匹配 astro、ts、js、json、md、yml、yaml、env 扩展名的可搜索文件检查私钥标记、AWS Access Key 格式及常见凭据关键词；返回命中为依赖名称和公开 URL。此扫描未覆盖全部文件类型、Git 历史或所有凭据格式，不能证明无泄漏。
+- 发布攻坚复核：npm 审计直接依赖暴露 GHSA-26w7-cxv4-gfx2（Astro AVIF，CVSS 9.8，<7.2.8）、GHSA-6g55-p6wh-862q 与 GHSA-r28c-9q8g-f849（PostCSS source map 路径，均影响当前 8.5.6）；Rollup 与 Sharp 也有构建链公告。静态输出降低访客运行时可达性，但构建供应链风险仍在，依赖门禁不通过。
