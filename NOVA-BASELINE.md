@@ -10,6 +10,7 @@ PROJECT NOVA 生产与源码基线
 - 当时开发分支 nova/v1-foundation 提交 0f58ece8352db521824be3b9339d2590cb145130，工作树干净，已推送远程；当前版本以 git log 和远程分支为准。2026-11-08 17:47 本地核对：工作树干净，远程 nova/v1-foundation=`57034ecad955e7770289b626af512d3cf7eb08fe`，远程 main=`3c9faeca80fa8ef6255bfca681510dd8cd3be9be`；两锁文件仍同时存在。
 - pnpm run build 已实测通过：Astro check 20 files，0 errors、0 warnings、0 hints，静态生成 7 页。
 - 当时 npm ci --ignore-scripts --dry-run --audit=false 已实测退出 0；此后完成下述隔离 npm 构建，但 ESA 生产环境可复现性仍待验证。
+- 隔离安全升级探针（未改开发分支）：npm registry 元数据确认 `astro@7.2.8` engines 为 Node >=22.12.0、npm >=9.6.5；`@astrojs/check@0.9.12` 支持 TypeScript ^5/^6；当前 `@astrojs/tailwind@6.0.2` peer 仅支持 Astro ^3/^4/^5。尝试在独立 `_work/project-nova-upgrade-check` 以 exact 版本解析 Astro 7.2.8 + 集成时，npm 正确拒绝并报 `ERESOLVE`：`@astrojs/tailwind@6.0.2` 与 Astro 7 peer 不兼容。未使用 force/legacy-peer-deps，未改开发分支；需另行评估 Astro 7 的官方 Tailwind 集成替代方案或选择受支持的较低升级目标。
 - pnpm-lock.yaml 与 package-lock.json 存在依赖版本漂移：TypeScript 5.9.3/5.9.2、Tailwind 3.4.19/3.4.17、autoprefixer 10.6.2/10.4.21、postcss 8.5.32/8.5.6。发布前必须统一包管理器和唯一锁文件。
 - package-lock.json 含多个 registry.npmmirror.com 下载源；发布前需确认镜像来源可信，避免在未审查情况下切换生产安装源。
 - npm audit --package-lock-only --ignore-scripts 报告 68 项（5 低、33 中、29 高、1 严重）；目前未判定均可利用，需按公告、依赖路径和构建/运行边界逐项复核。
