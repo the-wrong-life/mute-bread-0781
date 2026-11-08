@@ -43,3 +43,11 @@
 - 开发分支远程最新为 `fec9b537d44d9d64a9ac8b0c2e3db94d5aa45b7d`；`origin/main` 仍为 `3c9faeca80fa8ef6255bfca681510dd8cd3be9be`，正式工作树仅保留未跟踪 `_work/` 审核资料。
 - 4330 候选预览七路由均返回 HTTP 200；首页 UTF-8 响应包含“格物”和“辛巳”，不含旧主标题，包含 `data-nova-core`。
 - 该核验确认本机候选服务响应，不代表 ESA 预览或生产发布。ESA 预览、跨浏览器、辅助技术、Lighthouse、安全响应头和外部票据仍是 NO-GO 阻断。
+
+## 2026-11-08 系统 Edge 无头截图补充
+
+- 使用本机已安装 Microsoft Edge（`C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe`），未下载 Playwright 浏览器、未提权。
+- 候选 Astro 7.4.7 预览 `http://127.0.0.1:4330/` 已启动并返回就绪。
+- 1600×1042 截图：`.tmp/edge-viewport/desktop.png`，SHA-256 `49b4c6530789affab4feb6f1647c79ec7827cd67b3de5eed1e67b64320824a21`，文件219055字节。
+- 390×844 截图：`.tmp/edge-viewport/mobile.png`，SHA-256 `755df8dc7220971a34273bad119c11e24cf4b7bf1491fc8b66541f67a8e97f0d`，文件114759字节。
+- 截图显示桌面三列新中式布局；手机首屏品牌、主文案、进入实验室入口和玉衡核心连续可见。该证据仅覆盖系统 Edge 截图，不替代Firefox/WebKit、屏幕阅读器、Lighthouse或ESA验证。
