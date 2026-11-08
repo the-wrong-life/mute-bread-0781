@@ -1,5 +1,11 @@
 # PROJECT NOVA 发布验证补充记录
 
+## 22:10 生产只读健康抽查
+
+- 通过 Invoke-WebRequest -UseBasicParsing 对 https://www.token-xxo.cn/ 发出 HTTPS HEAD：HTTP 200，Server ESA。远程 main 仍为 3c9faeca80fa8ef6255bfca681510dd8cd3be9be。
+- 本次 HEAD 响应未观察到 Strict-Transport-Security、Content-Security-Policy、X-Content-Type-Options、Referrer-Policy；不推断其他响应或全站策略。未改生产配置。
+- 工具失败记录：网页抓取服务 /fetch 返回 HTTP 404；普通 Invoke-WebRequest 在非交互环境失败，增加基础解析参数后成功。不修改任何插件端点或凭证。
+
 ## 22:07 依赖迁移已提交开发分支（发布仍 NO-GO）
 
 - 五个依赖迁移文件已独立提交并推送：5559ce5e4ca815a54258bf27bbf6ba24786f0eca，分支 nova/v1-foundation；未包含 _work/、缓存或本记录。
