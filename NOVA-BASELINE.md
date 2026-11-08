@@ -15,6 +15,7 @@ PROJECT NOVA 生产与源码基线
 - package-lock.json 含多个 registry.npmmirror.com 下载源；发布前需确认镜像来源可信，避免在未审查情况下切换生产安装源。
 - npm audit --package-lock-only --ignore-scripts 报告 68 项（5 低、33 中、29 高、1 严重）；目前未判定均可利用，需按公告、依赖路径和构建/运行边界逐项复核。
 - 本轮未修改生产站点，未合并 main，未部署；以上审计项是发布阻断条件。
+- Astro 5.18.2 候选隔离验证：在 `_work/project-nova-upgrade-check` 中以 npm exact 版本解析 `astro@5.18.2`、`@astrojs/check@0.9.12`、`@astrojs/tailwind@5.1.5`、`postcss@8.5.22`、`autoprefixer@10.4.21` 成功；`npm ci --ignore-scripts` 安装469包，`astro check` 21文件0错误/警告/提示，`astro build` 静态生成7页成功。重新审计计数为 total17（low2/moderate4/high10/critical1），直接 astro 仍包含 AVIF RCE GHSA-26w7-cxv4-gfx2（影响<7.2.8）；因此该候选降低风险数量但仍未达到安全门禁，未改开发分支、未替换锁文件。
 
 隔离 npm 构建复核（2026-11-08）：
 - 独立工作树 project-nova-npm-check 基于提交 f50ac1635aa2784fd036468293e456264da21915，使用本机 Node 及 npm 11.13.0，以工作树内缓存执行 npm ci --ignore-scripts --no-audit --no-fund，安装 490 个包。
