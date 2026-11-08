@@ -17,6 +17,10 @@
 
 审计列出 `vite`、`rollup`、`sharp`、`devalue`、`fast-uri`、`source-map-js`、`zod` 等问题；部分可修复，部分当前无自动修复。多数属于构建工具、开发服务器、解析器或图片处理链，不能仅依据数量判断生产可利用性。
 
+## 严重告警定位
+
+唯一严重级别直接依赖为 `astro`，报告中的关键条目是 `Astro: Remote code execution through AVIF image optimization`（影响范围 `<7.2.8`）。当前配置 `astro.config.mjs` 明确使用 `output: static`，未配置图像优化集成、服务端适配器或 AVIF 处理入口；这降低了该特定路径在当前站点的适用性，但不能替代升级和供应链复核。该结论仅基于当前源码配置与 npm 审计报告，不能推断 ESA 构建环境绝对不受影响。
+
 ## 发布决策
 
 当前不执行自动 `npm audit fix`，不升级依赖，不删除任一锁文件。原因：项目同时存在 `package-lock.json` 与 `pnpm-lock.yaml`，且二者版本漂移；自动修复可能改变 Astro 4 构建行为。发布前必须先选定一个包管理器、统一唯一锁文件，在隔离工作树完成干净安装、构建、审计和回归测试。
