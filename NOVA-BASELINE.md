@@ -15,6 +15,8 @@ PROJECT NOVA 生产与源码基线
 - package-lock.json 含多个 registry.npmmirror.com 下载源；发布前需确认镜像来源可信，避免在未审查情况下切换生产安装源。
 - npm audit --package-lock-only --ignore-scripts 报告 68 项（5 低、33 中、29 高、1 严重）；目前未判定均可利用，需按公告、依赖路径和构建/运行边界逐项复核。
 - 本轮未修改生产站点，未合并 main，未部署；以上审计项是发布阻断条件。
+- 2026-11-08 18:10 非交互 curl 线上复核：HTTPS 返回 200，Server=ESA，Content-Type=text/html；仍未观察 HSTS、CSP、X-Content-Type-Options、Referrer-Policy。该次仅为单点响应头观测，不证明部署关联。
+- Astro 7.4.7 + Tailwind 4.1.17 隔离候选（工作树 project-nova-astro7-check）：移除旧 @astrojs/tailwind，改用 @tailwindcss/vite 4.1.17，CSS 入口迁移为 @import "tailwindcss"；npm ls 顶层确认无旧集成，astro check 21 文件零错误/警告/提示，astro build 静态生成7页，产物保留站点样式。npm audit package-lock-only 结果为5项（低0、中3、高2、严重0）；高危为 Rollup 4.0.0–4.58.0 与 Vite <=6.4.3 传递依赖，均报告 fixAvailable=true。该候选未改正式分支、未替换正式锁文件，且尚未完成完整浏览器/ESA预览及升级后安全复核，不能直接发布。
 - Astro 5.18.2 候选隔离验证：在 `_work/project-nova-upgrade-check` 中以 npm exact 版本解析 `astro@5.18.2`、`@astrojs/check@0.9.12`、`@astrojs/tailwind@5.1.5`、`postcss@8.5.22`、`autoprefixer@10.4.21` 成功；`npm ci --ignore-scripts` 安装469包，`astro check` 21文件0错误/警告/提示，`astro build` 静态生成7页成功。重新审计计数为 total17（low2/moderate4/high10/critical1），直接 astro 仍包含 AVIF RCE GHSA-26w7-cxv4-gfx2（影响<7.2.8）；因此该候选降低风险数量但仍未达到安全门禁，未改开发分支、未替换锁文件。
 
 隔离 npm 构建复核（2026-11-08）：
