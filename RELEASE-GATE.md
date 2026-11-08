@@ -52,3 +52,9 @@
 继续在隔离工作树 work/project-nova-astro7-check 进行干净 npm ci 验证。移除 @tailwindcss/vite，改用 @tailwindcss/postcss@4.3.5，并新增独立 postcss.config.cjs；Astro 配置不再注册 Vite 插件。结果：npm ls vite rollup esbuild --all 仅保留 astro@7.4.7 -> vite@8.3.6，无 ELSPROBLEMS；astro check 22文件、0 errors/0 warnings/0 hints；astro build 静态7页成功；npm audit --package-lock-only 统计 low0/moderate2/high0/critical0。剩余两项为 Tailwind typography/postcss-selector-parser 的中危 CPU exhaustion 公告 GHSA-rj75-hqrm-r3gf，当前 fixAvailable 指向版本 0.5.4，需独立确认版本兼容后才可纳入正式仓库。
 
 该结果只存在于隔离候选树，未修改正式仓库，不能视为已发布或已通过全部门禁。正式分支仍保留原依赖，双锁治理、候选变更审查、ESA预览与发布票据仍未完成。
+
+## 2026-11-08 18:26 零漏洞 Astro 7 候选
+
+在隔离工作树 work/project-nova-astro7-check 中，进一步移除未使用的 @tailwindcss/typography 及其 @plugin 声明。最终依赖方案为 astro@7.4.7、tailwindcss@4.3.5、@tailwindcss/postcss@4.3.5，使用 postcss.config.cjs，不使用 @tailwindcss/vite；Astro 配置保持 output: static。干净 npm ci 后，npm ls vite rollup esbuild --all 仅显示 astro@7.4.7 -> vite@8.3.6，未报告 invalid/ELSPROBLEMS；npm audit --package-lock-only 统计 total=0（low0/moderate0/high0/critical0）；astro check 22文件、0 errors/0 warnings/0 hints；astro build静态7页成功。
+
+该候选未复制回正式工作树，正式分支仍为旧 Astro 4 双锁状态。下一步必须在正式分支创建独立提交并由独立审查复核 Tailwind 4 CSS 产物、浏览器矩阵和回滚路径，之后才可考虑预览。ESA 关联、外部发布票据、跨引擎/屏幕阅读器/Lighthouse 和生产响应头仍未满足，故整体门禁仍 NO-GO。
