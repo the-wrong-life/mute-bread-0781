@@ -31,3 +31,4 @@ PROJECT NOVA 生产与源码基线
 - 第10轮复核：隔离 npm audit --package-lock-only 仍报告 68 项（低5、中33、高29、严重1），严重项为直接依赖 astro；静态产物 7 个路由均存在 title。审计非零退出符合漏洞发现，未执行自动修复。
 - 第10轮有限敏感信息扫描：对匹配 astro、ts、js、json、md、yml、yaml、env 扩展名的可搜索文件检查私钥标记、AWS Access Key 格式及常见凭据关键词；返回命中为依赖名称和公开 URL。此扫描未覆盖全部文件类型、Git 历史或所有凭据格式，不能证明无泄漏。
 - 发布攻坚复核：npm 审计直接依赖暴露 GHSA-26w7-cxv4-gfx2（Astro AVIF，CVSS 9.8，<7.2.8）、GHSA-6g55-p6wh-862q 与 GHSA-r28c-9q8g-f849（PostCSS source map 路径，均影响当前 8.5.6）；Rollup 与 Sharp 也有构建链公告。静态输出降低访客运行时可达性，但构建供应链风险仍在，依赖门禁不通过。
+- 隔离 Playwright/Edge 回归：4 个视口（360、390、768、1280）×7 路由共 28 次导航均 HTTP 200、无 pageerror；仅发现 768px 首页初版横向溢出 31px，已将平板网格改为 minmax(0,1fr)，修复版本已通过 Astro check/build，待重新浏览器回归。360px 首页有 4 条 WebGL GPU stall warning（ReadPixels），需性能观察，不是功能错误；工具 25.4 mm→2.54 cm、−300°C 拒绝及 aria-invalid=true 均通过。
