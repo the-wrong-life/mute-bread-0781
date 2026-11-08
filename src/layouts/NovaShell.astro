@@ -19,7 +19,7 @@ const links = [
   <body>
     <header class="site-header">
       <a class="brand" href="/" aria-label="返回实验室首页"><span class="brand-mark" aria-hidden="true">✦</span><span>DIY ENGINEERING LAB</span></a>
-      <nav aria-label="主导航">{links.map((link) => <a class:list={{ active: active === link.href }} href={link.href}>{link.label}</a>)}</nav>
+      <nav aria-label="主导航">{links.map((link) => <a class:list={{ active: active === link.href }} href={link.href} aria-current={active === link.href ? "page" : undefined}>{link.label}</a>)}</nav>
     </header>
     <main><slot /></main>
     <footer><span>DIY ENGINEERING LAB</span><span>工程想法 → 可验证现实</span></footer>
