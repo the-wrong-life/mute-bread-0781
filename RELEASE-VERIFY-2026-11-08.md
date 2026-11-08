@@ -29,6 +29,15 @@
 - 本机 Edge 预览曾验证首页 1600×1042 和七路由 HTTP 200；截图 SHA256：91db3e0db6e87e3884430fd0145a8bd794f323a8478b3cab0d94f0dd763d9fef。
 - 生产单点 HEAD：HTTPS 200、Server ESA；本次未观察 HSTS、CSP、X-Content-Type-Options、Referrer-Policy。该结果不是候选发布证据。
 
+## 2026-11-08 21:57 最终字号复验
+
+- 候选预览：`http://127.0.0.1:4334/`，Astro 7.4.7；测试脚本 C:/Users/33126/Documents/DIY/_work/nova-v13-audit.mjs。
+- 系统 Chrome 无头实测 1440、768、390、360、320；五种视口均 scrollWidth 等于视口宽，pageErrors=[]。
+- 1440/768：每页一个 `main`，桌面六项导航可见，CTA 高度 50px。
+- 390/360/320：每页一个 `main`，移动菜单开闭均成功，CTA 高度 44px，footer gap 4px，四领域和三快捷入口存在。
+- 最终截图 SHA256：390=`088ea4efee7df21137c35ffaf2b8191a34b97aba146cb707dabd757045c4bf2f`；320=`6b0474e51a0a2ca97a9488a00f54e5ed1fac0900cd7b9f673c706b617c75d1c6`。截图位于候选 `.tmp/v13/`。
+- 复验结束后已停止临时预览；该证据仍仅覆盖本机 Chrome，不替代 ESA、Firefox/WebKit、屏幕阅读器或 Lighthouse。
+
 ## 失败案例与边界
 
 - 直接调用不存在的 node_modules/astro/astro.js 曾报 MODULE_NOT_FOUND；随后改用项目 npm 入口执行，Astro check/build 均通过。
