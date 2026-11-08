@@ -37,3 +37,9 @@
 ## 回滚与安全边界
 
 正式基线仍为 main 提交 3c9faeca80fa8ef6255bfca681510dd8cd3be9be；如获外部批准，回滚应使用独立 worktree 恢复基线，不在当前工作树执行 git reset --hard。未申请新付费服务、未扩大系统权限、未接触凭据。
+
+## 2026-11-08 后续候选核验
+
+- 开发分支远程最新为 `fec9b537d44d9d64a9ac8b0c2e3db94d5aa45b7d`；`origin/main` 仍为 `3c9faeca80fa8ef6255bfca681510dd8cd3be9be`，正式工作树仅保留未跟踪 `_work/` 审核资料。
+- 4330 候选预览七路由均返回 HTTP 200；首页 UTF-8 响应包含“格物”和“辛巳”，不含旧主标题，包含 `data-nova-core`。
+- 该核验确认本机候选服务响应，不代表 ESA 预览或生产发布。ESA 预览、跨浏览器、辅助技术、Lighthouse、安全响应头和外部票据仍是 NO-GO 阻断。
