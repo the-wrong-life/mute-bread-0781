@@ -2,22 +2,488 @@
 import NovaShell from '../layouts/NovaShell.astro';
 import NovaCore from '../components/NovaCore.astro';
 ---
-<NovaShell title="格物致知 · 造物有成" description="DIY 工程实验室：以工程方法探索想法，让创造有迹可循。">
+
+<NovaShell
+  title="格物致知 · 造物有成"
+  description="DIY 工程实验室：以工程方法探索想法，让创造有迹可循。"
+>
   <div class="page">
     <section class="hero" aria-label="DIY 工程实验室首页">
-      <div class="intro"><p class="eyebrow">PROJECT NOVA · 工程实验室</p><h1>格物致知<br />造物有成</h1><p class="english">Engineering Ideas Into Reality</p><p class="lede">以工程方法探索想法<br />让每一次创造都有迹可循</p><p class="motto"><span aria-hidden="true"></span>探索 · 验证 · 创造</p></div>
-      <div class="core-stage"><NovaCore size="min(100%, 38rem)" label="NOVA Core：玉衡核心装置" /><div class="core-caption"><span>NOVA CORE · 玉衡</span><span>生生不息 · 求知无尽</span></div></div>
+      <svg class="mountains" viewBox="0 0 1440 160" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+        <path d="M0 126 Q55 109 105 115 L160 88 Q198 105 222 100 L288 65 Q318 85 354 87 L417 117 Q484 96 535 115 Q614 89 685 116 Q758 98 820 119 Q901 93 955 107 L1025 75 Q1052 87 1087 98 L1145 63 Q1184 94 1224 99 L1290 57 Q1328 90 1360 92 L1440 119 L1440 160 L0 160Z" fill="#9aab9a" opacity=".18" />
+        <path d="M0 143 Q77 116 151 137 Q227 111 302 135 Q370 116 444 139 Q521 118 606 141 Q690 119 762 140 Q851 117 925 136 Q998 107 1079 137 Q1150 115 1237 138 Q1323 107 1440 133 L1440 160 L0 160Z" fill="#8e9f90" opacity=".15" />
+      </svg>
+
+      <div class="intro">
+        <p class="eyebrow">PROJECT NOVA · 工程实验室</p>
+        <h1>格物致知<br />造物有成</h1>
+        <p class="english">Engineering Ideas Into Reality</p>
+        <p class="lede">以工程方法探索想法<br />让每一次创造都有迹可循</p>
+        <p class="motto"><span aria-hidden="true"></span>探索 · 验证 · 创造</p>
+      </div>
+
+      <div class="core-stage">
+        <NovaCore size="min(100%, 38rem)" label="NOVA Core：玉衡核心装置" />
+        <div class="core-caption">
+          <span>NOVA CORE · 玉衡</span>
+          <span>生生不息 · 求知无尽</span>
+        </div>
+      </div>
+
       <a class="enter" href="/projects">进入实验室 <span aria-hidden="true">→</span></a>
-      <nav class="domains" aria-label="工程领域入口"><p class="domains-title">探索领域 <span aria-hidden="true"></span></p><a href="/projects"><small>01</small><span>船舶电气</span><b aria-hidden="true">→</b></a><a href="/projects"><small>02</small><span>机械设计</span><b aria-hidden="true">→</b></a><a href="/ai"><small>03</small><span>AI 工程</span><b aria-hidden="true">→</b></a><a href="/tools"><small>04</small><span>工程工具</span><b aria-hidden="true">→</b></a></nav>
+
+      <nav class="domains" aria-label="工程领域入口">
+        <p class="domains-title">探索领域 <span aria-hidden="true"></span></p>
+        <a href="/projects"><small>01</small><span>船舶电气</span><b aria-hidden="true">→</b></a>
+        <a href="/projects"><small>02</small><span>机械设计</span><b aria-hidden="true">→</b></a>
+        <a href="/ai"><small>03</small><span>AI 工程</span><b aria-hidden="true">→</b></a>
+        <a href="/tools"><small>04</small><span>工程工具</span><b aria-hidden="true">→</b></a>
+      </nav>
     </section>
-    <nav class="quick-links" aria-label="常用入口"><div class="quick-heading"><strong>从想法，到现实</strong><span>EXPLORE THE LAB</span></div><a href="/projects"><span aria-hidden="true">⌘</span>项目中心 <b aria-hidden="true">→</b></a><a href="/docs"><span aria-hidden="true">▤</span>工程知识库 <b aria-hidden="true">→</b></a><a href="/tools"><span aria-hidden="true">⌖</span>工程工具箱 <b aria-hidden="true">→</b></a></nav>
+
+    <nav class="quick-links" aria-label="常用入口">
+      <div class="quick-heading"><strong>从想法，到现实</strong><span>EXPLORE THE LAB</span></div>
+      <a href="/projects"><span aria-hidden="true">⌘</span>项目中心 <b aria-hidden="true">→</b></a>
+      <a href="/docs"><span aria-hidden="true">▤</span>工程知识库 <b aria-hidden="true">→</b></a>
+      <a href="/tools"><span aria-hidden="true">⌖</span>工程工具箱 <b aria-hidden="true">→</b></a>
+    </nav>
   </div>
 </NovaShell>
+
 <style>
-:global(body){background:#f4f0e6;color:#202923}.page{max-width:1440px;margin:auto;padding:0 clamp(20px,3.7vw,58px)}.hero{position:relative;min-height:min(690px,calc(100vh - 80px));display:grid;grid-template-columns:minmax(280px,.95fr) minmax(400px,1.65fr) minmax(250px,.95fr);align-items:center;gap:clamp(18px,2.5vw,38px);padding:24px 0 54px}.intro{position:relative;z-index:1;min-width:0}.eyebrow{margin:0 0 22px;color:#272b25;font:600 12px ui-monospace,monospace;letter-spacing:.12em}.eyebrow:after{content:"";display:block;width:38px;height:3px;margin-top:18px;background:#a74432}.intro h1{margin:0;color:#1e2924;font-family:Georgia,"Noto Serif CJK SC","Songti SC",serif;font-size:clamp(44px,4.8vw,76px);font-weight:600;line-height:1.26;white-space:nowrap}.english{margin:14px 0 18px;color:#32362f;font:italic 15px Georgia,serif;letter-spacing:.11em;white-space:nowrap}.lede{margin:0 0 24px;color:#383a32;font-family:"Noto Serif CJK SC","Songti SC",serif;font-size:17px;line-height:1.75}.enter{min-height:44px;display:inline-flex;align-items:center;justify-content:space-between;gap:28px;min-width:220px;padding:12px 18px;background:#a74432;border:1px solid #a74432;color:#fffaf0;text-decoration:none;font-family:"Noto Serif CJK SC","Songti SC",serif;font-size:18px;transition:background .18s,border-color .18s}.enter:hover{background:#873a2d;border-color:#873a2d}.enter span{font:24px/1 Arial,sans-serif}.enter:focus-visible,.domains a:focus-visible,.quick-links a:focus-visible{outline:2px solid #52735e;outline-offset:4px}.motto{display:flex;align-items:center;gap:14px;margin:26px 0 0;color:#34372f;font-family:"Noto Serif CJK SC","Songti SC",serif;font-size:14px;letter-spacing:.12em}.motto span{width:36px;height:1px;background:#a74432}
-.core-stage{position:relative;display:grid;place-items:center;min-width:0;width:100%;align-self:stretch;padding:8px 0 44px}.core-stage :global(.nova-core){width:min(100%,38rem)!important;max-width:100%}.core-caption{position:absolute;bottom:8px;left:50%;transform:translateX(-50%);width:min(100%,25rem);display:flex;flex-direction:column;align-items:center;gap:5px;text-align:center;color:#262a24;font-family:"Noto Serif CJK SC","Songti SC",serif;font-size:13px;letter-spacing:.18em;white-space:nowrap}.domains{min-width:0;display:flex;flex-direction:column;align-self:center}.domains-title{display:flex;align-items:center;gap:14px;margin:0 0 20px;color:#242820;font-family:"Noto Serif CJK SC","Songti SC",serif;font-size:19px;letter-spacing:.16em}.domains-title span{width:34px;height:1px;background:#a74432}.domains a{display:grid;grid-template-columns:42px minmax(0,1fr) 24px;align-items:center;gap:14px;min-width:0;padding:18px 0;border-bottom:1px solid #d4cbbb;color:#242820;text-decoration:none;font-family:"Noto Serif CJK SC","Songti SC",serif;font-size:clamp(17px,1.55vw,23px);transition:color .18s,border-color .18s}.domains a:hover{color:#a74432;border-color:#a74432}.domains small{color:#3c5143;font:15px Georgia,serif;letter-spacing:.08em}.domains b{font:22px Arial,sans-serif;font-weight:400}.quick-links{display:grid;grid-template-columns:1.05fr repeat(3,1fr);align-items:center;border-top:1px solid #d5cebf;padding:22px 0 25px}.quick-heading{display:flex;flex-direction:column;gap:5px;border-left:4px solid #a74432;padding-left:16px;color:#202923}.quick-heading strong{font-family:"Noto Serif CJK SC","Songti SC",serif;font-size:24px;font-weight:500}.quick-heading span{font:10px ui-monospace,monospace;letter-spacing:.2em}.quick-links a{display:flex;align-items:center;justify-content:center;gap:12px;min-width:0;padding:9px 12px;border-left:1px solid #d5cebf;color:#252a23;text-decoration:none;font-family:"Noto Serif CJK SC","Songti SC",serif;font-size:19px;white-space:nowrap}.quick-links a>span{color:#3f604c;font-size:26px}.quick-links a b{font:20px Arial,sans-serif;font-weight:400}.quick-links a:hover{color:#a74432}
-@media(max-width:1100px) and (min-width:701px){.hero{grid-template-columns:minmax(220px,.9fr) minmax(320px,1.3fr);grid-template-rows:auto auto;min-height:0;gap:16px 28px;padding:34px 0 42px}.core-stage{grid-column:2;grid-row:1 / span 2;min-height:530px}.enter{grid-column:1;grid-row:1;align-self:end;margin-top:280px}.domains{grid-column:1;grid-row:2}.quick-links{grid-template-columns:1fr 1fr}.quick-heading{grid-column:1/-1;padding:0 0 14px;border:0;border-bottom:1px solid #d5cebf;margin-bottom:8px}.quick-links a:nth-of-type(2){border-left:0}}
-@media(max-width:700px){.page{padding:0 20px}.hero{display:flex;flex-direction:column;align-items:stretch;gap:0;min-height:0;padding:22px 0 20px}.intro{align-self:stretch}.eyebrow{font-size:10px;letter-spacing:.06em;margin-bottom:12px}.eyebrow:after{margin-top:10px;width:28px}.intro h1{font-size:clamp(36px,10vw,40px);line-height:1.25;white-space:normal}.english{font-size:12px;letter-spacing:.035em;margin:8px 0 9px;white-space:normal}.lede{font-size:13px;line-height:1.65;margin:0}.motto{display:none}.core-stage{align-self:center;width:100%;padding:0 0 27px;margin-top:4px}.core-stage :global(.nova-core){display:block;width:min(82vw,290px)!important;max-width:100%;margin-inline:auto}.core-caption{bottom:0;width:100%;font-size:11px;letter-spacing:.06em;gap:3px}.enter{align-self:center;min-width:0;width:100%;max-width:none;min-height:48px;padding:11px 16px;gap:16px;font-size:16px;margin:12px 0 24px}.enter span{font-size:21px}.domains{display:flex;flex-direction:column;align-self:stretch;gap:0;margin-top:0}.domains-title{font-size:15px;margin:0 0 7px}.domains-title span{width:24px}.domains a{display:grid;grid-template-columns:36px minmax(0,1fr) 24px;min-height:50px;align-items:center;gap:10px;padding:10px 0;font-size:16px;border-bottom:1px solid #d4cbbb}.domains small{font-size:12px}.domains b{display:block}.quick-links{grid-template-columns:repeat(3,minmax(0,1fr));padding:12px 0 16px}.quick-heading{grid-column:1/-1;flex-direction:row;align-items:baseline;justify-content:space-between;border-left:3px solid #a74432;padding:0 0 7px 9px;margin-bottom:4px}.quick-heading strong{font-size:15px}.quick-heading span{font-size:8px;letter-spacing:.08em}.quick-links a{flex-direction:column;gap:2px;padding:7px 2px;border-left:1px solid #d5cebf;font-size:12px;white-space:normal;text-align:center}.quick-links a:nth-of-type(2){border-left:0}.quick-links a>span{font-size:18px}.quick-links a b{font-size:14px}}
-@media(max-width:380px){.page{padding-inline:20px}.hero{padding-top:18px}.intro h1{font-size:36px}.english{font-size:11px}.lede{font-size:12px}.core-stage :global(.nova-core){display:block;width:min(80vw,276px)!important;margin-inline:auto}.enter{margin-top:10px}.domains a{font-size:15px}}
-@media(prefers-reduced-motion:reduce){.enter,.domains a{transition:none}}
+  :global(body) {
+    background: #f4f0e6;
+    color: #202923;
+  }
+  .page {
+    max-width: 1440px;
+    margin: auto;
+    padding: 0 clamp(20px, 3.7vw, 58px);
+    background: linear-gradient(180deg, #f8f3ea 0%, #f4f0e6 100%);
+  }
+  .hero {
+    position: relative;
+    isolation: isolate;
+    min-height: min(690px, calc(100vh - 80px));
+    display: grid;
+    grid-template-columns: minmax(270px, .95fr) minmax(380px, 1.65fr) minmax(230px, .95fr);
+    grid-template-rows: 1fr auto 1fr;
+    grid-template-areas: "intro core domains" "intro core domains" "cta core domains";
+    align-items: center;
+    column-gap: clamp(18px, 2.5vw, 38px);
+    padding: 24px 0 54px;
+  }
+  .mountains {
+    position: absolute;
+    z-index: -1;
+    inset: auto 0 0;
+    width: 100%;
+    height: 160px;
+    pointer-events: none;
+  }
+  .intro {
+    grid-area: intro;
+    align-self: end;
+    min-width: 0;
+  }
+  .eyebrow {
+    margin: 0 0 22px;
+    color: #272b25;
+    font: 600 12px ui-monospace, monospace;
+    letter-spacing: .12em;
+  }
+  .eyebrow::after {
+    content: "";
+    display: block;
+    width: 38px;
+    height: 3px;
+    margin-top: 18px;
+    background: #a74432;
+  }
+  .intro h1 {
+    margin: 0;
+    color: #1e2924;
+    font-family: Georgia, "Noto Serif CJK SC", "Songti SC", serif;
+    font-size: clamp(44px, 4.8vw, 76px);
+    font-weight: 600;
+    line-height: 1.26;
+    white-space: nowrap;
+  }
+  .english {
+    margin: 14px 0 18px;
+    color: #32362f;
+    font: italic 15px Georgia, serif;
+    letter-spacing: .11em;
+    overflow-wrap: anywhere;
+  }
+  .lede {
+    margin: 0;
+    color: #383a32;
+    font-family: "Noto Serif CJK SC", "Songti SC", serif;
+    font-size: 17px;
+    line-height: 1.75;
+  }
+  .motto {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin: 22px 0 0;
+    color: #34372f;
+    font-family: "Noto Serif CJK SC", "Songti SC", serif;
+    font-size: 14px;
+    letter-spacing: .12em;
+  }
+  .motto span {
+    width: 36px;
+    height: 1px;
+    background: #a74432;
+  }
+  .enter {
+    grid-area: cta;
+    align-self: start;
+    justify-self: start;
+    min-width: 220px;
+    min-height: 48px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 28px;
+    margin-top: 22px;
+    padding: 12px 18px;
+    background: #a74432;
+    border: 1px solid #a74432;
+    color: #fffaf0;
+    text-decoration: none;
+    font-family: "Noto Serif CJK SC", "Songti SC", serif;
+    font-size: 18px;
+    transition: background .18s, border-color .18s;
+  }
+  .enter:hover {
+    background: #873a2d;
+    border-color: #873a2d;
+  }
+  .enter span {
+    font: 24px/1 Arial, sans-serif;
+  }
+  .enter:focus-visible, .domains a:focus-visible, .quick-links a:focus-visible {
+    outline: 2px solid #52735e;
+    outline-offset: 4px;
+  }
+  .core-stage {
+    grid-area: core;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-width: 0;
+    width: 100%;
+  }
+  .core-stage :global(.nova-shell) {
+    width: min(100%, 38rem) !important;
+    max-width: 100%;
+  }
+  .core-caption {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+    max-width: 100%;
+    text-align: center;
+    color: #262a24;
+    font-family: "Noto Serif CJK SC", "Songti SC", serif;
+    font-size: 13px;
+    letter-spacing: .18em;
+  }
+  .domains {
+    grid-area: domains;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+  }
+  .domains-title {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin: 0 0 20px;
+    color: #242820;
+    font-family: "Noto Serif CJK SC", "Songti SC", serif;
+    font-size: 19px;
+    letter-spacing: .16em;
+  }
+  .domains-title span {
+    width: 34px;
+    height: 1px;
+    background: #a74432;
+  }
+  .domains a {
+    display: grid;
+    grid-template-columns: 42px minmax(0, 1fr) 24px;
+    align-items: center;
+    gap: 14px;
+    min-width: 0;
+    padding: 18px 0;
+    border-bottom: 1px solid #d4cbbb;
+    color: #242820;
+    text-decoration: none;
+    font-family: "Noto Serif CJK SC", "Songti SC", serif;
+    font-size: clamp(17px, 1.55vw, 23px);
+    transition: color .18s, border-color .18s;
+  }
+  .domains a:hover {
+    color: #a74432;
+    border-color: #a74432;
+  }
+  .domains small {
+    color: #3c5143;
+    font: 15px Georgia, serif;
+    letter-spacing: .08em;
+  }
+  .domains b {
+    font: 22px Arial, sans-serif;
+    font-weight: 400;
+  }
+  .quick-links {
+    display: grid;
+    grid-template-columns: 1.05fr repeat(3, 1fr);
+    align-items: center;
+    border-top: 1px solid #d5cebf;
+    padding: 22px 0 25px;
+  }
+  .quick-heading {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    border-left: 4px solid #a74432;
+    padding-left: 16px;
+    color: #202923;
+  }
+  .quick-heading strong {
+    font-family: "Noto Serif CJK SC", "Songti SC", serif;
+    font-size: 24px;
+    font-weight: 500;
+  }
+  .quick-heading span {
+    font: 10px ui-monospace, monospace;
+    letter-spacing: .2em;
+  }
+  .quick-links a {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    min-width: 0;
+    min-height: 44px;
+    padding: 9px 12px;
+    border-left: 1px solid #d5cebf;
+    color: #252a23;
+    text-decoration: none;
+    font-family: "Noto Serif CJK SC", "Songti SC", serif;
+    font-size: 19px;
+  }
+  .quick-links a > span {
+    color: #3f604c;
+    font-size: 26px;
+  }
+  .quick-links a b {
+    font: 20px Arial, sans-serif;
+    font-weight: 400;
+  }
+  .quick-links a:hover {
+    color: #a74432;
+  }
+  @media (max-width: 1100px) and (min-width: 701px) {
+    .hero {
+      min-height: 0;
+      grid-template-columns: minmax(220px, .9fr) minmax(300px, 1.3fr);
+      grid-template-rows: auto auto auto;
+      grid-template-areas: "intro core" "cta core" "domains domains";
+      gap: 16px 28px;
+      padding: 34px 0 42px;
+    }
+    .intro {
+      align-self: end;
+    }
+    .enter {
+      margin-top: 0;
+    }
+    .domains {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+    }
+    .domains-title {
+      grid-column: 1 / -1;
+      margin-bottom: 0;
+    }
+    .domains a {
+      grid-template-columns: auto minmax(0, 1fr);
+      gap: 8px;
+      font-size: 16px;
+    }
+    .domains b {
+      display: none;
+    }
+    .quick-links {
+      grid-template-columns: 1fr 1fr;
+    }
+    .quick-heading {
+      grid-column: 1 / -1;
+      padding: 0 0 14px;
+      border: 0;
+      border-bottom: 1px solid #d5cebf;
+      margin-bottom: 8px;
+    }
+    .quick-links a:nth-of-type(2) {
+      border-left: 0;
+    }
+  }
+  @media (max-width: 700px) {
+    .page {
+      padding: 0 20px;
+    }
+    .hero {
+      min-height: 0;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr);
+      grid-template-rows: auto;
+      grid-template-areas: "intro" "core" "cta" "domains";
+      gap: 0;
+      padding: 22px 0 20px;
+    }
+    .mountains {
+      height: 110px;
+    }
+    .intro {
+      align-self: auto;
+    }
+    .eyebrow {
+      margin-bottom: 12px;
+      font-size: 10px;
+      letter-spacing: .06em;
+    }
+    .eyebrow::after {
+      width: 28px;
+      margin-top: 10px;
+    }
+    .intro h1 {
+      font-size: clamp(36px, 10vw, 40px);
+      line-height: 1.25;
+      white-space: normal;
+    }
+    .english {
+      margin: 8px 0 9px;
+      font-size: 12px;
+      letter-spacing: .035em;
+    }
+    .lede {
+      font-size: 13px;
+      line-height: 1.65;
+    }
+    .motto {
+      display: none;
+    }
+    .core-stage {
+      margin-top: 4px;
+    }
+    .core-stage :global(.nova-shell) {
+      width: min(100%, 290px) !important;
+    }
+    .core-caption {
+      gap: 3px;
+      font-size: 11px;
+      letter-spacing: .06em;
+      line-height: normal;
+    }
+    .enter {
+      justify-self: stretch;
+      min-width: 0;
+      min-height: 48px;
+      width: 100%;
+      margin: 12px 0 24px;
+      padding: 11px 16px;
+      gap: 16px;
+      font-size: 16px;
+    }
+    .enter span {
+      font-size: 21px;
+    }
+    .domains-title {
+      margin-bottom: 7px;
+      font-size: 15px;
+    }
+    .domains-title span {
+      width: 24px;
+    }
+    .domains a {
+      grid-template-columns: 36px minmax(0, 1fr) 24px;
+      min-height: 50px;
+      gap: 10px;
+      padding: 10px 0;
+      font-size: 16px;
+    }
+    .domains small {
+      font-size: 12px;
+    }
+    .quick-links {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      padding: 12px 0 16px;
+    }
+    .quick-heading {
+      grid-column: 1 / -1;
+      flex-direction: row;
+      align-items: baseline;
+      justify-content: space-between;
+      border-left: 3px solid #a74432;
+      padding: 0 0 7px 9px;
+      margin-bottom: 4px;
+    }
+    .quick-heading strong {
+      font-size: 15px;
+    }
+    .quick-heading span {
+      font-size: 8px;
+      letter-spacing: .08em;
+    }
+    .quick-links a {
+      flex-direction: column;
+      gap: 2px;
+      padding: 7px 2px;
+      font-size: 12px;
+      text-align: center;
+    }
+    .quick-links a:nth-of-type(2) {
+      border-left: 0;
+    }
+    .quick-links a > span {
+      font-size: 18px;
+    }
+    .quick-links a b {
+      font-size: 14px;
+    }
+  }
+  @media (max-width: 380px) {
+    .hero {
+      padding-top: 18px;
+    }
+    .intro h1 {
+      font-size: 36px;
+    }
+    .english {
+      font-size: 11px;
+    }
+    .lede {
+      font-size: 12px;
+    }
+    .core-stage :global(.nova-shell) {
+      width: min(80vw, 276px) !important;
+    }
+    .domains a {
+      font-size: 15px;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .enter, .domains a {
+      transition: none;
+    }
+  }
 </style>
