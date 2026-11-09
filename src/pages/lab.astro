@@ -1,0 +1,100 @@
+---
+import NovaShell from '../layouts/NovaShell.astro';
+import JadeViewer from '../components/JadeViewer.astro';
+---
+<NovaShell title="玉衡三维开发预览" description="玉衡三维模型的开发预览：可旋转查看、导出 GLB，并记录 Blender 导入验证状态。" active="/lab">
+  <section class="head">
+    <p class="eyebrow">DEVELOPMENT PREVIEW / 玉衡</p>
+    <h1>玉衡 · 三维开发预览<span class="dot">。</span></h1>
+    <p class="lede">这是开发预览页，不属于正式对外内容。模型由 Three.js 程序化建模，部件分组命名可编辑；拖动旋转、滚轮缩放，可切换正面/侧面/背面视角。</p>
+    <p class="warn">状态：基础结构已完成，正进行 GLB 导出与 Blender 导入验证。<strong>尚未验收</strong>：材质写实度、蛇首与尾部衔接细节、跨软件一致性。</p>
+  </section>
+
+  <section class="stage" aria-label="三维预览">
+    <JadeViewer />
+    <div class="controls" role="group" aria-label="视角与模型操作">
+      <button type="button" data-view="front">正面</button>
+      <button type="button" data-view="side">侧面</button>
+      <button type="button" data-view="back">背面</button>
+      <button type="button" data-export>导出 GLB</button>
+      <label class="toggle"><input type="checkbox" data-auto checked /> 自动旋转</label>
+      <output data-export-status class="out" role="status">未导出</output>
+    </div>
+  </section>
+
+  <section class="parts">
+    <h2>部件分组</h2>
+    <ul>
+      <li><b>jade-shell</b> 青玉球壳（透光、菲涅耳反射、内部絮纹）</li>
+      <li><b>default-kernel</b> 暖白内核</li>
+      <li><b>ouroboros</b> 衔尾蛇环（serpent-body / serpent-belly / serpent-head / serpent-eye-*）</li>
+      <li><b>jade-axis</b> 竖直玉轴（axis-shaft / axis-collar-top / axis-collar-bottom）</li>
+      <li><b>copper-ring</b> 倾斜铜环（含 copper-vernier 游标刻度）</li>
+      <li><b>base-badge</b> 底部徽章</li>
+      <li><b>xin-si-tablet</b> 辛巳玉牌</li>
+      <li><b>seven-stars</b> 七星刻纹（star-1 … star-7）</li>
+      <li><b>wugu-relief</b> 武曲浮雕</li>
+    </ul>
+  </section>
+</NovaShell>
+
+<style>
+  .head,.stage,.parts{max-width:1120px;margin-inline:auto;padding-inline:clamp(20px,5vw,72px)}
+  .head{padding-top:clamp(48px,8vw,96px)}
+  .eyebrow{color:#a74432;font:600 11px ui-monospace,monospace;letter-spacing:.18em}
+  h1{margin:16px 0;font-family:"Songti SC","Noto Serif CJK SC",SimSun,serif;font-size:clamp(34px,5.4vw,68px);line-height:1.1;font-weight:600;color:#1e2924}
+  .dot{color:#a74432}
+  .lede{max-width:66ch;color:#3b3f36;line-height:1.85;font-size:16px}
+  .warn{margin-top:20px;padding:14px 16px;border-left:3px solid #a74432;background:#f7f2e6;color:#4a4436;font-size:14px;line-height:1.8}
+  .stage{padding-top:32px;display:grid;gap:14px}
+  .controls{display:flex;flex-wrap:wrap;align-items:center;gap:10px}
+  .controls button{min-height:44px;min-width:88px;padding:10px 16px;border:1px solid #b9b0a0;background:#fbf8f0;color:#242a22;font:inherit;font-size:15px;border-radius:2px;cursor:pointer}
+  .controls button:hover{border-color:#a74432;color:#a74432}
+  .controls button:focus-visible{outline:2px solid #52735e;outline-offset:3px}
+  .toggle{display:inline-flex;align-items:center;gap:8px;min-height:44px;font-size:14px;color:#3b3f36}
+  .out{font:11px ui-monospace,monospace;color:#5d6659;letter-spacing:.08em}
+  .parts{padding-top:44px;padding-bottom:40px}
+  .parts h2{font-family:"Songti SC",serif;font-size:22px;font-weight:600;color:#1e2924}
+  .parts ul{list-style:none;padding:0;margin:0;display:grid;gap:1px;background:#d8d0c1;border:1px solid #d8d0c1}
+  .parts li{padding:12px 16px;background:#fbf8f0;color:#3b3f36;font-size:14px;line-height:1.6}
+  .parts b{font-family:ui-monospace,monospace;color:#3f604c;font-weight:600;margin-right:10px}
+  @media (max-width:520px){.controls button{flex:1 1 calc(50% - 10px);min-width:0}}
+</style>
+
+<script>
+  const root = document.querySelector<HTMLElement>('[data-jade-viewer]');
+  const api = (window as unknown as { __jadeViewer?: { orbitTo: (v: 'front'|'side'|'back') => void; exportGLB: () => Promise<ArrayBuffer> } }).__jadeViewer;
+  const out = document.querySelector<HTMLElement>('[data-export-status]');
+  document.querySelectorAll<HTMLButtonElement>('[data-view]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const view = (btn.dataset.view ?? 'front') as 'front'|'side'|'back';
+      api?.orbitTo(view);
+      out && (out.textContent = '视角：' + btn.textContent);
+    });
+  });
+  document.querySelector<HTMLButtonElement>('[data-export]')?.addEventListener('click', async (event) => {
+    const btn = event.currentTarget as HTMLButtonElement;
+    if (!api) { if (out) out.textContent = '导出失败：模型未就绪'; return; }
+    btn.disabled = true;
+    if (out) out.textContent = '正在导出…';
+    try {
+      const buf = await api.exportGLB();
+      const blob = new Blob([buf], { type: 'model/gltf-binary' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'yuheng-jade-core.glb';
+      a.click();
+      URL.revokeObjectURL(url);
+      if (out) out.textContent = '已导出 ' + (buf.byteLength / 1024).toFixed(0) + ' KB';
+    } catch (error) {
+      if (out) out.textContent = '导出失败：' + String(error).slice(0, 80);
+    } finally {
+      btn.disabled = false;
+    }
+  });
+  document.querySelector<HTMLInputElement>('[data-auto]')?.addEventListener('change', (event) => {
+    const el = event.currentTarget as HTMLInputElement;
+    if (root) root.dataset.autoRotate = String(el.checked);
+  });
+</script>
