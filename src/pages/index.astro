@@ -1,6 +1,6 @@
 ---
 import NovaShell from '../layouts/NovaShell.astro';
-import NovaCore from '../components/NovaCore.astro';
+import NovaHeroCore from '../components/NovaHeroCore.astro';
 
 const domains = [
   { number: '01', title: '船舶电气', href: '/projects' },
@@ -33,7 +33,7 @@ const journals = [
         <p class="english" lang="en">Engineering Ideas Into Reality</p>
       </div>
       <div class="core-stage">
-        <NovaCore size="var(--core-width)" label="NOVA Core：青玉球、衔尾蛇环与铜金仪器环" />
+        <NovaHeroCore size="var(--core-width)" label="玉衡：青玉球、衔尾蛇环与铜金测量环" />
         <p class="core-caption">NOVA CORE <span aria-hidden="true">·</span> 玉衡</p>
       </div>
       <p class="hero-lede">以工程方法探索想法，让每一次创造都有迹可循。</p>
@@ -122,6 +122,7 @@ const journals = [
   .hero .button { grid-area: cta; justify-self: start; align-self: start; margin-top: 26px; min-width: 220px; }
   .core-stage { grid-area: core; display: flex; flex-direction: column; align-items: center; justify-content: center; min-width: 0; width: 100%; }
   .core-stage :global(.nova-shell) { max-width: 100%; }
+  .core-stage :global(.hero-core) { aspect-ratio: 1 / 1; }
   .core-caption { margin: 10px 0 0; text-align: center; color: #e3ebdf; font: 12px/1.5 ui-monospace, monospace; letter-spacing: .14em; }
   .core-caption span { color: #b78b57; }
   .paper { background: #f4f0e6; }

@@ -1,0 +1,76 @@
+---
+import NovaCore from './NovaCore.astro';
+
+interface Props { size?: string; label?: string }
+const { size = 'min(80vw, 32rem)', label = '玉衡：青玉球、衔尾蛇环与铜金测量环' } = Astro.props;
+---
+<div class="hero-core" style={'--core-size:' + size} data-hero-core data-state="static">
+  <div class="hero-core-static">
+    <NovaCore size="100%" label={label} static />
+  </div>
+  <div class="hero-core-live" data-hero-live aria-hidden="true">
+    <canvas role="img" aria-label={`${label}（三维，可拖动旋转）`}></canvas>
+  </div>
+  <p class="hero-core-status" data-hero-status role="status">静态预览</p>
+</div>
+<style>
+  .hero-core{position:relative;width:var(--core-size);max-width:100%;margin-inline:auto;aspect-ratio:1/1;overflow:hidden}
+  .hero-core-static,.hero-core-live{position:absolute;inset:0}
+  .hero-core-static{display:grid;place-items:center}
+  .hero-core-static :global(.nova-shell){width:100%}
+  .hero-core-live{opacity:0;transition:opacity .65s ease}
+  .hero-core[data-state="live"] .hero-core-live{opacity:1}
+  .hero-core-live canvas{display:block;width:100%;height:100%;touch-action:pan-y}
+  .hero-core-status{position:absolute;left:0;right:0;bottom:2px;margin:0;text-align:center;color:#9fb5a5;font:10px/1.6 ui-monospace,monospace;letter-spacing:.12em;pointer-events:none;transition:opacity .5s}
+  .hero-core[data-state="live"] .hero-core-status{opacity:0}
+  @media (prefers-reduced-motion: reduce){ .hero-core-live{transition:none} }
+</style>
+<script>
+  const root = document.querySelector<HTMLElement>('[data-hero-core]');
+  const status = root?.querySelector<HTMLElement>('[data-hero-status]');
+  const live = root?.querySelector<HTMLElement>('[data-hero-live]');
+
+  function fail(message: string) {
+    if (!root) return;
+    root.dataset.state = 'static';
+    if (status) status.textContent = message;
+  }
+
+  if (root && live) {
+    const start = async () => {
+      try {
+        const { mountJadeViewer } = await import('../scripts/jade/viewer');
+        const handle = mountJadeViewer(live);
+        if (!handle) {
+          fail('当前浏览器不支持 WebGL，显示静态玉衡。');
+          return;
+        }
+        root.dataset.state = 'live';
+        (window as unknown as { __heroJade?: unknown }).__heroJade = handle;
+      } catch {
+        fail('三维模块载入失败，显示静态玉衡。');
+      }
+    };
+
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)');
+    let started = false;
+    const kick = () => {
+      if (started) return;
+      started = true;
+      void start();
+    };
+
+    if ('IntersectionObserver' in window) {
+      const io = new IntersectionObserver((entries) => {
+        if (entries.some((e) => e.isIntersecting)) {
+          io.disconnect();
+          kick();
+        }
+      }, { rootMargin: '200px' });
+      io.observe(root);
+    } else {
+      kick();
+    }
+    void reduced;
+  }
+</script>

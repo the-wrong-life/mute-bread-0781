@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
-import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js';
+
 import { buildJadeModel, type JadeParts } from './build-jade';
 
 export interface JadeViewerHandle {
@@ -11,6 +11,61 @@ export interface JadeViewerHandle {
 }
 
 const VIEWS: Record<string, number> = { front: 0, side: Math.PI / 2, back: Math.PI };
+
+/** 程序化影棚环境：柔和顶光 + 深墨绿地色，避免点状高光把玉球照成塑料球。 */
+function makeStudioEnvironment(): THREE.Texture {
+  const w = 512;
+  const h = 256;
+  const c = document.createElement('canvas');
+  c.width = w;
+  c.height = h;
+  const ctx = c.getContext('2d')!;
+  const sky = ctx.createLinearGradient(0, 0, 0, h);
+  sky.addColorStop(0, '#8fa596');
+  sky.addColorStop(0.18, '#6b8574');
+  sky.addColorStop(0.36, '#4a6455');
+  sky.addColorStop(0.54, '#2c4038');
+  sky.addColorStop(0.74, '#1a2a24');
+  sky.addColorStop(1, '#0e1714');
+  ctx.fillStyle = sky;
+  ctx.fillRect(0, 0, w, h);
+  // 顶部主光带
+  const key = ctx.createRadialGradient(w * 0.34, h * 0.08, 4, w * 0.34, h * 0.08, w * 0.3);
+  key.addColorStop(0, 'rgba(255,248,228,0.16)');
+  key.addColorStop(1, 'rgba(255,252,240,0)');
+  ctx.fillStyle = key;
+  ctx.fillRect(0, 0, w, h);
+  // 侧向补光
+  const fill = ctx.createRadialGradient(w * 0.82, h * 0.34, 4, w * 0.82, h * 0.34, w * 0.22);
+  fill.addColorStop(0, 'rgba(176,208,192,0.4)');
+  fill.addColorStop(1, 'rgba(200,224,214,0)');
+  ctx.fillStyle = fill;
+  ctx.fillRect(0, 0, w, h);
+  const tex = new THREE.CanvasTexture(c);
+  tex.mapping = THREE.EquirectangularReflectionMapping;
+  tex.colorSpace = THREE.SRGBColorSpace;
+  return tex;
+}
+
+/** 屏幕背景：中心暖白向四周深墨绿收拢，给透射材质提供可穿透的亮底 */
+function makeBackdrop(): THREE.Texture {
+  const size = 512;
+  const c = document.createElement('canvas');
+  c.width = size;
+  c.height = size;
+  const ctx = c.getContext('2d')!;
+  const g = ctx.createRadialGradient(size * 0.5, size * 0.44, size * 0.02, size * 0.5, size * 0.5, size * 0.74);
+  g.addColorStop(0, '#1d3a2f');
+  g.addColorStop(0.32, '#152b23');
+  g.addColorStop(0.64, '#0f1f19');
+  g.addColorStop(0.85, '#0a1611');
+  g.addColorStop(1, '#070f0c');
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, size, size);
+  const tex = new THREE.CanvasTexture(c);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  return tex;
+}
 
 export function mountJadeViewer(root: HTMLElement): JadeViewerHandle | null {
   const canvas = root.querySelector<HTMLCanvasElement>('canvas');
@@ -27,8 +82,8 @@ export function mountJadeViewer(root: HTMLElement): JadeViewerHandle | null {
   const scene = new THREE.Scene();
   const camera = new THREE.PerspectiveCamera(34, 1, 0.1, 100);
   camera.position.set(0, 0.25, 8.6);
-  const FIT_RADIUS = 1.78;
-  const FIT_CENTER_Y = -0.12;
+  const FIT_RADIUS = 1.82;
+  const FIT_CENTER_Y = -0.06;
 
   /** 依据视口宽高比计算能完整容纳模型的相机距离，避免窄屏或宽屏裁切。 */
   function fitDistance(aspect: number) {
@@ -40,37 +95,91 @@ export function mountJadeViewer(root: HTMLElement): JadeViewerHandle | null {
 
   renderer.setClearColor(0x000000, 0);
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 0.98;
+  renderer.toneMappingExposure = 1.36;
   renderer.outputColorSpace = THREE.SRGBColorSpace;
 
   const pmrem = new THREE.PMREMGenerator(renderer);
-  const envRT = pmrem.fromScene(new RoomEnvironment(), 0.04);
+  const envEquirect = makeStudioEnvironment();
+  const envRT = pmrem.fromEquirectangular(envEquirect);
   scene.environment = envRT.texture;
+  // 背景交给页面 CSS 渐变，canvas 保持透明，避免出现一块深色方块边界
+  const backdrop = makeBackdrop();
+
+  // 球后柔光：给透射材质提供亮源，玉体才会泛起暖白内光
+  const haloCanvas = document.createElement('canvas');
+  haloCanvas.width = 256; haloCanvas.height = 256;
+  const hctx = haloCanvas.getContext('2d')!;
+  const hg = hctx.createRadialGradient(128, 128, 4, 128, 128, 126);
+  hg.addColorStop(0, 'rgba(255,250,232,0.55)');
+  hg.addColorStop(0.3, 'rgba(232,244,222,0.3)');
+  hg.addColorStop(0.62, 'rgba(150,204,170,0.08)');
+  hg.addColorStop(1, 'rgba(120,180,150,0)');
+  hctx.fillStyle = hg;
+  hctx.fillRect(0, 0, 256, 256);
+  const halo = new THREE.Sprite(new THREE.SpriteMaterial({
+    map: new THREE.CanvasTexture(haloCanvas),
+    transparent: true,
+    depthWrite: false,
+    blending: THREE.AdditiveBlending,
+  }));
+  halo.scale.set(3.4, 3.4, 1);
+  halo.position.set(0.05, 0.12, -1.35);
+  scene.add(halo);
+
+  // 球后柔光箱：必须是网格（Sprite 不进入透射采样缓冲），玉体透射时才有亮源
+  const sbCanvas = document.createElement('canvas');
+  sbCanvas.width = 512; sbCanvas.height = 512;
+  const sb = sbCanvas.getContext('2d')!;
+  const sg = sb.createRadialGradient(256, 250, 8, 256, 256, 250);
+  sg.addColorStop(0, 'rgba(255,252,240,0.95)');
+  sg.addColorStop(0.28, 'rgba(255,246,220,0.62)');
+  sg.addColorStop(0.58, 'rgba(228,240,214,0.24)');
+  sg.addColorStop(0.82, 'rgba(180,214,190,0.05)');
+  sg.addColorStop(1, 'rgba(160,200,175,0)');
+  sb.fillStyle = sg;
+  sb.fillRect(0, 0, 512, 512);
+  const softboxTex = new THREE.CanvasTexture(sbCanvas);
+  softboxTex.colorSpace = THREE.SRGBColorSpace;
+  const softbox = new THREE.Mesh(
+    new THREE.PlaneGeometry(2.6, 2.6),
+    new THREE.MeshBasicMaterial({
+      map: softboxTex,
+      transparent: true,
+      depthWrite: false,
+      toneMapped: false,
+      blending: THREE.AdditiveBlending,
+    }),
+  );
+  softbox.name = 'softbox-backlight';
+  softbox.position.set(0.0, 0.02, -1.16);
+  scene.add(softbox);
 
   // 灯光：主光（暖）+ 补光（冷）+ 顶部轮廓
-  const key = new THREE.DirectionalLight(0xfff2d8, 2.1);
-  key.position.set(3.2, 4.4, 3.6);
+  const key = new THREE.DirectionalLight(0xfff6e8, 0.85);
+  key.position.set(3.4, 2.4, 3.8);
   scene.add(key);
-  const rim = new THREE.DirectionalLight(0xbfe6ff, 1.25);
-  rim.position.set(-3.6, 1.6, -2.8);
+  const rim = new THREE.DirectionalLight(0xe8f2ff, 2.1);
+  rim.position.set(-3.4, 1.2, -2.6);
   scene.add(rim);
-  const fill = new THREE.HemisphereLight(0xfff6e4, 0x2a3a30, 0.9);
+  const fill = new THREE.HemisphereLight(0xf8fff8, 0x7fa38c, 2.2);
   scene.add(fill);
-  const core = new THREE.PointLight(0xffe6b0, 3.2, 6, 2);
+  const snakeFill = new THREE.DirectionalLight(0xdff0e2, 2.0);
+  snakeFill.position.set(-1.6, 2.2, 5.0);
+  scene.add(snakeFill);
+  const rimWarm = new THREE.DirectionalLight(0xfff0d0, 3.2);
+  rimWarm.position.set(1.8, 2.2, -3.6);
+  scene.add(rimWarm);
+
+  const core = new THREE.PointLight(0xffcf8c, 22.0, 7.0, 2);
   core.position.set(0, 0, 0);
   scene.add(core);
 
   const parts: JadeParts = buildJadeModel({ quality: 'high' });
+  // 球壳需要环境倒影，把影棚环境图直接交给玉质着色器
+  const shellShader = parts.shell.material as THREE.ShaderMaterial;
+  if (shellShader.uniforms?.uEnv) shellShader.uniforms.uEnv.value = envEquirect;
   scene.add(parts.root);
 
-  // 柔和投影：地面圆盘阴影
-  const shadowPlane = new THREE.Mesh(
-    new THREE.CircleGeometry(1.9, 64),
-    new THREE.MeshBasicMaterial({ color: 0x8fa894, transparent: true, opacity: 0.16 }),
-  );
-  shadowPlane.rotation.x = -Math.PI / 2;
-  shadowPlane.position.y = -1.72;
-  scene.add(shadowPlane);
 
   const controls = new OrbitControls(camera, canvas);
   controls.enableDamping = true;
@@ -121,6 +230,8 @@ export function mountJadeViewer(root: HTMLElement): JadeViewerHandle | null {
 
   function frame(now: number) {
     raf = requestAnimationFrame(frame);
+  // 减少动态效果时至少渲染一帧，避免只看到空白画布
+  renderer.render(scene, camera);
     const dt = Math.min(0.05, (now - last) / 1000);
     last = now;
     acc += dt;
@@ -192,6 +303,12 @@ export function mountJadeViewer(root: HTMLElement): JadeViewerHandle | null {
     document.removeEventListener('visibilitychange', onVisibility);
     controls.dispose();
     envRT.dispose();
+    backdrop.dispose();
+    softboxTex.dispose();
+    (softbox.material as THREE.MeshBasicMaterial).dispose();
+    (softbox.geometry as THREE.BufferGeometry).dispose();
+    (halo.material as THREE.SpriteMaterial).map?.dispose();
+    (halo.material as THREE.SpriteMaterial).dispose();
     pmrem.dispose();
     renderer.dispose();
     parts.root.traverse((obj) => {

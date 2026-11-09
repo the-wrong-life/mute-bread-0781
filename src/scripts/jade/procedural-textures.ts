@@ -7,21 +7,24 @@ function canvas(size) {
   return c;
 }
 
-/** 蛇鳞：菱形叠瓦图案，返回 color 与 bump 两张贴图 */
-export function createScaleTextures(): { map: THREE.CanvasTexture; bump: THREE.CanvasTexture } {
+/** 蛇鳞：叠瓦图案，palette 决定鳞片配色（绿翡翠 / 金色青铜） */
+export function createScaleTextures(palette: 'jade' | 'gold' = 'jade'): { map: THREE.CanvasTexture; bump: THREE.CanvasTexture } {
   const size = 512;
+  const P = palette === 'gold'
+    ? { base: '#8a6529', hi: '#e8c88a', mid: '#c9a05e', lo: '#6d4f24', line: 'rgba(255,238,198,0.9)' }
+    : { base: '#2b5f4e', hi: '#7dbfa1', mid: '#3d7f68', lo: '#1e4a3d', line: 'rgba(24,62,52,0.55)' };
   const color = canvas(size);
   const cctx = color.getContext('2d')!;
   const bump = canvas(size);
   const bctx = bump.getContext('2d')!;
 
-  cctx.fillStyle = '#3f7a68';
+  cctx.fillStyle = P.base;
   cctx.fillRect(0, 0, size, size);
   bctx.fillStyle = '#808080';
   bctx.fillRect(0, 0, size, size);
 
-  const cols = 10;
-  const rows = 12;
+  const cols = palette === 'gold' ? 9 : 11;
+  const rows = palette === 'gold' ? 11 : 14;
   const w = size / cols;
   const h = size / rows;
 
@@ -31,16 +34,28 @@ export function createScaleTextures(): { map: THREE.CanvasTexture; bump: THREE.C
       const x = c * w + offset + w / 2;
       const y = r * h + h / 2;
       const grad = cctx.createRadialGradient(x - w * 0.18, y - h * 0.3, 1, x, y, w * 0.62);
-      grad.addColorStop(0, '#8fc0a8');
-      grad.addColorStop(0.5, '#4e8b74');
-      grad.addColorStop(1, '#27554a');
+      grad.addColorStop(0, P.hi);
+      grad.addColorStop(0.55, P.mid);
+      grad.addColorStop(1, P.lo);
       cctx.fillStyle = grad;
       cctx.beginPath();
       cctx.ellipse(x, y, w * 0.52, h * 0.6, 0, 0, Math.PI * 2);
       cctx.fill();
-      cctx.strokeStyle = 'rgba(24,62,52,0.55)';
+      cctx.strokeStyle = P.line;
       cctx.lineWidth = 1.6;
       cctx.stroke();
+
+      // 金鳞中心嵌青玉甲片：参考图的蛇是金铜底 + 小块青玉，不是整条绿蛇
+      if (palette === 'gold') {
+        const s = w * 0.34;
+        cctx.fillStyle = '#8ed3b2';
+        cctx.beginPath();
+        cctx.roundRect(x - s / 2, y - s * 0.44, s, s * 0.88, s * 0.22);
+        cctx.fill();
+        cctx.strokeStyle = 'rgba(255,240,205,0.7)';
+        cctx.lineWidth = 1.2;
+        cctx.stroke();
+      }
 
       const bgrad = bctx.createRadialGradient(x - w * 0.15, y - h * 0.28, 1, x, y, w * 0.6);
       bgrad.addColorStop(0, '#ffffff');
@@ -58,7 +73,7 @@ export function createScaleTextures(): { map: THREE.CanvasTexture; bump: THREE.C
   for (const t of [map, bmp]) {
     t.wrapS = THREE.RepeatWrapping;
     t.wrapT = THREE.RepeatWrapping;
-    t.repeat.set(3, 1);
+    t.repeat.set(1, 1);
     t.anisotropy = 4;
     t.colorSpace = THREE.SRGBColorSpace;
   }

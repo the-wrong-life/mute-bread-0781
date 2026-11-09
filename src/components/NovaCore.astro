@@ -1,12 +1,12 @@
 ---
-interface Props { size?: string; label?: string }
-const { size = 'min(80vw, 28rem)', label = '玉衡核心：青玉球与衔尾蛇环' } = Astro.props;
+interface Props { size?: string; label?: string; static?: boolean }
+const { size = 'min(80vw, 28rem)', label = '玉衡核心：青玉球与衔尾蛇环', static: isStatic = false } = Astro.props;
 const uid = 'nova-' + crypto.randomUUID();
 const ref = (name: string) => 'url(#' + uid + '-' + name + ')';
 ---
-<div class="nova-shell" style={'--nova-size:' + size} data-nova-core>
+<div class:list={['nova-shell', { 'is-static': isStatic }]} style={'--nova-size:' + size} data-nova-core data-static={isStatic ? 'true' : undefined}>
   <div class="nova-core" role="img" aria-label={label}>
-  <div class="nova-art"><canvas aria-hidden="true"></canvas><svg class="instrument" viewBox="0 0 400 420" aria-hidden="true" focusable="false">
+  <div class="nova-art">{isStatic ? null : <canvas aria-hidden="true" />}<svg class="instrument" viewBox="0 0 400 420" aria-hidden="true" focusable="false">
     <defs>
       <radialGradient id={uid + '-jade'} cx="32%" cy="25%" r="76%"><stop stop-color="#fffef0" stop-opacity=".94"/><stop offset=".2" stop-color="#c9e6d5" stop-opacity=".83"/><stop offset=".48" stop-color="#70af96" stop-opacity=".76"/><stop offset=".78" stop-color="#387a68" stop-opacity=".85"/><stop offset="1" stop-color="#aecab2" stop-opacity=".92"/></radialGradient>
       <linearGradient id={uid + '-gold'} x1="0" y1="0" x2=".7" y2="1"><stop stop-color="#fff0c4"/><stop offset=".19" stop-color="#b98248"/><stop offset=".42" stop-color="#f7dfaa"/><stop offset=".7" stop-color="#956536"/><stop offset="1" stop-color="#e6c58a"/></linearGradient>
@@ -47,10 +47,10 @@ const ref = (name: string) => 'url(#' + uid + '-' + name + ')';
     <g transform="translate(200 330)"><circle r="31" fill={ref('gold')} stroke="#8d6035" stroke-width="3"/><circle r="25" fill="#b99260" stroke="#f7dda4" stroke-width="2"/><path d="M-13 11 Q-9-6 0-9 Q9-6 13 11 M-7-11 Q-6-22 0-22 Q6-22 7-11 Q4-3 0-2 Q-4-3-7-11Z" fill="#ead09e" stroke="#795330" stroke-width="1.5"/><path d="M-11 16 Q0 9 11 16" fill="none" stroke="#775431" stroke-width="2"/></g>
   </svg></div>
   </div>
-  <button class="nova-motion" type="button" data-nova-motion hidden>暂停动画</button>
+  {isStatic ? null : <button class="nova-motion" type="button" data-nova-motion hidden>暂停动画</button>}
 </div>
 <style>
-.nova-shell{width:var(--nova-size);max-width:100%;margin-inline:auto;text-align:center}.nova-core{position:relative;width:100%;aspect-ratio:400/420;isolation:isolate;overflow:hidden}.nova-art,.instrument,canvas{position:absolute;inset:0;width:100%;height:100%}.instrument{display:block}.nova-core canvas{display:block;pointer-events:none}.nova-shell[data-renderer="webgl"] .jade-base{opacity:.58}.nova-motion{font:inherit;font-size:.8rem;min-height:44px;min-width:100px;color:#476455;background:transparent;border:1px solid #8aa08d;border-radius:999px;padding:.35rem .8rem;cursor:pointer}.nova-motion:focus-visible{outline:2px solid #92573f;outline-offset:3px}.nova-art{animation:float 8s ease-in-out infinite}.nova-orbit{transform-origin:200px 194px;animation:sway 10s ease-in-out infinite}.nova-shell:not([data-active]) .nova-art,.nova-shell:not([data-active]) .nova-orbit{animation-play-state:paused}@keyframes float{50%{transform:translateY(-1.1%)}}@keyframes sway{50%{transform:rotate(3deg)}}@media(prefers-reduced-motion:reduce){.nova-art,.nova-orbit{animation:none}}
+.nova-shell{width:var(--nova-size);max-width:100%;margin-inline:auto;text-align:center}.nova-core{position:relative;width:100%;aspect-ratio:400/420;isolation:isolate;overflow:hidden}.nova-art,.instrument,canvas{position:absolute;inset:0;width:100%;height:100%}.instrument{display:block}.nova-core canvas{display:block;pointer-events:none}.nova-shell[data-renderer="webgl"] .jade-base{opacity:.58}.nova-motion{font:inherit;font-size:.8rem;min-height:44px;min-width:100px;color:#476455;background:transparent;border:1px solid #8aa08d;border-radius:999px;padding:.35rem .8rem;cursor:pointer}.nova-motion:focus-visible{outline:2px solid #92573f;outline-offset:3px}.nova-art{animation:float 8s ease-in-out infinite}.is-static .nova-art,.is-static .nova-orbit{animation:none}.nova-orbit{transform-origin:200px 194px;animation:sway 10s ease-in-out infinite}.nova-shell:not([data-active]) .nova-art,.nova-shell:not([data-active]) .nova-orbit{animation-play-state:paused}@keyframes float{50%{transform:translateY(-1.1%)}}@keyframes sway{50%{transform:rotate(3deg)}}@media(prefers-reduced-motion:reduce){.nova-art,.nova-orbit{animation:none}}
 </style>
 <script>
 import { mountNovaCore } from '../scripts/nova-core';
