@@ -11,7 +11,7 @@ function canvas(size) {
 export function createScaleTextures(palette: 'jade' | 'gold' = 'jade'): { map: THREE.CanvasTexture; bump: THREE.CanvasTexture } {
   const size = 512;
   const P = palette === 'gold'
-    ? { base: '#8a6529', hi: '#e8c88a', mid: '#c9a05e', lo: '#6d4f24', line: 'rgba(255,238,198,0.9)' }
+    ? { base: '#a37f3c', hi: '#ecd49a', mid: '#cfa663', lo: '#7a5a28', line: 'rgba(255,242,206,0.92)' }
     : { base: '#2b5f4e', hi: '#7dbfa1', mid: '#3d7f68', lo: '#1e4a3d', line: 'rgba(24,62,52,0.55)' };
   const color = canvas(size);
   const cctx = color.getContext('2d')!;
@@ -46,8 +46,8 @@ export function createScaleTextures(palette: 'jade' | 'gold' = 'jade'): { map: T
       cctx.stroke();
 
       // 金鳞中心嵌青玉甲片：参考图的蛇是金铜底 + 小块青玉，不是整条绿蛇
-      if (palette === 'gold') {
-        const s = w * 0.34;
+      if (palette === 'gold' && (r * 3 + c) % 3 === 0) {
+        const s = w * 0.22;
         cctx.fillStyle = '#8ed3b2';
         cctx.beginPath();
         cctx.roundRect(x - s / 2, y - s * 0.44, s, s * 0.88, s * 0.22);

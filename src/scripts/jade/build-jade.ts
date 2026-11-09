@@ -43,7 +43,7 @@ function taperedTube(
       const nz = cos * N.z + sin * B.z;
       positions.push(P.x + r * nx, P.y + r * ny, P.z + r * nz);
       normals.push(nx, ny, nz);
-      uvs.push(t * 16, (j / radialSegments) * 1.6);
+      uvs.push(t * 3.5, (j / radialSegments) * 1.2);
     }
   }
   for (let i = 1; i <= tubularSegments; i += 1) {
@@ -68,16 +68,20 @@ function taperedTube(
  * 使正面看成一条完整闭合的环，而不是散成两段螺旋。
  */
 function serpentCurve(): THREE.CatmullRomCurve3 {
+  // 关键修正：蛇必须贴着球面绕行，否则无论怎么调都像独立呼啦圈。
+  // 用球面参数化：半径 R 略大于球半径（1.0），让蛇身半嵌入玉体；
+  // 纬度随经度做一次正弦起伏，形成真实的立体盘绕而不是平面圆。
   const pts: THREE.Vector3[] = [];
-  const steps = 280;
-  const sweep = Math.PI * 2 - 0.20;
-  const R = 1.30;
-  // 参考图里蛇是环绕玉球的外框，不是贴着球面的螺旋：
-  // 在 XY 平面画一圈，倾角交给 serpent.rotation 处理。
+  const steps = 300;
+  const sweep = Math.PI * 2 - 0.16;
+  const R = 1.086;
+  const latAmp = 0.125;
   for (let i = 0; i <= steps; i += 1) {
     const t = i / steps;
-    const a = Math.PI * 0.46 - sweep * t;
-    pts.push(new THREE.Vector3(Math.cos(a) * R, Math.sin(a) * R, 0));
+    const a = Math.PI * 0.42 - sweep * t;
+    const lat = Math.cos(a) * latAmp;
+    const r = Math.cos(lat) * R;
+    pts.push(new THREE.Vector3(Math.cos(a) * r, Math.sin(lat) * R, Math.sin(a) * r));
   }
   return new THREE.CatmullRomCurve3(pts, false, 'centripetal', 0.5);
 }
@@ -140,20 +144,19 @@ export function buildJadeModel(options: { quality?: 'high' | 'low' } = {}): Jade
   // 3. 衔尾蛇
   const serpent = new THREE.Group();
   serpent.name = 'ouroboros';
-  serpent.rotation.set(0.10, 0.06, -0.16);
+  serpent.rotation.set(0.0, 0.0, 0.0);
   const curve = serpentCurve();
-  const bodyGeo = taperedTube(curve, (t) => 0.075 - 0.026 * Math.pow(t, 2.0), hi ? 460 : 230, hi ? 44 : 26);
+  const bodyGeo = taperedTube(curve, (t) => 0.098 - 0.032 * Math.pow(t, 2.0), hi ? 460 : 230, hi ? 44 : 26);
   bodyGeo.scale(1, 1, 1);
   const bodyMat = new THREE.MeshPhysicalMaterial({
-    color: new THREE.Color('#ffffff'),
-    map: scaleTex.map,
+    color: new THREE.Color('#c9a05e'),
     bumpMap: scaleTex.bump,
-    bumpScale: 0.34,
-    roughness: 0.3,
-    metalness: 0.55,
-    envMapIntensity: 2.4,
-    clearcoat: 0.7,
-    clearcoatRoughness: 0.1,
+    bumpScale: 0.32,
+    roughness: 0.28,
+    metalness: 0.72,
+    envMapIntensity: 2.6,
+    clearcoat: 0.5,
+    clearcoatRoughness: 0.12,
   });
   bodyMat.name = 'mat-serpent';
   const body = new THREE.Mesh(bodyGeo, bodyMat);
@@ -165,10 +168,10 @@ export function buildJadeModel(options: { quality?: 'high' | 'low' } = {}): Jade
   for (let i = 0; i <= 40; i += 1) {
     const t = 0.06 + (0.82 * i) / 40;
     const p = curve.getPointAt(t);
-    bellyCurvePts.push(p.clone().multiplyScalar(0.9));
+    bellyCurvePts.push(p.clone().multiplyScalar(0.965));
   }
   const bellyCurve = new THREE.CatmullRomCurve3(bellyCurvePts);
-  const bellyGeo = taperedTube(bellyCurve, (t) => 0.048 * (1 - 0.5 * t), 96, 12);
+  const bellyGeo = taperedTube(bellyCurve, (t) => 0.036 * (1 - 0.5 * t), 96, 12);
   const bellyMat = new THREE.MeshStandardMaterial({
     color: new THREE.Color('#f0dcae'),
     roughness: 0.24,
@@ -194,16 +197,16 @@ export function buildJadeModel(options: { quality?: 'high' | 'low' } = {}): Jade
   head.position.copy(tip);
   head.quaternion.setFromRotationMatrix(new THREE.Matrix4().makeBasis(fwd, upV, sideV));
 
-  const skullGeo = new THREE.SphereGeometry(0.125, hi ? 48 : 24, hi ? 36 : 18);
+  const skullGeo = new THREE.SphereGeometry(0.118, hi ? 48 : 24, hi ? 36 : 18);
   const skull = new THREE.Mesh(skullGeo, bodyMat);
-  skull.scale.set(2.1, 0.82, 1.18);
+  skull.scale.set(2.05, 0.84, 1.15);
   skull.name = 'serpent-skull';
   head.add(skull);
 
   // 吻部：向前拉出的锥体，让头有"咬合"指向而不是圆球
-  const snout = new THREE.Mesh(new THREE.ConeGeometry(0.078, 0.24, hi ? 32 : 18), bodyMat);
+  const snout = new THREE.Mesh(new THREE.ConeGeometry(0.072, 0.236, hi ? 32 : 18), bodyMat);
   snout.name = 'serpent-snout';
-  snout.position.set(0.225, -0.008, 0);
+  snout.position.set(0.175, -0.006, 0);
   snout.rotation.z = -Math.PI / 2;
   snout.scale.set(1, 1, 0.72);
   head.add(snout);
@@ -298,7 +301,7 @@ export function buildJadeModel(options: { quality?: 'high' | 'low' } = {}): Jade
 
   // 5. 倾斜铜环（绕到球体背后）
   // 参考图的铜环是"宽扁测量带"而不是细圆环：用开口圆柱面做带子
-  const bandGeo = new THREE.CylinderGeometry(1.44, 1.44, 0.21, hi ? 200 : 120, 1, true);
+  const bandGeo = new THREE.CylinderGeometry(1.30, 1.30, 0.072, hi ? 200 : 120, 1, true);
   const ringMat = new THREE.MeshStandardMaterial({
     color: new THREE.Color('#c99a52'),
     roughness: 0.26,
@@ -320,16 +323,6 @@ export function buildJadeModel(options: { quality?: 'high' | 'low' } = {}): Jade
   const tickMat = new THREE.MeshStandardMaterial({ color: new THREE.Color('#f0d3a0'), roughness: 0.16, metalness: 1, envMapIntensity: 2.2 });
   tickMat.name = 'mat-copper-tick';
   const tickGeo = new THREE.BoxGeometry(0.009, 0.042, 0.008);
-  for (let i = 0; i < 60; i += 1) {
-    const a = (i / 60) * Math.PI * 2;
-    const long = i % 10 === 0;
-    const t = new THREE.Mesh(tickGeo, tickMat);
-    t.name = 'ring-tick-' + i;
-    t.position.set(Math.cos(a) * 1.34, Math.sin(a) * 1.34, 0.036);
-    t.scale.set(1, long ? 1.35 : 0.8, 1);
-    t.rotation.z = a - Math.PI / 2;
-    copperRing.add(t);
-  }
 
   // 刻度块：沿铜环的游标
   const tick = new THREE.Group();

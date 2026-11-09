@@ -1,0 +1,86 @@
+---
+interface Props {
+  src?: string;
+  srcSet?: string;
+  alt: string;
+  caption?: string;
+}
+const {
+  src = '/yuheng/yuheng-core.webp',
+  srcSet = '/yuheng/yuheng-core-520.webp 520w, /yuheng/yuheng-core.webp 1040w',
+  alt,
+  caption = 'NOVA CORE · 玉衡',
+} = Astro.props;
+---
+
+<figure class="yuheng">
+  <div class="yuheng-frame">
+    <img
+      class="yuheng-art"
+      src={src}
+      srcset={srcSet}
+      sizes="(max-width: 768px) 88vw, min(37.5rem, 46vw)"
+      width="1040"
+      height="1040"
+      alt={alt}
+      loading="eager"
+      decoding="async"
+      fetchpriority="high"
+    />
+  </div>
+  <figcaption class="yuheng-caption">{caption}</figcaption>
+</figure>
+
+<style>
+  .yuheng {
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.9rem;
+  }
+  .yuheng-frame {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    display: grid;
+    place-items: center;
+  }
+  /* 柔和落影：与暖白纸底的接触感，避免模型"浮空" */
+  .yuheng-frame::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    bottom: 4%;
+    width: 62%;
+    height: 7%;
+    transform: translateX(-50%);
+    background: radial-gradient(ellipse at center, rgba(52, 74, 60, 0.30) 0%, rgba(52, 74, 60, 0.14) 45%, transparent 72%);
+    filter: blur(10px);
+    z-index: 0;
+    pointer-events: none;
+  }
+  .yuheng-art {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    height: auto;
+    display: block;
+    filter: drop-shadow(0 22px 46px rgba(45, 66, 52, 0.20));
+    animation: yuheng-float 14s ease-in-out infinite;
+    will-change: transform;
+  }
+  @keyframes yuheng-float {
+    0%, 100% { transform: translateY(0) }
+    50% { transform: translateY(-0.55rem) }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .yuheng-art { animation: none; }
+  }
+  .yuheng-caption {
+    font-size: 0.78rem;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: #6d7c72;
+  }
+</style>

@@ -287,9 +287,31 @@ export function mountJadeViewer(root: HTMLElement): JadeViewerHandle | null {
 
   async function exportGLB(): Promise<ArrayBuffer> {
     const { GLTFExporter } = await import('three/examples/jsm/exporters/GLTFExporter.js');
-    const exporter = new GLTFExporter();
-    const result = await exporter.parseAsync(parts.root, { binary: true, onlyVisible: true });
-    return result as ArrayBuffer;
+    // 自定义 ShaderMaterial 无法写入 glTF 材质名，导出前临时换成 PBR 近似材质，
+    // 否则 Blender 侧找不到 mat-jade-shell，玉球会变成一块白球。
+    const shellShader = parts.shell.material as THREE.MeshPhysicalMaterial;
+    const proxy = new THREE.MeshPhysicalMaterial({
+      name: 'mat-jade-shell',
+      color: new THREE.Color('#8fd6b4'),
+      roughness: 0.07,
+      metalness: 0,
+      transmission: 0.55,
+      thickness: 0.6,
+      ior: 1.52,
+      attenuationColor: new THREE.Color('#4fbf94'),
+      attenuationDistance: 2.2,
+      clearcoat: 0.9,
+      clearcoatRoughness: 0.05,
+    });
+    parts.shell.material = proxy;
+    try {
+      const exporter = new GLTFExporter();
+      const result = await exporter.parseAsync(parts.root, { binary: true, onlyVisible: true });
+      return result as ArrayBuffer;
+    } finally {
+      parts.shell.material = shellShader;
+      proxy.dispose();
+    }
   }
 
   function setQuality(q: 'high' | 'low') {

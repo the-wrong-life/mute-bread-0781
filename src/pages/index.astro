@@ -1,6 +1,6 @@
 ---
 import NovaShell from '../layouts/NovaShell.astro';
-import NovaHeroCore from '../components/NovaHeroCore.astro';
+import YuhengArt from '../components/YuhengArt.astro';
 
 const domains = [
   { number: '01', title: '船舶电气', href: '/projects' },
@@ -33,8 +33,7 @@ const journals = [
         <p class="english" lang="en">Engineering Ideas Into Reality</p>
       </div>
       <div class="core-stage">
-        <NovaHeroCore size="var(--core-width)" label="玉衡：青玉球、衔尾蛇环与铜金测量环" />
-        <p class="core-caption">NOVA CORE <span aria-hidden="true">·</span> 玉衡</p>
+        <YuhengArt alt="玉衡：青玉球体、金铜衔尾蛇环与倾斜的铜金测量环" />
       </div>
       <p class="hero-lede">以工程方法探索想法，让每一次创造都有迹可循。</p>
       <a class="button primary" href="/projects">进入实验室 <span aria-hidden="true">→</span></a>
@@ -92,10 +91,13 @@ const journals = [
 
 <style>
   :global(body) { background: #f4f0e6; color: #202923; }
+  /* 首屏改用暖白纸底：玉衡的通透只在浅底上成立，
+     深绿留给文字与朱砂做点缀，整体更接近参考图的"纸与玉"关系。 */
   .hero {
     --core-width: min(100%, 37.5rem);
-    color: #f4f0e6;
-    background: radial-gradient(ellipse at 70% 42%, #3c5f4e 0%, #253e32 30%, #192b23 70%, #17271f 100%);
+    color: #1e2a23;
+    background: radial-gradient(ellipse at 66% 38%, #fdfaf3 0%, #f7f2e7 32%, #f1ece0 66%, #eae3d4 100%);
+    border-bottom: 1px solid #ded6c7;
   }
   .hero-grid {
     max-width: 1440px;
@@ -111,11 +113,11 @@ const journals = [
   }
   .hero-intro { grid-area: intro; align-self: end; min-width: 0; }
   .eyebrow { margin: 0; color: #52735e; font: 11px/1.5 ui-monospace, monospace; letter-spacing: .14em; overflow-wrap: anywhere; }
-  .hero .eyebrow { color: #d2dfcf; }
+  .hero .eyebrow { color: #4f7a63; }
   h1, h2, .card-title, .domains a { font-family: "Songti SC", "Noto Serif CJK SC", SimSun, serif; }
   h1 { margin: 26px 0 15px; font-size: clamp(44px, 5vw, 76px); font-weight: 500; line-height: 1.2; }
-  .english { margin: 0; font: italic clamp(13px, 1.15vw, 17px)/1.5 Georgia, serif; letter-spacing: .06em; overflow-wrap: anywhere; }
-  .hero-lede { grid-area: lede; align-self: start; max-width: 24rem; margin: 24px 0 0; color: #e0e8db; line-height: 1.8; overflow-wrap: anywhere; }
+  .english { margin: 0; color: #4d6b58; font: italic clamp(13px, 1.15vw, 17px)/1.5 Georgia, serif; letter-spacing: .06em; overflow-wrap: anywhere; }
+  .hero-lede { grid-area: lede; align-self: start; max-width: 24rem; margin: 24px 0 0; color: #46564c; line-height: 1.8; overflow-wrap: anywhere; }
   .button { display: inline-flex; align-items: center; justify-content: space-between; gap: 32px; min-height: 48px; padding: 12px 20px; text-decoration: none; font-family: "Songti SC", "Noto Serif CJK SC", SimSun, serif; }
   .primary { background: #a74432; color: #fffaf0; }
   .primary:hover { background: #873a2d; }
@@ -123,8 +125,8 @@ const journals = [
   .core-stage { grid-area: core; display: flex; flex-direction: column; align-items: center; justify-content: center; min-width: 0; width: 100%; }
   .core-stage :global(.nova-shell) { max-width: 100%; }
   .core-stage :global(.hero-core) { aspect-ratio: 1 / 1; }
-  .core-caption { margin: 10px 0 0; text-align: center; color: #e3ebdf; font: 12px/1.5 ui-monospace, monospace; letter-spacing: .14em; }
-  .core-caption span { color: #b78b57; }
+
+
   .paper { background: #f4f0e6; }
   .section { max-width: 1440px; margin: 0 auto; padding: clamp(64px, 8vw, 124px) clamp(24px, 5vw, 72px); }
   .section + .section { border-top: 1px solid #d8d1c3; }

@@ -1,0 +1,229 @@
+# -*- coding: utf-8 -*-
+"""
+玉衡（NOVA CORE）Blender 离线渲染脚本 —— 定稿版 v18
+
+用途：把 /lab 页面导出的 yuheng-jade-core.glb 在 Blender 中重新布光、
+      重写材质（GLB 里的 Three 材质在 Blender 中表现不足），
+      输出首页主视觉所需的透明背景 PNG。
+
+用法（Windows）：
+  set NOVA_GLB=C:\path\to\yuheng-jade-core.glb
+  set NOVA_OUT=C:\path\to\out
+  "C:\Program Files\Blender Foundation\Blender 4.5\blender.exe" -b --python tools/blender/render-yuheng.py
+
+依赖：Blender 4.5 LTS（Cycles CPU 渲染，单张约 60-90 秒 @1400x1400/128 samples）
+"""
+import bpy, os, math, mathutils
+
+OUT = os.environ.get("NOVA_OUT", os.path.dirname(os.path.abspath(__file__)))
+GLB = os.environ.get("NOVA_GLB", os.path.join(OUT, "yuheng-jade-core.glb"))
+
+bpy.ops.import_scene.gltf(filepath=GLB)
+print("OBJ", len(bpy.data.objects))
+
+def rep(name, base, rough, metal, trans=0.0, ior=1.45, coat=0.0, emit=None, emit_str=0.0, keep_tex=False, sss=0.0, sss_rad=(0.5,0.9,0.7), sss_scale=0.3):
+    m = bpy.data.materials.get(name)
+    if not m:
+        print("MISSING", name); return
+    m.use_nodes = True
+    nt = m.node_tree
+    tex_img = None
+    if keep_tex:
+        for n in nt.nodes:
+            if n.type == 'TEX_IMAGE' and n.image:
+                tex_img = n.image; break
+    nt.nodes.clear()
+    out = nt.nodes.new('ShaderNodeOutputMaterial')
+    bs = nt.nodes.new('ShaderNodeBsdfPrincipled')
+    bs.inputs['Base Color'].default_value = (base[0], base[1], base[2], 1)
+    bs.inputs['Roughness'].default_value = rough
+    bs.inputs['Metallic'].default_value = metal
+    bs.inputs['IOR'].default_value = ior
+    if 'Transmission Weight' in bs.inputs: bs.inputs['Transmission Weight'].default_value = trans
+    if 'Coat Weight' in bs.inputs:
+        bs.inputs['Coat Weight'].default_value = coat
+        bs.inputs['Coat Roughness'].default_value = 0.04
+    if emit is not None:
+        bs.inputs['Emission Color'].default_value = (emit[0], emit[1], emit[2], 1)
+        bs.inputs['Emission Strength'].default_value = emit_str
+    if name == 'mat-jade-shell':
+        noise = nt.nodes.new('ShaderNodeTexNoise')
+        noise.inputs['Scale'].default_value = 3.4
+        noise.inputs['Detail'].default_value = 8.0
+        noise.inputs['Roughness'].default_value = 0.62
+        nr = nt.nodes.new('ShaderNodeValToRGB')
+        nr.color_ramp.elements[0].position = 0.36
+        nr.color_ramp.elements[0].color = (0.40, 0.70, 0.58, 1)
+        nr.color_ramp.elements[1].position = 0.68
+        nr.color_ramp.elements[1].color = (0.80, 0.95, 0.86, 1)
+        nt.links.new(noise.outputs['Fac'], nr.inputs['Fac'])
+        nt.links.new(nr.outputs['Color'], bs.inputs['Base Color'])
+    if sss > 0 and 'Subsurface Weight' in bs.inputs:
+        bs.inputs['Subsurface Weight'].default_value = sss
+        bs.inputs['Subsurface Radius'].default_value = sss_rad
+        bs.inputs['Subsurface Scale'].default_value = sss_scale
+    if tex_img is not None:
+        t = nt.nodes.new('ShaderNodeTexImage'); t.image = tex_img; t.interpolation = 'Smart'
+        bump = nt.nodes.new('ShaderNodeBump'); bump.inputs['Strength'].default_value = 0.7
+        bump.inputs['Distance'].default_value = 0.05
+        nt.links.new(t.outputs['Color'], bump.inputs['Height'])
+        nt.links.new(bump.outputs['Normal'], bs.inputs['Normal'])
+        bt = nt.nodes.new('ShaderNodeTexImage'); bt.image = tex_img
+        nt.links.new(bt.outputs['Color'], bs.inputs['Base Color'])
+    nt.links.new(bs.outputs['BSDF'], out.inputs['Surface'])
+
+# 参考图是暖白纸底上的青玉：玉必须浅、透、有内部散射，不能是深墨绿
+rep("mat-jade-shell", (0.58, 0.86, 0.73), 0.09, 0.0, trans=0.86, ior=1.55, coat=0.55, sss=0.22, sss_rad=(0.45,0.85,0.65), sss_scale=0.25)
+rep("mat-kernel", (1.0, 0.96, 0.86), 0.5, 0.0, emit=(1.0, 0.88, 0.62), emit_str=5.5)
+rep("mat-serpent", (0.72, 0.54, 0.24), 0.20, 0.75, coat=0.35)
+def serpent_plates():
+    m = bpy.data.materials.get("mat-serpent")
+    nt = m.node_tree
+    bs = [n for n in nt.nodes if n.type == 'BSDF_PRINCIPLED'][0]
+    out = [n for n in nt.nodes if n.type == 'OUTPUT_MATERIAL'][0]
+    brick = nt.nodes.new('ShaderNodeTexBrick')
+    brick.inputs['Scale'].default_value = 15.0
+    brick.inputs['Mortar Size'].default_value = 0.007
+    brick.inputs['Mortar Smooth'].default_value = 0.2
+    brick.inputs['Bias'].default_value = 0.0
+    brick.inputs['Brick Width'].default_value = 0.5
+    brick.inputs['Row Height'].default_value = 0.5
+    brick.inputs['Color1'].default_value = (0.50, 0.34, 0.12, 1)
+    brick.inputs['Color2'].default_value = (0.26, 0.17, 0.06, 1)
+    brick.inputs['Mortar'].default_value = (0.62, 0.45, 0.18, 1)
+    uvc = nt.nodes.new('ShaderNodeTexCoord')
+    nt.links.new(uvc.outputs['UV'], brick.inputs['Vector'])
+    nt.links.new(brick.outputs['Color'], bs.inputs['Base Color'])
+    bump = nt.nodes.new('ShaderNodeBump')
+    bump.inputs['Strength'].default_value = 0.55
+    bump.inputs['Distance'].default_value = 0.035
+    nt.links.new(brick.outputs['Fac'], bump.inputs['Height'])
+    nt.links.new(bump.outputs['Normal'], bs.inputs['Normal'])
+    nt.links.new(bs.outputs['BSDF'], out.inputs['Surface'])
+    print("SERPENT-PLATES ok")
+serpent_plates()
+rep("mat-serpent-belly", (0.72, 0.60, 0.36), 0.40, 0.5)
+rep("mat-serpent-jaw", (0.70, 0.58, 0.34), 0.42, 0.4)
+rep("mat-serpent-crest", (0.86, 0.68, 0.38), 0.24, 1.0)
+rep("mat-eye", (0.45, 0.96, 0.68), 0.08, 0.0, emit=(0.20, 0.92, 0.52), emit_str=3.0, coat=1.0)
+rep("mat-jade-axis", (0.78, 0.93, 0.84), 0.08, 0.0, trans=0.45, ior=1.5, coat=1.0, sss=0.7, sss_scale=0.25)
+rep("mat-gold", (0.86, 0.66, 0.32), 0.20, 1.0)
+rep("mat-copper-ring", (0.74, 0.52, 0.22), 0.26, 1.0)
+rep("mat-copper-tick", (0.90, 0.74, 0.44), 0.24, 1.0)
+rep("mat-tablet", (0.80, 0.90, 0.82), 0.18, 0.0, trans=0.25, ior=1.5, coat=1.0, keep_tex=True, sss=0.6, sss_scale=0.2)
+rep("mat-star", (1.0, 0.95, 0.80), 0.22, 0.3, emit=(1.0, 0.88, 0.64), emit_str=1.0)
+rep("mat-relief", (0.80, 0.66, 0.40), 0.30, 1.0)
+rep("mat-plinth", (0.76, 0.88, 0.80), 0.14, 0.0, trans=0.30, ior=1.5, coat=0.9, sss=0.5)
+
+# 蛇头改亮金，与蛇身鳞甲区分开（参考图的蛇头是金铜色带绿眼）
+head_mat = bpy.data.materials.new("head-gold"); head_mat.use_nodes = True
+hb = head_mat.node_tree.nodes["Principled BSDF"]
+hb.inputs['Base Color'].default_value = (0.62, 0.45, 0.19, 1)
+hb.inputs['Metallic'].default_value = 0.5
+hb.inputs['Roughness'].default_value = 0.24
+for o in bpy.data.objects:
+    if o.type == 'MESH' and (o.name.startswith('serpent-skull') or o.name.startswith('serpent-snout') or o.name.startswith('serpent-crest')):
+        o.data.materials.clear()
+        o.data.materials.append(head_mat)
+        print("HEADMAT", o.name)
+
+# 铜环带加刻度细纹，避免"素腰带"
+mr = bpy.data.materials.get("mat-copper-ring")
+if mr:
+    mr.use_nodes = True
+    nt2 = mr.node_tree
+    bs2 = [n for n in nt2.nodes if n.type == 'BSDF_PRINCIPLED'][0]
+    wv = nt2.nodes.new('ShaderNodeTexWave')
+    wv.wave_type = 'BANDS'
+    wv.bands_direction = 'Z'
+    wv.inputs['Scale'].default_value = 14.0
+    wv.inputs['Distortion'].default_value = 0.0
+    cmix = nt2.nodes.new('ShaderNodeMixRGB')
+    cmix.blend_type = 'MIX'
+    cmix.inputs['Fac'].default_value = 0.62
+    cmix.inputs['Color1'].default_value = (0.42, 0.28, 0.10, 1)
+    cmix.inputs['Color2'].default_value = (0.78, 0.58, 0.28, 1)
+    nt2.links.new(wv.outputs['Fac'], cmix.inputs['Fac'])
+    nt2.links.new(cmix.outputs['Color'], bs2.inputs['Base Color'])
+    bmp2 = nt2.nodes.new('ShaderNodeBump')
+    bmp2.inputs['Strength'].default_value = 0.35
+    nt2.links.new(wv.outputs['Fac'], bmp2.inputs['Height'])
+    nt2.links.new(bmp2.outputs['Normal'], bs2.inputs['Normal'])
+    print("COPPER-TICKS ok")
+
+# 球壳体积吸收：让厚度决定深浅，玉的关键
+ms = bpy.data.materials.get("mat-jade-shell")
+if ms and ms.use_nodes:
+    nt3 = ms.node_tree
+    o3 = [n for n in nt3.nodes if n.type == 'OUTPUT_MATERIAL'][0]
+    vol = nt3.nodes.new('ShaderNodeVolumeAbsorption')
+    vol.inputs['Color'].default_value = (0.16, 0.52, 0.36, 1)
+    vol.inputs['Density'].default_value = 1.75
+    nt3.links.new(vol.outputs['Volume'], o3.inputs['Volume'])
+    print("SHELL-VOLUME ok")
+
+scene = bpy.context.scene
+# 暖白纸底：与参考图一致，玉的通透只在浅底上才成立
+world = bpy.data.worlds.new("w"); scene.world = world
+world.use_nodes = True
+wn = world.node_tree
+bg = wn.nodes["Background"]
+grad = wn.nodes.new("ShaderNodeTexGradient")
+mapping = wn.nodes.new("ShaderNodeMapping")
+texco = wn.nodes.new("ShaderNodeTexCoord")
+ramp = wn.nodes.new("ShaderNodeValToRGB")
+ramp.color_ramp.elements[0].position = 0.0
+ramp.color_ramp.elements[0].color = (0.62, 0.60, 0.54, 1)
+ramp.color_ramp.elements[1].position = 1.0
+ramp.color_ramp.elements[1].color = (0.96, 0.94, 0.88, 1)
+wn.links.new(texco.outputs['Generated'], mapping.inputs['Vector'])
+wn.links.new(mapping.outputs['Vector'], grad.inputs['Vector'])
+wn.links.new(grad.outputs['Fac'], ramp.inputs['Fac'])
+wn.links.new(ramp.outputs['Color'], bg.inputs[0])
+bg.inputs[1].default_value = 1.15
+
+bpy.ops.mesh.primitive_plane_add(size=30, location=(0, 0, -1.72))
+plane = bpy.context.object
+plane.hide_render = True  # 首页用透明背景 + CSS 投影
+pm = bpy.data.materials.new("ground"); pm.use_nodes = True
+pb = pm.node_tree.nodes["Principled BSDF"]
+pb.inputs["Base Color"].default_value = (0.80, 0.78, 0.72, 1)
+pb.inputs["Roughness"].default_value = 0.55
+plane.data.materials.append(pm)
+
+cam_data = bpy.data.cameras.new("cam"); cam = bpy.data.objects.new("cam", cam_data)
+bpy.context.scene.collection.objects.link(cam)
+cam_data.lens = 92
+bpy.context.scene.camera = cam
+
+def add_light(name, loc, energy, size, color):
+    d = bpy.data.lights.new(name, type='AREA'); d.energy = energy; d.size = size; d.color = color
+    o = bpy.data.objects.new(name, d); o.location = loc
+    bpy.context.scene.collection.objects.link(o)
+    v = mathutils.Vector((0,0,0.1)) - mathutils.Vector(loc)
+    o.rotation_euler = v.to_track_quat('-Z','Y').to_euler()
+
+add_light("key", (5.2, -7.0, 6.4), 1500, 7.0, (1.0, 0.97, 0.90))
+add_light("rim", (-6.8, 2.2, 3.6), 900, 6.0, (0.92, 0.98, 1.0))
+add_light("back", (0.2, 5.2, 2.0), 700, 5.0, (1.0, 0.98, 0.92))
+add_light("fill", (-3.4, -7.6, 0.8), 320, 6.0, (1.0, 1.0, 1.0))
+
+scene.render.engine = 'CYCLES'
+scene.cycles.device = 'CPU'
+scene.cycles.samples = 128
+scene.cycles.use_denoising = True
+scene.render.resolution_x = 1400
+scene.render.resolution_y = 1400
+scene.render.film_transparent = True
+scene.view_settings.view_transform = 'AgX'
+scene.view_settings.look = 'AgX - Medium High Contrast'
+
+views = {"web": (0.0, -10.0, 0.35)}
+for k, loc in views.items():
+    cam.location = loc
+    d = mathutils.Vector((0, 0, 0.05)) - mathutils.Vector(loc)
+    cam.rotation_euler = d.to_track_quat('-Z', 'Y').to_euler()
+    scene.render.filepath = os.path.join(OUT, "yuheng-web-%s.png" % k)
+    bpy.ops.render.render(write_still=True)
+    print("RENDERED", k)
+print("DONE")
