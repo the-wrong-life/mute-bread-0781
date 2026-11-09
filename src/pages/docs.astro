@@ -1,16 +1,15 @@
 ---
 import NovaShell from '../layouts/NovaShell.astro';
-const docs = [
-  { title: '如何阅读一个实验记录', kind: 'METHOD', text: '文档尚未发布。正式内容将包含输入、步骤、测量值、误差与复现条件。' },
-  { title: '工具使用说明', kind: 'REFERENCE', text: '文档尚未发布。工具页面会明确公式、单位、边界与不适用场景。' },
-  { title: '安全与验证清单', kind: 'SAFETY', text: '文档尚未发布。涉及电气、机械和现场操作时，以专业验收与适用标准为准。' },
-];
+import { docs } from '../data/docs';
 ---
-<NovaShell title="Docs" description="DIY Engineering Lab 的方法与文档索引。" active="/docs">
-  <section class="intro"><p class="eyebrow">FIELD NOTES / 02</p><h1>Docs<span class="dot">.</span></h1><p>面向实际动手的短文档索引。先给边界，再给步骤；未完成的内容不会伪装成指南。</p></section>
-  <section class="docs">{docs.map((doc, i) => <article class="doc"><span class="num">0{i+1}</span><div><span class="kind">{doc.kind}</span><h2>{doc.title}</h2><p>{doc.text}</p></div><span class="arrow" aria-hidden="true">—</span></article>)}</section>
-  <p id="pending" class="footnote">文档索引已建立，正文待基于真实实验和可核查资料补充。</p>
+<NovaShell title="工程文档" description="工程计算、资料整理与静态部署的参考文档。" active="/docs">
+  <div class="page">
+    <header class="intro"><p class="eyebrow">知识库 / 参考与方法</p><h1>工程文档<span>.</span></h1><p>从单位换算到部署记录，留下可复查的依据，也写清使用边界。</p></header>
+    <section aria-label="文档列表" class="list">
+      {docs.map((doc, i) => <article class="entry"><span class="number" aria-hidden="true">0{i + 1}</span><div class="body"><div class="meta"><span>{doc.kind}</span><time datetime={doc.updated}>更新于 {doc.updated}</time></div><h2><a href={`/docs/${doc.slug}`}>{doc.title}</a></h2><p>{doc.summary}</p></div><span class="arrow" aria-hidden="true">↗</span></article>)}
+    </section>
+  </div>
 </NovaShell>
 <style>
-.intro,.docs,.footnote{max-width:1120px;margin-left:auto;margin-right:auto}.intro{padding:clamp(70px,12vw,150px) clamp(20px,5vw,72px) 72px}.eyebrow,.kind,.num{color:#79d7ef;font:11px ui-monospace,monospace;letter-spacing:.16em}.intro h1{font-size:clamp(50px,9vw,112px);line-height:.9;letter-spacing:-.07em;margin:18px 0}.dot{color:#79d7ef}.intro p{max-width:600px;color:#a9b6c0;line-height:1.8;font-size:17px}.docs{padding:0 clamp(20px,5vw,72px)}.doc{display:grid;grid-template-columns:70px 1fr 30px;gap:20px;padding:30px 0;border-top:1px solid #293744;color:inherit;text-decoration:none}.doc:last-child{border-bottom:1px solid #293744}.doc h2{color:#dcecf0}.num{color:#71808c}.doc h2{margin:10px 0;font-size:24px;transition:color .2s}.doc p{margin:0;max-width:650px;color:#91a0ab;line-height:1.7;font-size:14px}.arrow{color:#79d7ef;font-size:22px}.footnote{padding:36px clamp(20px,5vw,72px);color:#71808c;font-size:13px}@media(max-width:600px){.doc{grid-template-columns:42px 1fr}.arrow{display:none}}
+.page{max-width:1120px;margin:auto;padding:clamp(60px,10vw,120px) clamp(20px,5vw,72px);color:#202923;overflow-wrap:anywhere}.intro{max-width:70ch;margin-bottom:clamp(44px,7vw,80px)}.eyebrow,.meta,.number{font:12px/1.6 ui-monospace,monospace;letter-spacing:.08em;color:#52735e}.intro h1{font-family:"Songti SC","Noto Serif CJK SC",SimSun,serif;font-size:clamp(44px,7vw,80px);font-weight:600;line-height:1.15;margin:18px 0 22px}.intro h1 span{color:#a74432}.intro>p:last-child{font-size:17px;line-height:1.8;color:#3f604c}.entry{display:grid;grid-template-columns:48px minmax(0,1fr) 24px;gap:20px;padding:26px 0;border-top:1px solid #b78b57}.entry:last-child{border-bottom:1px solid #b78b57}.body{min-width:0}.number{padding-top:5px}.meta{display:flex;flex-wrap:wrap;gap:8px 20px}.body h2{font-family:"Songti SC","Noto Serif CJK SC",SimSun,serif;font-size:clamp(22px,3vw,29px);line-height:1.4;margin:10px 0}.body h2 a{display:inline-flex;align-items:center;min-height:44px;color:#202923;text-decoration:none}.body h2 a:hover{text-decoration:underline;text-decoration-color:#a74432;text-underline-offset:.25em}.body h2 a:focus-visible{outline:2px solid #a74432;outline-offset:4px}.body p{margin:0;max-width:68ch;line-height:1.8;color:#3f604c}.arrow{color:#8f6438}@media(max-width:600px){.entry{grid-template-columns:30px minmax(0,1fr);gap:12px}.arrow{display:none}}
 </style>
