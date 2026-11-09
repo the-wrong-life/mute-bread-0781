@@ -1,12 +1,20 @@
 ---
 import NovaShell from '../layouts/NovaShell.astro';
-const principles = ['先定义问题与验收条件', '区分模型推断与真实测量', '凭证不进入提示词、日志或仓库', '高风险操作必须人工确认'];
+const workflows = [
+  { title: '图纸与手册整理', input: '经授权的图纸、设备手册与相关版本信息', steps: '提取参数与约束，整理术语和资料出处，生成待确认清单。', check: '对照原图及手册版本，核对单位、适用条件和遗漏。' },
+  { title: '工程计算辅助', input: '设计条件、已知参数与适用依据', steps: '列出假设、公式与单位，形成计算步骤和方案候选。', check: '由专业人员复算公式与数值，核对标准及安全裕量。' },
+  { title: '日志与故障排查', input: '经脱敏的运行日志、现象与时间线', steps: '结构化事件，检索相关资料，列出可验证的故障假设。', check: '回查原始记录，排除时间误差，并通过现场测试验证假设。' },
+  { title: '代码与文档草稿', input: '经授权的代码片段、需求和现有文档', steps: '整理接口与边界，生成候选代码、检查清单或文档草稿。', check: '人工审查差异、执行测试，核对权限、安全与实际运行结果。' },
+];
 ---
-<NovaShell title="AI" description="DIY Engineering Lab 的 AI 实验与使用边界。" active="/ai">
-  <section class="hero"><p class="eyebrow">ASSISTED RESEARCH / 04</p><h1>AI<span class="dot">.</span></h1><p>把人工智能作为研究工具，而不是证据本身。这个页面记录方法边界，当前没有对外 AI 服务。</p></section>
-  <section class="panel"><p class="label">OPERATING PRINCIPLES</p><ul>{principles.map((item, i) => <li><span>0{i+1}</span>{item}</li>)}</ul></section>
-  <section class="callout"><span class="signal">●</span><div><h2>实验入口尚未开放</h2><p>没有已发布的模型接口、知识库或自动化流程。未来新增能力时，会同时说明数据来源、权限、成本与验证状态。</p></div></section>
+<NovaShell title="AI 工程辅助" description="工程工作中人工智能的辅助流程与核查边界。" active="/ai">
+  <div class="page">
+    <header class="intro"><p class="eyebrow">工程方法 / AI 辅助</p><h1>让工具帮助思考，<br />让证据回答问题。</h1><p class="lede">从资料整理到方案草拟，人工智能用于辅助工程工作。<strong>AI 输出是候选，不是结论。</strong></p></header>
+    <section aria-labelledby="flow-title"><h2 id="flow-title">从输入到人工核查</h2><ol class="flow"><li><strong>输入材料</strong><span>图纸、手册、日志、代码</span></li><li><strong>辅助操作</strong><span>结构化、检索、交叉核对、生成候选</span></li><li><strong>形成输出</strong><span>方案候选、检查清单、文档草稿</span></li><li><strong>人工核查</strong><span>公式复算、原始依据比对、现场验收</span></li></ol></section>
+    <section class="workflows" aria-labelledby="cases-title"><h2 id="cases-title">工作流程示例</h2><p>以下是可采用的方法，不代表已经部署自动化服务。</p><div class="cards">{workflows.map((item) => <article><h3>{item.title}</h3><dl><dt>输入</dt><dd>{item.input}</dd><dt>步骤</dt><dd>{item.steps}</dd><dt>人工核查</dt><dd>{item.check}</dd></dl></article>)}</div></section>
+    <aside class="note"><strong>使用边界</strong><p>仅使用有权处理的材料；敏感信息和凭证不应进入提示词或日志。涉及安全的工程判断须由专业人员按适用标准与现场条件复核。</p></aside>
+  </div>
 </NovaShell>
 <style>
-.hero,.panel,.callout{max-width:1120px;margin-left:auto;margin-right:auto}.hero{padding:clamp(70px,12vw,150px) clamp(20px,5vw,72px) 72px}.eyebrow,.label,.signal{color:#79d7ef;font:11px ui-monospace,monospace;letter-spacing:.16em}.hero h1{font-size:clamp(50px,9vw,112px);line-height:.9;letter-spacing:-.07em;margin:18px 0}.dot{color:#79d7ef}.hero p{max-width:650px;color:#a9b6c0;font-size:17px;line-height:1.8}.panel{margin:0 clamp(20px,5vw,72px);padding:30px;border:1px solid #293744;background:#11181e}.label{margin:0 0 18px;color:#71808c}.panel ul{list-style:none;padding:0;margin:0}.panel li{display:flex;gap:24px;padding:18px 0;border-top:1px solid #293744;color:#d9e1e6}.panel li span{color:#79d7ef;font:12px ui-monospace,monospace}.callout{display:flex;gap:20px;padding:42px clamp(20px,5vw,72px)}.signal{font-size:12px}.callout h2{margin:0 0 8px;font-size:21px}.callout p{margin:0;color:#91a0ab;line-height:1.8;font-size:14px;max-width:680px}
+  .page{max-width:1120px;margin:auto;padding:clamp(64px,9vw,110px) clamp(20px,5vw,72px) 20px;overflow-wrap:anywhere}.intro{max-width:780px;margin-bottom:64px}.eyebrow{color:#52735e;font:12px ui-monospace,monospace;letter-spacing:.08em}h1{margin:20px 0 24px;font-size:clamp(36px,6vw,70px);line-height:1.2;font-weight:500}h2{font-size:clamp(25px,3vw,34px);font-weight:500}h3{font-size:22px;font-weight:600;margin:0 0 20px}.lede,.workflows>p{color:#3f604c;line-height:1.8;font-size:17px}.lede strong{color:#a74432}.flow{list-style:none;padding:0;margin:24px 0 0;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px}.flow li{min-width:0;border-top:1px solid #b78b57;padding:20px 0}.flow strong,.flow span{display:block}.flow span{color:#3f604c;line-height:1.7;margin-top:8px;font-size:14px}.workflows{margin-top:70px}.cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin-top:24px}.cards article{min-width:0;border:1px solid #b78b57;padding:26px;background:#faf7ef}dl{margin:0}dt{color:#52735e;font-weight:650;font-size:13px}dd{margin:6px 0 18px;line-height:1.7;font-size:14px}dd:last-child{margin-bottom:0}.note{border-left:3px solid #a74432;margin-top:48px;padding:4px 0 4px 20px;line-height:1.8}.note p{margin:6px 0;color:#3f604c}@media(max-width:720px){.flow,.cards{grid-template-columns:1fr}.intro{margin-bottom:44px}.workflows{margin-top:50px}}
 </style>
