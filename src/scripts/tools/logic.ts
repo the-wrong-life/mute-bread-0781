@@ -148,3 +148,56 @@ export function upsRuntime(p: { capacity: string; voltage: string; dod: string; 
   const hours = deliveredWh / load;
   return { nominalWh, usableWh, deliveredWh, minutes: hours * 60, hours };
 }
+
+/** 钣金折弯展开：θ 为折弯角（度），R 为内侧半径，T 为料厚，K 为中性层系数。
+ *  BA  = θ(rad) × (R + K·T)     中性层弧长
+ *  OSSB = (R + T)·tan(θ/2)      外侧退让
+ *  BD  = 2·OSSB − BA            折弯扣除
+ *  展开长 = A + B − BD，A、B 为到虚拟尖角的边长。K 取 0.33–0.5 之间是常见工程区间，
+ *  具体值取决于材料、R/T 比与设备；结果供前期估算，不替代按设备与材料实测的展开系数。 */
+export interface BendResult {
+  /** 中性层弧长（mm） */
+  allowance: number;
+  /** 单侧外侧退让（mm） */
+  setback: number;
+  /** 折弯扣除（mm） */
+  deduction: number;
+  /** 两侧边长之和（mm），未填写时为 0 */
+  legs: number;
+  /** 展开长度（mm），未填写 A、B 时为 0 */
+  flat: number;
+  angleRad: number;
+}
+export function bendAllowance(p: { thickness: string; radius: string; angle: string; k: string; legA?: string; legB?: string }): BendResult {
+  const t = parsePositive(p.thickness, '料厚');
+  const r = parsePositive(p.radius, '内侧半径', true);
+  const angle = parsePositive(p.angle, '折弯角');
+  const k = parsePositive(p.k, '中性层系数', true);
+  if (t > 50) throw new Error('料厚超过 50 mm，请确认单位是否为 mm。');
+  if (r > 500) throw new Error('内侧半径超过 500 mm，请确认单位是否为 mm。');
+  if (angle >= 180) throw new Error('折弯角必须小于 180°；180° 时外侧退让无定义。');
+  if (angle > 170) throw new Error('折弯角超过 170°，请确认输入是否为折弯角而非余角。');
+  if (k > 0.5) throw new Error('中性层系数应在 0–0.5 之间。');
+  const angleRad = (angle * Math.PI) / 180;
+  const allowance = angleRad * (r + k * t);
+  const setback = (r + t) * Math.tan(angleRad / 2);
+  const deduction = 2 * setback - allowance;
+  const hasA = (p.legA ?? '').trim() !== '';
+  const hasB = (p.legB ?? '').trim() !== '';
+  let legs = 0;
+  let flat = 0;
+  if (hasA !== hasB) throw new Error('展开长度需要同时填写边 A 与边 B，或两者都留空。');
+  if (hasA && hasB) {
+    const a = parsePositive(p.legA as string, '边 A');
+    const b = parsePositive(p.legB as string, '边 B');
+    legs = a + b;
+    flat = legs - deduction;
+    if (flat <= 0) throw new Error('扣除量大于两边之和，展开长度为负；请检查边长与角度。');
+  }
+  for (const [key, value] of Object.entries({ allowance, setback, deduction, flat })) {
+    if (!Number.isFinite(value)) throw new Error('计算结果溢出，请检查输入范围。');
+    if (Math.abs(value) > 1e9) throw new Error('计算结果过大，请检查输入单位。');
+    void key;
+  }
+  return { allowance, setback, deduction, legs, flat, angleRad };
+}

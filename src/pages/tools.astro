@@ -3,8 +3,8 @@ import NovaShell from '../layouts/NovaShell.astro';
 ---
 <NovaShell title="工程工具箱" description="单位换算、JSON 格式化和文本整理，均在浏览器本地完成。" active="/tools">
   <div class="page">
-    <header class="hero"><p class="eyebrow">ENGINEERING TOOLBOX / 工程工具箱</p><h1>让细节<br /><em>有据可循。</em></h1><p class="lead">五个轻量工具，帮助处理工程工作中的常见小事。输入仅在当前浏览器处理，不会通过工具上传。</p></header>
-    <nav class="tool-nav" aria-label="工具目录"><a href="#units">单位换算</a><a href="#drop">直流压降</a><a href="#ups">UPS 备用时间</a><a href="#json">JSON 校验</a><a href="#text">文本整理</a></nav>
+    <header class="hero"><p class="eyebrow">ENGINEERING TOOLBOX / 工程工具箱</p><h1>让细节<br /><em>有据可循。</em></h1><p class="lead">六个轻量工具，帮助处理工程工作中的常见小事。输入仅在当前浏览器处理，不会通过工具上传。</p></header>
+    <nav class="tool-nav" aria-label="工具目录"><a href="#units">单位换算</a><a href="#drop">直流压降</a><a href="#ups">UPS 备用时间</a><a href="#bend">折弯展开</a><a href="#json">JSON 校验</a><a href="#text">文本整理</a></nav>
     <section id="units" class="tool" aria-labelledby="units-title">
       <div class="heading"><span class="number">01</span><div><h2 id="units-title">单位换算</h2><p>选择类别与单位，输入数值后自动换算；可选择结果的有效数字位数。</p></div></div>
       <div class="unit-grid">
@@ -50,6 +50,23 @@ import NovaShell from '../layouts/NovaShell.astro';
       <p id="ups-detail" class="status"></p>
       <div class="actions"><button type="button" id="ups-example">填入示例</button><button type="button" id="ups-copy">复制结果</button><span id="ups-copy-status" role="status"></span></div>
     </section>
+    <section id="bend" class="tool" aria-labelledby="bend-title">
+      <div class="heading"><span class="number">06</span><div><h2 id="bend-title">钣金折弯展开</h2><p>按中性层系数计算折弯扣除；填写两边边长可同时得到展开长度。</p></div></div>
+      <div class="unit-grid">
+        <label for="bend-thickness">料厚 T mm<input id="bend-thickness" type="text" inputmode="decimal" autocomplete="off" placeholder="例如 2" aria-invalid="false" /></label>
+        <label for="bend-radius">内侧半径 R mm<input id="bend-radius" type="text" inputmode="decimal" autocomplete="off" placeholder="例如 2" aria-invalid="false" /></label>
+        <label for="bend-angle">折弯角 °<input id="bend-angle" type="text" inputmode="decimal" autocomplete="off" placeholder="例如 90" aria-invalid="false" /></label>
+        <label for="bend-k">中性层系数 K<input id="bend-k" type="text" inputmode="decimal" autocomplete="off" placeholder="例如 0.44" aria-invalid="false" /></label>
+        <label for="bend-leg-a">边 A mm（可选）<input id="bend-leg-a" type="text" inputmode="decimal" autocomplete="off" placeholder="到虚拟尖角" aria-invalid="false" /></label>
+      </div>
+      <div class="unit-grid unit-grid--rho">
+        <label for="bend-leg-b">边 B mm（可选）<input id="bend-leg-b" type="text" inputmode="decimal" autocomplete="off" placeholder="到虚拟尖角" aria-invalid="false" /></label>
+      </div>
+      <p id="bend-note" class="note">BA = θ(rad) × (R + K·T)，OSSB = (R + T)·tan(θ/2)，BD = 2·OSSB − BA，展开长 = A + B − BD。K 常见取值 0.33–0.5，随材料、R/T 比与设备变化；边 A、B 量到虚拟尖角，不是到折弯圆角切点。结果供前期估算，实际下料应以试折或设备实测系数为准。</p>
+      <div class="result" aria-live="polite"><span id="bend-status">等待输入</span><output id="bend-result">—</output></div>
+      <p id="bend-detail" class="status"></p>
+      <div class="actions"><button type="button" id="bend-example">填入示例</button><button type="button" id="bend-copy">复制结果</button><span id="bend-copy-status" role="status"></span></div>
+    </section>
     <section id="json" class="tool" aria-labelledby="json-title">
       <div class="heading"><span class="number">02</span><div><h2 id="json-title">JSON 校验与格式化</h2><p>粘贴 JSON（JavaScript 对象表示法），先校验，再选择缩进格式化或压缩。</p></div></div>
       <label for="json-input">输入 JSON<textarea id="json-input" rows="8" spellcheck="false" aria-invalid="false" aria-describedby="json-status" placeholder="在此粘贴 JSON"></textarea></label>
@@ -65,7 +82,7 @@ import NovaShell from '../layouts/NovaShell.astro';
     </section>
   </div>
 </NovaShell>
-<script>import { mountTools } from '../scripts/tools/ui'; import { mountDcDrop } from '../scripts/tools/dc-drop'; import { mountUps } from '../scripts/tools/ups'; mountTools(); mountDcDrop(); mountUps();</script>
+<script>import { mountTools } from '../scripts/tools/ui'; import { mountDcDrop } from '../scripts/tools/dc-drop'; import { mountUps } from '../scripts/tools/ups'; import { mountBend } from '../scripts/tools/bend'; mountTools(); mountDcDrop(); mountUps(); mountBend();</script>
 <style>
 .page{max-width:1120px;margin:auto;padding:clamp(48px,8vw,100px) clamp(20px,5vw,64px) 90px;color:#202923}.page *{box-sizing:border-box;min-width:0}.hero{max-width:700px}.eyebrow,.number{font:12px ui-monospace,monospace;letter-spacing:.14em;color:#52735e}h1,h2{font-family:"Songti SC","Noto Serif CJK SC",SimSun,serif;font-weight:600}h1{font-size:clamp(42px,6vw,76px);line-height:1.14;margin:20px 0}h1 em{font-style:normal;color:#52735e}.lead,.heading p{line-height:1.8;color:#4b5b50}.tool-nav{display:flex;flex-wrap:wrap;gap:8px;margin:34px 0 0}.tool-nav a{display:inline-flex;align-items:center;min-height:44px;padding:8px 16px;border:1px solid #b78b57;color:#3f604c;text-decoration:none}.tool{margin-top:36px;border-top:1px solid #b78b57;padding-top:28px;scroll-margin-top:24px}.heading{display:flex;gap:22px;align-items:baseline}.heading h2{font-size:clamp(26px,3vw,36px);margin:0}.heading p{margin:10px 0 22px}.unit-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:14px}.unit-grid--rho{margin-top:14px;grid-template-columns:repeat(2,minmax(0,1fr))}label{display:grid;gap:8px;font-size:14px;color:#3f604c}input,select,textarea,button{font:inherit;color:#202923;border:1px solid #b78b57;border-radius:2px;background:#fbf9f3}input,select,button{min-height:44px}input,select,textarea{width:100%;padding:10px}textarea{display:block;resize:vertical;font:14px/1.6 ui-monospace,monospace;overflow-wrap:anywhere}button{cursor:pointer;padding:10px 16px;color:#3f604c}button:hover,.tool-nav a:hover{background:#e8ecdf}button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid #a74432;outline-offset:2px}[aria-invalid="true"]{border-color:#a74432}.note,.status{font-size:13px;line-height:1.7;color:#526458;overflow-wrap:anywhere}.result{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;border-left:3px solid #a74432;background:#eeeade;padding:18px;margin:16px 0}.result output{font:600 20px ui-monospace,monospace;overflow-wrap:anywhere;user-select:all}.actions{display:flex;align-items:center;flex-wrap:wrap;gap:10px;margin:14px 0}.actions span{font-size:13px;color:#3f604c}.inline-label{display:flex;align-items:center;gap:8px}.inline-label select{width:auto}.check{display:flex;align-items:center;gap:8px;min-height:44px}.check input{width:20px;height:20px;min-height:0;accent-color:#52735e}@media(max-width:850px){.unit-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:480px){.unit-grid{grid-template-columns:1fr}.heading{gap:12px}.result{display:grid}}@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto}}
 </style>
