@@ -6,6 +6,7 @@ import {
   snakeTangent,
   snakeCurveAt,
   updateSnakeTube,
+  snakeRadius,
   headYaw,
   ringSwing,
   kernelPulse,
@@ -395,7 +396,7 @@ export function buildJadeModel(options: { quality?: 'high' | 'low' } = {}): Jade
   // 现有方案是砖格法线/颜色（一张 canvas 贴图 + bumpMap），远看是菱形网、近看像编织袋。
   // 这里用几何甲片做对照样段：每片是压扁的半球，沿切线方向重叠 45%、逐行错位半个步距，
   // 尺寸随蛇身半径变化（颈部大、尾部小），方向始终顺着蛇身走向。
-  const scales = buildScaleSample(curve, 0.66, 0.80, (t) => 0.022 + 0.086 * Math.pow(Math.min(t * 1.7, 1), 0.65), hi);
+  const scales = buildScaleSample(curve, 0.66, 0.80, snakeRadius, hi);
   if (scales) serpent.add(scales);
 
   // 腹鳞：沿内侧的一条薄带
@@ -431,7 +432,7 @@ export function buildJadeModel(options: { quality?: 'high' | 'low' } = {}): Jade
   const fwd = snakeTangent(1, 0);
 
   // 颈套筒：沿蛇身切向反向延伸的短管，盖住 taperedTube 的端面，消除头身之间的直角台阶
-  const neckGeo = new THREE.CylinderGeometry(0.086, 0.080, 0.20, 28, 1, false);
+  const neckGeo = new THREE.CylinderGeometry(0.113, 0.104, 0.20, 28, 1, false);
   neckGeo.rotateX(Math.PI / 2);
   const neck = new THREE.Mesh(neckGeo, bodyMat);
   neck.name = 'serpent-neck';
@@ -703,7 +704,8 @@ export function buildJadeModel(options: { quality?: 'high' | 'low' } = {}): Jade
   );
   tickFace.position.z = 0.066;
   tick.add(tickFace);
-  tick.position.set(1.038, 0.0, 0.0);
+  // 游标原本在 +X 位置，正好落在右上蛇头旁边，读成"漂浮的小金疙瘩"；挪到左下空档
+  tick.position.set(-0.90, -0.52, 0.0);
   tick.rotation.z = Math.PI / 2;
   copperRing.add(tick);
 
@@ -719,11 +721,11 @@ export function buildJadeModel(options: { quality?: 'high' | 'low' } = {}): Jade
     clearcoat: 0.8,
   });
   plinthMat.name = 'mat-plinth';
-  const disc = new THREE.Mesh(new THREE.CylinderGeometry(0.13, 0.16, 0.028, hi ? 64 : 32), plinthMat);
+  const disc = new THREE.Mesh(new THREE.CylinderGeometry(0.112, 0.134, 0.024, hi ? 64 : 32), plinthMat);
   disc.rotation.x = Math.PI / 2;
   baseBadge.add(disc);
   const discInner = new THREE.Mesh(
-    new THREE.CylinderGeometry(0.098, 0.098, 0.03, hi ? 64 : 32),
+    new THREE.CylinderGeometry(0.082, 0.082, 0.028, hi ? 64 : 32),
     new THREE.MeshStandardMaterial({ color: new THREE.Color('#9c7a4a'), roughness: 0.38, metalness: 0.9 }),
   );
   discInner.rotation.x = Math.PI / 2;
@@ -738,7 +740,29 @@ export function buildJadeModel(options: { quality?: 'high' | 'low' } = {}): Jade
   root.add(baseBadge);
 
   // 7. 右侧辛巳玉牌
-  const tabletGeo = new THREE.BoxGeometry(0.24, 0.36, 0.03, 2, 2, 1);
+  // 玉牌不能是一张方卡片：做成圆角、带倒角厚度的小玉牌，边缘有收进的光
+  const tabletShape = new THREE.Shape();
+  const tw = 0.115;
+  const th = 0.175;
+  const tr = 0.026;
+  tabletShape.moveTo(-tw + tr, -th);
+  tabletShape.lineTo(tw - tr, -th);
+  tabletShape.quadraticCurveTo(tw, -th, tw, -th + tr);
+  tabletShape.lineTo(tw, th - tr);
+  tabletShape.quadraticCurveTo(tw, th, tw - tr, th);
+  tabletShape.lineTo(-tw + tr, th);
+  tabletShape.quadraticCurveTo(-tw, th, -tw, th - tr);
+  tabletShape.lineTo(-tw, -th + tr);
+  tabletShape.quadraticCurveTo(-tw, -th, -tw + tr, -th);
+  const tabletGeo = new THREE.ExtrudeGeometry(tabletShape, {
+    depth: 0.026,
+    bevelEnabled: true,
+    bevelThickness: 0.008,
+    bevelSize: 0.007,
+    bevelSegments: hi ? 3 : 1,
+    curveSegments: hi ? 10 : 5,
+  });
+  tabletGeo.center();
   const tabletMat = new THREE.MeshPhysicalMaterial({
     color: new THREE.Color('#dfeee0'),
     map: createTabletTexture('辛', '巳'),

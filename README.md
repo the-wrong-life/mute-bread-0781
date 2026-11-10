@@ -67,11 +67,37 @@ $env:NOVA_OUT="<输出目录>"
 
 导出注意：`jade-material.ts` 是自定义 `ShaderMaterial`，写不进 glTF 材质。`viewer.ts` 在导出前会把球壳临时换成名为 `mat-jade-shell` 的 `MeshPhysicalMaterial` 代理，`finally` 再换回；否则 Blender 侧拿到白球。
 
+### 循环动画管线
+
+首页主视觉是静态 WebP（LCP 优先），首屏稳定后才换成 8 秒循环动画，可暂停，尊重 `prefers-reduced-motion`。
+
+```powershell
+# 1. 逐帧导出姿态 GLB（需要本地预览在 127.0.0.1:4340）
+node _work/nova-export-frames.mjs 48        # → _work/nova-loop/glb/frame-000..047.glb，约 146 ms/帧
+
+# 2. 逐帧离线渲染（720² / 24 samples，约 10 s/帧）
+$env:NOVA_FRAMES="_work/nova-loop/glb"; $env:NOVA_OUT="_work/nova-loop/png-720"
+$env:NOVA_RES="720"; $env:NOVA_SAMPLES="24"
+$env:NOVA_HIDE="kernel-glow,jade-inner-core,serpent-scales-sample"
+$env:NOVA_KERNEL="14"; $env:NOVA_AXIS_EMIT="0.5"
+& "C:\Program Files\Blender Foundation\Blender 4.5\blender.exe" -b --python tools/blender/render-loop.py
+
+# 3. 打包动画 WebP（480² / 24 帧 / 4fps / q72，约 384 KB）
+python _work/nova-pack-loop.py _work/nova-loop/png-720 _work/nova-loop/out 480 4
+```
+
+渲染前必须先 `astro build`，否则 /lab 加载的是旧 bundle，导出的 GLB 不会包含最新几何。
+
+`NOVA_HIDE` 里的 `jade-inner-core` 与 `kernel-glow` 是 WebGL 侧为暖白页面加的辅助件（内层壳、加法光晕球），
+离线渲染时必须跳过：内层壳会把真实内核整个挡掉，实测 A/B/C/D 四组对照见 `docs/NOVA-YUHENG-MOTION-20261111.md`。
+
 ## 测试
 
 - 全路由审计：`node _work/nova-audit-all.mjs`（开发分支，17 路由 × 4 视口）
 - 生产批次审计：`node _work/nova-audit-release.mjs`（15 路由 × 4 视口）
 - 点击与导航回归：`node _work/nova-click-regress.mjs`
+- 首页动画播放/暂停/降级：`node _work/nova-anim-check.mjs`
+- 七视口首屏几何：`node _work/nova-shots3.mjs`
 
 这些脚本需要 Playwright（`C:/Users/33126/Documents/DIY/node_modules/playwright`）与 `TEMP/TMP` 指向可写目录。截图与脚本落在 `_work/`，不进版本库。
 

@@ -4,16 +4,19 @@ interface Props {
   srcSet?: string;
   alt: string;
   caption?: string;
+  /** 循环动画素材；留空则不提供动起来的能力。 */
+  animSrc?: string;
 }
 const {
   src = '/yuheng/yuheng-core.webp',
   srcSet = '/yuheng/yuheng-core-520.webp 520w, /yuheng/yuheng-core.webp 1040w',
   alt,
   caption = 'NOVA CORE · 玉衡',
+  animSrc = '/yuheng/yuheng-loop.webp',
 } = Astro.props;
 ---
 
-<figure class="yuheng">
+<figure class="yuheng" data-yuheng data-static-src={src} data-anim-src={animSrc}>
   <div class="yuheng-frame">
     <img
       class="yuheng-art"
@@ -28,8 +31,84 @@ const {
       fetchpriority="high"
     />
   </div>
-  <figcaption class="yuheng-caption">{caption}</figcaption>
+  <figcaption class="yuheng-caption">
+    <span>{caption}</span>
+    <button class="yuheng-toggle" type="button" hidden aria-pressed="false">暂停动作</button>
+  </figcaption>
 </figure>
+
+<script>
+  // 静态图负责 LCP；动画素材在首屏稳定后按需换上，可暂停，尊重 prefers-reduced-motion 与省流量设置。
+  const IDLE = (cb: () => void) => {
+    const ric = (window as unknown as { requestIdleCallback?: (cb: () => void, o?: { timeout: number }) => number }).requestIdleCallback;
+    if (ric) ric(cb, { timeout: 2500 });
+    else window.setTimeout(cb, 1200);
+  };
+
+  const figures = Array.from(document.querySelectorAll<HTMLElement>('[data-yuheng]'));
+  for (const fig of figures) {
+    const img = fig.querySelector<HTMLImageElement>('.yuheng-art');
+    const btn = fig.querySelector<HTMLButtonElement>('.yuheng-toggle');
+    const staticSrc = fig.dataset.staticSrc || '';
+    const animSrc = fig.dataset.animSrc || '';
+    if (!img || !btn || !staticSrc || !animSrc) continue;
+
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const conn = (navigator as unknown as { connection?: { saveData?: boolean; effectiveType?: string } }).connection;
+    const lightNet = conn?.saveData === true || /(^|-)2g$/.test(conn?.effectiveType || '');
+    let stored = (() => {
+      try { return window.localStorage.getItem('yuheng-motion'); } catch { return null; }
+    })();
+
+    const showStatic = () => {
+      if (img.dataset.mode === 'static') return;
+      img.dataset.mode = 'static';
+      img.src = staticSrc;
+      img.srcset = '';
+      btn.textContent = '播放动作';
+      btn.setAttribute('aria-pressed', 'false');
+      fig.dataset.anim = 'off';
+    };
+    const showAnim = () => {
+      if (img.dataset.mode === 'anim') return;
+      img.dataset.mode = 'anim';
+      img.srcset = '';
+      img.src = animSrc;
+      btn.textContent = '暂停动作';
+      btn.setAttribute('aria-pressed', 'true');
+      fig.dataset.anim = 'on';
+    };
+
+    const allowed = () => !reduce.matches && !lightNet && stored !== 'paused';
+
+    // 上次手动暂停过：直接以静态态呈现，按钮文案与状态必须一致，不能只留默认文案
+    if (stored === 'paused') showStatic();
+
+    if (!reduce.matches && !lightNet) {
+      btn.hidden = false;
+      IDLE(() => {
+        const pre = new Image();
+        pre.onload = () => { if (allowed()) showAnim(); };
+        pre.src = animSrc;
+      });
+    }
+
+    btn.addEventListener('click', () => {
+      const playing = img.dataset.mode === 'anim';
+      if (playing) {
+        showStatic();
+        stored = 'paused';
+        try { window.localStorage.setItem('yuheng-motion', 'paused'); } catch { /* 隐私模式下忽略 */ }
+      } else {
+        showAnim();
+        stored = 'playing';
+        try { window.localStorage.setItem('yuheng-motion', 'playing'); } catch { /* 隐私模式下忽略 */ }
+      }
+    });
+
+    reduce.addEventListener('change', () => { if (reduce.matches) showStatic(); });
+  }
+</script>
 
 <style>
   .yuheng {
@@ -77,10 +156,28 @@ const {
   @media (prefers-reduced-motion: reduce) {
     .yuheng-art { animation: none; }
   }
+  .yuheng[data-anim='on'] .yuheng-art { animation: none; }
   .yuheng-caption {
+    display: flex;
+    align-items: center;
+    gap: 0.9rem;
     font-size: 0.78rem;
     letter-spacing: 0.22em;
     text-transform: uppercase;
     color: #6d7c72;
   }
+  .yuheng-toggle {
+    min-height: 44px;
+    padding: 0 0.85rem;
+    border: 1px solid rgba(52, 74, 60, 0.28);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.55);
+    color: #3f5347;
+    font: inherit;
+    font-size: 0.72rem;
+    letter-spacing: 0.14em;
+    cursor: pointer;
+  }
+  .yuheng-toggle:hover { border-color: rgba(52, 74, 60, 0.5); }
+  .yuheng-toggle:focus-visible { outline: 2px solid #7a5b2e; outline-offset: 3px; }
 </style>

@@ -23,9 +23,15 @@ const END_ANGLE = Math.PI * 0.25;
 const SWEEP = Math.PI * 2 - GAP;
 const SQUASH_Y = 0.965;
 
-/** 蛇身半径：尾尖 0.022 收细入口，颈部 0.108 与头部衔接。 */
+/**
+ * 蛇身半径：尾尖 0.020 收细入口，颈部 0.110 与头部衔接。
+ *
+ * 教训：旧式 `0.022 + 0.086 * min(u*1.7,1)^0.65` 在 u>0.59 之后恒为 0.108，
+ * 整条蛇有 40% 的长度是等粗，正向看就是一根塑料管/呼啦圈。必须全段连续变化。
+ */
 export function snakeRadius(u: number): number {
-  return 0.022 + 0.086 * Math.pow(Math.min(u * 1.7, 1), 0.65);
+  const t = Math.min(Math.max(u, 0), 1);
+  return 0.020 + 0.090 * Math.pow(t, 0.62);
 }
 
 /** 时间相位：把秒换成 0–1 的循环相位。 */
