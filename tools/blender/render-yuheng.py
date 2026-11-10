@@ -102,8 +102,9 @@ def serpent_plates():
     nt.links.new(mp.outputs['Vector'], brick.inputs['Vector'])
     nt.links.new(brick.outputs['Color'], bs.inputs['Base Color'])
     bump = nt.nodes.new('ShaderNodeBump')
-    bump.inputs['Strength'].default_value = 0.55
-    bump.inputs['Distance'].default_value = 0.035
+    # 凸起过强会把鳞片读成竹编/藤编，改为以颜色分片、只留极浅起伏
+    bump.inputs['Strength'].default_value = 0.12
+    bump.inputs['Distance'].default_value = 0.012
     nt.links.new(brick.outputs['Fac'], bump.inputs['Height'])
     nt.links.new(bump.outputs['Normal'], bs.inputs['Normal'])
     nt.links.new(bs.outputs['BSDF'], out.inputs['Surface'])

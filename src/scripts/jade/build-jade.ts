@@ -207,7 +207,7 @@ export function buildJadeModel(options: { quality?: 'high' | 'low' } = {}): Jade
   const skullGeo = new THREE.SphereGeometry(0.152, hi ? 48 : 24, hi ? 36 : 18);
   const skull = new THREE.Mesh(skullGeo, bodyMat);
   // 蛇头不能是扁球：横向再拉长、竖向压薄、宽度收窄，吻部才有探出感
-  skull.scale.set(2.35, 0.70, 0.92);
+  skull.scale.set(2.0, 0.88, 1.0);
   skull.name = 'serpent-skull';
   head.add(skull);
 
@@ -253,16 +253,16 @@ export function buildJadeModel(options: { quality?: 'high' | 'low' } = {}): Jade
   });
   eyeMat.name = 'mat-eye';
   for (const side of [1, -1]) {
-    const eye = new THREE.Mesh(new THREE.SphereGeometry(0.033, 20, 16), eyeMat);
+    const eye = new THREE.Mesh(new THREE.SphereGeometry(0.042, 20, 16), eyeMat);
     eye.name = 'serpent-eye-' + (side > 0 ? 'l' : 'r');
-    eye.position.set(0.125, 0.058, 0.088 * side);
+    eye.position.set(0.155, 0.064, 0.108 * side);
     head.add(eye);
     const socket = new THREE.Mesh(
-      new THREE.TorusGeometry(0.04, 0.011, 10, 24),
+      new THREE.TorusGeometry(0.05, 0.013, 10, 24),
       new THREE.MeshStandardMaterial({ color: new THREE.Color('#b8874a'), roughness: 0.3, metalness: 0.9 }),
     );
     socket.name = 'serpent-eye-ring-' + (side > 0 ? 'l' : 'r');
-    socket.position.copy(eye.position);
+    socket.position.copy(eye.position).multiplyScalar(1.02);
     socket.rotation.y = Math.PI / 2;
     head.add(socket);
   }
