@@ -208,6 +208,7 @@ def materials():
     # 诊断（第 10 轮）：GLB 里 jade-inner-core 直径 1.48，占外壳半径 74%，底色调青绿、透射仅 0.30、
     # SSS 0.4 —— 它才是"调外壳参数毫无反应"的原因：肉眼看到的那颗球就是它，不是外壳。
     rep("mat-jade-core", core_rgb, 0.16, 0.0, trans=float(os.environ.get("NOVA_CORE_TRANS", "0.30")), ior=1.5, sss=float(os.environ.get("NOVA_CORE_SSS", "0.4")), sss_rad=(0.25,0.5,0.4), sss_scale=0.2)
+    rep("mat-jade-strut", (0.86, 0.90, 0.78), 0.16, 0.0, trans=0.45, ior=1.5, coat=0.45, emit=(0.80, 0.88, 0.72), emit_str=0.10)
     rep("mat-jade-axis", (0.78, 0.94, 0.86), 0.14, 0.0, trans=0.30, ior=1.5, coat=0.3, emit=(0.86, 0.98, 0.90), emit_str=AXIS_EMIT)
     rep("mat-copper-ring", (0.78, 0.60, 0.30), 0.26, 0.92)
     rep("mat-copper-tick", (0.90, 0.74, 0.42), 0.22, 0.95)
