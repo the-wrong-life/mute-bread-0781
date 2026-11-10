@@ -113,6 +113,99 @@ function loftHead(sections: HeadSection[], radial: number): THREE.BufferGeometry
 }
 
 /**
+ * 鳞片样段：在一小段蛇身上生成覆瓦状几何甲片，用于与砖格法线方案做同机位对照。
+ * 每片甲片是压扁的半球（8×6 段），沿切线方向重叠 45%、逐行错位半个步距，
+ * 尺寸随蛇身半径缩放，方向取"顺着蛇身走"的局部坐标架。
+ * 返回单个合并网格，节点名 serpent-scales-sample，便于 Blender 侧单独赋材质或隐藏。
+ */
+function buildScaleSample(
+  curve: THREE.CatmullRomCurve3,
+  t0: number,
+  t1: number,
+  radiusAt: (t: number) => number,
+  hi: boolean,
+): THREE.Mesh | null {
+  const pos: number[] = [];
+  const nor: number[] = [];
+  const uvs: number[] = [];
+  const idx: number[] = [];
+  const rows = hi ? 26 : 14;      // 沿蛇身
+  const cols = hi ? 12 : 8;       // 绕一周
+  const segA = hi ? 6 : 4;        // 甲片纵向段数
+  const segB = hi ? 5 : 4;        // 甲片横向段数
+  const len = curve.getLength();
+  const tmpT = new THREE.Vector3();
+  const tmpN = new THREE.Vector3();
+  const tmpB = new THREE.Vector3();
+  const v = new THREE.Vector3();
+  for (let i = 0; i < rows; i += 1) {
+    const fi = i / (rows - 1);
+    const t = t0 + (t1 - t0) * fi;
+    const p = curve.getPointAt(t);
+    const tan = curve.getTangentAt(t).normalize();
+    // 外法线取径向（环在 XY 平面上绕原点），再用切向正交化
+    tmpN.copy(p).normalize();
+    tmpN.sub(tan.clone().multiplyScalar(tmpN.dot(tan))).normalize();
+    tmpB.crossVectors(tan, tmpN).normalize();
+    const r = radiusAt(t);
+    // 甲片长度按弧长给，保证重叠比例稳定：步距 = 弧长/rows，片长 = 步距×1.45
+    const step = (len * (t1 - t0)) / rows;
+    const plateLen = step * 1.45;
+    const plateWid = ((2 * Math.PI * r) / cols) * 1.55;
+    const plateHt = r * 0.30;
+    for (let j = 0; j < cols; j += 1) {
+      // 逐行错位半格：读成覆瓦而不是方格阵
+      const phase = ((j + (i % 2) * 0.5) / cols) * Math.PI * 2;
+      const radial = tmpN.clone().multiplyScalar(Math.cos(phase)).add(tmpB.clone().multiplyScalar(Math.sin(phase)));
+      const centre = p.clone().addScaledVector(radial, r * 0.92);
+      const base = pos.length / 3;
+      for (let a = 0; a <= segA; a += 1) {
+        const u = a / segA;
+        // 沿切向：前端薄、后端厚，形成叠压的"檐口"
+        const along = (u - 0.5) * plateLen;
+        const taper = Math.sin(Math.PI * Math.min(u, 1)) ** 0.55;
+        for (let b = 0; b <= segB; b += 1) {
+          const w = (b / segB - 0.5) * plateWid;
+          const across = Math.sin(Math.PI * Math.min(b / segB, 1)) ** 0.6;
+          const lift = plateHt * taper * across;
+          v.copy(centre).addScaledVector(tan, along).addScaledVector(tmpB, w).addScaledVector(radial, lift);
+          pos.push(v.x, v.y, v.z);
+          // 法线近似取径向 + 少量切向倾斜，甲片才有"贴着蛇身"的立体感
+          nor.push(radial.x * 0.86 + tan.x * (u - 0.5) * 0.5, radial.y * 0.86 + tan.y * (u - 0.5) * 0.5, radial.z * 0.86 + tan.z * (u - 0.5) * 0.5);
+          uvs.push(u, b / segB);
+        }
+      }
+      for (let a = 0; a < segA; a += 1) {
+        for (let b = 0; b < segB; b += 1) {
+          const q = base + a * (segB + 1) + b;
+          idx.push(q, q + 1, q + segB + 1, q + segB + 1, q + 1, q + segB + 2);
+        }
+      }
+    }
+  }
+  if (!idx.length) return null;
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+  geo.setAttribute('normal', new THREE.Float32BufferAttribute(nor, 3));
+  geo.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
+  geo.setIndex(idx);
+  geo.computeVertexNormals();
+  const mat = new THREE.MeshPhysicalMaterial({
+    color: new THREE.Color('#12402e'),
+    roughness: 0.24,
+    metalness: 0.42,
+    clearcoat: 0.6,
+    clearcoatRoughness: 0.1,
+    envMapIntensity: 1.8,
+    side: THREE.DoubleSide,
+  });
+  mat.name = 'mat-serpent-scale';
+  const mesh = new THREE.Mesh(geo, mat);
+  mesh.name = 'serpent-scales-sample';
+  return mesh;
+}
+
+/**
  * 蛇身路径：贴着球面绕行一整圈（衔尾），纬度基本恒定在赤道附近并缓慢起伏，
  * 使正面看成一条完整闭合的环，而不是散成两段螺旋。
  */
@@ -232,20 +325,28 @@ export function buildJadeModel(options: { quality?: 'high' | 'low' } = {}): Jade
   // t=0 是尾端（收细到 0.020 以便入口），t=1 是颈端（0.132，与头部颈径衔接）
   const bodyGeo = taperedTube(curve, (t) => 0.022 + 0.086 * Math.pow(Math.min(t * 1.7, 1), 0.65), hi ? 460 : 230, hi ? 44 : 26);
   bodyGeo.scale(1, 1, 1);
+  // 与 Blender 渲染保持一致：蛇身是深青玉 (0.06,0.20,0.14)，不是金铜。
+  // 上一版 Three 侧仍是 #c9a05e 金铜，导致 /lab 与首页渲染同一模型却颜色不同。
   const bodyMat = new THREE.MeshPhysicalMaterial({
-    color: new THREE.Color('#c9a05e'),
+    color: new THREE.Color('#0f3324'),
     bumpMap: scaleTex.bump,
     bumpScale: 0.32,
     roughness: 0.28,
-    metalness: 0.72,
-    envMapIntensity: 2.6,
-    clearcoat: 0.5,
-    clearcoatRoughness: 0.12,
+    metalness: 0.34,
+    envMapIntensity: 1.6,
+    clearcoat: 0.3,
+    clearcoatRoughness: 0.15,
   });
   bodyMat.name = 'mat-serpent';
   const body = new THREE.Mesh(bodyGeo, bodyMat);
   body.name = 'serpent-body';
   serpent.add(body);
+  // ---- 鳞片样段（第 4 条：先做局部，再铺满）----
+  // 现有方案是砖格法线/颜色（一张 canvas 贴图 + bumpMap），远看是菱形网、近看像编织袋。
+  // 这里用几何甲片做对照样段：每片是压扁的半球，沿切线方向重叠 45%、逐行错位半个步距，
+  // 尺寸随蛇身半径变化（颈部大、尾部小），方向始终顺着蛇身走向。
+  const scales = buildScaleSample(curve, 0.66, 0.80, (t) => 0.022 + 0.086 * Math.pow(Math.min(t * 1.7, 1), 0.65), hi);
+  if (scales) serpent.add(scales);
 
   // 腹鳞：沿内侧的一条薄带
   const bellyCurvePts: THREE.Vector3[] = [];
@@ -280,7 +381,7 @@ export function buildJadeModel(options: { quality?: 'high' | 'low' } = {}): Jade
   const fwd = curve.getTangentAt(1).normalize();
 
   // 颈套筒：沿蛇身切向反向延伸的短管，盖住 taperedTube 的端面，消除头身之间的直角台阶
-  const neckGeo = new THREE.CylinderGeometry(0.106, 0.096, 0.30, 28, 1, false);
+  const neckGeo = new THREE.CylinderGeometry(0.086, 0.080, 0.20, 28, 1, false);
   neckGeo.rotateX(Math.PI / 2);
   const neck = new THREE.Mesh(neckGeo, bodyMat);
   neck.name = 'serpent-neck';
@@ -293,7 +394,9 @@ export function buildJadeModel(options: { quality?: 'high' | 'low' } = {}): Jade
   const up = tip.clone().normalize();
   const upV = up.clone().sub(fwd.clone().multiplyScalar(up.dot(fwd))).normalize();
   const sideV = new THREE.Vector3().crossVectors(fwd, upV).normalize();
-  head.position.copy(tip);
+  // 吻端在局部 x=0.23×0.82=0.189，尾尖距头原点 0.196，差 0.025 → 只是"相接"。
+  // 前移 0.025 让吻端越过尾尖 0.018，视觉上才是"衔住"而不是"碰到"。
+  head.position.copy(tip).addScaledVector(fwd, 0.025);
   head.quaternion.setFromRotationMatrix(new THREE.Matrix4().makeBasis(fwd, upV, sideV));
   // 头部整体缩到与收细后的蛇身匹配（原建模按蛇身半径 0.134 设计，现为 0.05）
   head.scale.setScalar(0.82);
@@ -312,18 +415,20 @@ export function buildJadeModel(options: { quality?: 'high' | 'low' } = {}): Jade
   // 蛇头改为"单一闭合放样体 + 压出的嘴缝"：
   // 上下颌各做一块半壳再贴合，接缝在任何角度都读成"蚌壳/夹板"，这是前面几版失败的根因。
   // 这里只放样一个实心头，嘴线用一条几乎与表面相切的细管压出暗缝。
+  // 比例校核（局部坐标，整体再乘 head.scale 0.82）：
+  // 头长 0.47（x −0.24…0.23）、最大宽 0.296、最大高 0.232 → 长宽比 1.6:1，接近真实蛇首；
+  // 上一版长 0.83、宽 0.344，长宽比 2.4:1 且 z 向远宽于 y 向，放大后读成"扁楔/勺子"。
+  // 颈部截面 0.208 × 0.180 略细于蛇身直径 0.216，让头部从蛇身里自然长出来。
   const headSections: HeadSection[] = [
-    { x: -0.46, w: 0.104, h: 0.074, cy: 0.012 },
-    { x: -0.36, w: 0.146, h: 0.098, cy: 0.010 },
-    { x: -0.26, w: 0.164, h: 0.106, cy: 0.006 },
-    { x: -0.14, w: 0.170, h: 0.108, cy: 0.000 },
-    { x: -0.02, w: 0.172, h: 0.106, cy: -0.006 },
-    { x: 0.08, w: 0.158, h: 0.098, cy: -0.010 },
-    { x: 0.16, w: 0.134, h: 0.086, cy: -0.014 },
-    { x: 0.24, w: 0.106, h: 0.072, cy: -0.018 },
-    { x: 0.30, w: 0.080, h: 0.058, cy: -0.022 },
-    { x: 0.34, w: 0.054, h: 0.044, cy: -0.026 },
-    { x: 0.37, w: 0.028, h: 0.030, cy: -0.030 },
+    { x: -0.24, w: 0.104, h: 0.090, cy: 0.004 },
+    { x: -0.18, w: 0.126, h: 0.098, cy: 0.006 },
+    { x: -0.10, w: 0.146, h: 0.112, cy: 0.010 },
+    { x: -0.02, w: 0.148, h: 0.116, cy: 0.012 },
+    { x: 0.05, w: 0.138, h: 0.110, cy: 0.008 },
+    { x: 0.11, w: 0.118, h: 0.096, cy: 0.002 },
+    { x: 0.16, w: 0.096, h: 0.082, cy: -0.004 },
+    { x: 0.20, w: 0.070, h: 0.064, cy: -0.010 },
+    { x: 0.215, w: 0.052, h: 0.048, cy: -0.014 },
   ];
   const upperJaw = new THREE.Mesh(loftHead(headSections, hi ? 44 : 22), headMat);
   upperJaw.name = 'serpent-upper-jaw';
@@ -336,29 +441,23 @@ export function buildJadeModel(options: { quality?: 'high' | 'low' } = {}): Jade
   });
   seamMat.name = 'mat-serpent-mouth';
 
-  // 嘴缝：沿每段截面的最大宽度线走，半径略小于表面内缩量，只露出一条细暗线
-  const seamR = 0.008;
-  const seamPts: THREE.Vector3[] = [];
-  for (const s of headSections) {
-    if (s.x < -0.24) continue;
-    seamPts.push(new THREE.Vector3(s.x, s.cy - s.h * 0.06, s.w - seamR + 0.004));
-  }
-  if (seamPts.length > 2) {
-    const seamCurve = new THREE.CatmullRomCurve3(seamPts);
-    for (const side of [1, -1]) {
-      const seamGeo = new THREE.TubeGeometry(seamCurve, hi ? 72 : 40, seamR, 8, false);
-      const seam = new THREE.Mesh(seamGeo, seamMat);
-      seam.name = 'serpent-mouthline-' + (side > 0 ? 'l' : 'r');
-      seam.scale.z = side;
-      head.add(seam);
-    }
-  }
+  // 旧方案（沿颌线铺一根细管）已删除：CatmullRom 在凸起的头面上会在中段切进、两端浮出，
+  // 灰模里读成"一根粘在颌骨上的棍子"。改为在吻端做真正的张口：深色锥筒，尾尖从筒口进入。
+  // 张口尺寸按尾尖半径（约 0.024）反推：口内径 0.030、外沿 0.034，长度 0.055，
+  // 只比尾尖略大一圈，读成"衔住"，不是套一个喇叭。
+  const gapeGeo = new THREE.CylinderGeometry(0.034, 0.030, 0.055, 18, 1, true);
+  gapeGeo.rotateZ(-Math.PI / 2); // 圆柱轴 Y → +X（吻端方向）
+  const gape = new THREE.Mesh(gapeGeo, seamMat);
+  gape.name = 'serpent-mouth-gape';
+  gape.material.side = THREE.DoubleSide;
+  gape.position.set(0.226, -0.010, 0);
+  head.add(gape);
 
   // 鼻孔：吻背两侧各一个小凹坑
   for (const side of [1, -1]) {
     const nostril = new THREE.Mesh(new THREE.SphereGeometry(0.012, 14, 10), seamMat);
     nostril.name = 'serpent-nostril-' + (side > 0 ? 'l' : 'r');
-    nostril.position.set(0.275, 0.014, 0.030 * side);
+    nostril.position.set(0.185, 0.006, 0.024 * side);
     nostril.scale.set(1, 0.7, 1);
     head.add(nostril);
   }
@@ -401,42 +500,55 @@ export function buildJadeModel(options: { quality?: 'high' | 'low' } = {}): Jade
   lidMat.name = 'mat-eye-lid';
 
   // 眼位与法线都算在 x=0.02 处的截面上，θ=0.66 rad 让眼睛落在头侧上方
-  const eyeX = 0.06;
-  const eyeH = 0.0996;
-  const eyeW = 0.1608;
-  const eyeCy = -0.0092;
-  const theta = 1.14;
+  // 眼位必须跟着 headSections 插值重算，否则眼球会浮在头外（上一版就浮过）。
+  // x=0.03 落在 (−0.02, 0.148/0.116/0.012) 与 (0.05, 0.138/0.110/0.008) 之间，t=0.714。
+  const eyeX = 0.03;
+  const eyeH = 0.1117;
+  const eyeW = 0.1409;
+  const eyeCy = 0.0092;
+  const theta = 1.02;
   for (const side of [1, -1]) {
     const ey = eyeCy + Math.cos(theta) * eyeH;
     const ez = Math.sin(theta) * eyeW * side;
     const n = new THREE.Vector3(0, Math.cos(theta) / eyeH, (Math.sin(theta) / eyeW) * side).normalize();
     const pos = new THREE.Vector3(eyeX, ey, ez);
 
-    const socket = new THREE.Mesh(new THREE.SphereGeometry(0.048, 24, 18), socketMat);
+    // 眼组必须小而深：0.048 的窝 + 0.034 的眼球从 1.35 倍焦距看是"贴在头侧的蜗牛壳"
+    const socket = new THREE.Mesh(new THREE.SphereGeometry(0.030, 24, 18), socketMat);
     socket.name = 'serpent-eye-socket-' + (side > 0 ? 'l' : 'r');
-    socket.position.copy(pos).addScaledVector(n, -0.016);
+    socket.position.copy(pos).addScaledVector(n, -0.022);
     head.add(socket);
 
-    const eye = new THREE.Mesh(new THREE.SphereGeometry(0.034, 26, 20), eyeMat);
+    const eye = new THREE.Mesh(new THREE.SphereGeometry(0.024, 26, 20), eyeMat);
     eye.name = 'serpent-eye-' + (side > 0 ? 'l' : 'r');
-    eye.position.copy(pos).addScaledVector(n, 0.006);
+    eye.position.copy(pos).addScaledVector(n, 0.001);
     head.add(eye);
 
     // 竖瞳：沿法线前移的扁椭球，给眼球一个明确的视觉中心
-    const pupil = new THREE.Mesh(new THREE.SphereGeometry(0.015, 18, 14), socketMat);
+    const pupil = new THREE.Mesh(new THREE.SphereGeometry(0.011, 18, 14), socketMat);
     pupil.name = 'serpent-pupil-' + (side > 0 ? 'l' : 'r');
-    pupil.position.copy(pos).addScaledVector(n, 0.030);
+    pupil.position.copy(pos).addScaledVector(n, 0.019);
     pupil.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), n);
     pupil.scale.set(1, 1.9, 0.5);
     head.add(pupil);
 
-    const lid = new THREE.Mesh(new THREE.TorusGeometry(0.042, 0.009, 12, 24, Math.PI * 1.15), lidMat);
-    lid.name = 'serpent-eye-lid-' + (side > 0 ? 'l' : 'r');
-    lid.position.copy(pos).addScaledVector(n, 0.010);
-    // 把弧片缺口转到下方，读成上眼睑而不是整圈垫圈
-    lid.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), n);
-    lid.rotateZ(Math.PI * 0.925);
-    head.add(lid);
+    // 眉脊：参考图蛇首有明显的眉弓，缺了它头就只是一个光滑楔形
+    const brow = new THREE.Mesh(new THREE.SphereGeometry(0.021, 20, 14), headMat);
+    brow.name = 'serpent-brow-' + (side > 0 ? 'l' : 'r');
+    brow.position.set(0.004, eyeCy + eyeH * 0.58, eyeW * 0.40 * side);
+    brow.scale.set(1.7, 0.45, 1.0);
+    brow.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), n);
+    head.add(brow);
+
+    // 颊窝：下颌后侧的内凹处，用一块略暗的小椭球压出阴影
+    const cheek = new THREE.Mesh(new THREE.SphereGeometry(0.026, 18, 12), socketMat);
+    cheek.name = 'serpent-cheek-' + (side > 0 ? 'l' : 'r');
+    cheek.position.set(-0.085, eyeCy - eyeH * 0.34, eyeW * 0.72 * side);
+    cheek.scale.set(1.5, 0.9, 0.35);
+    head.add(cheek);
+
+    // 眼睑弧片已删除：在球面上贴一段缺口圆环，任何角度都读成"蜗牛壳"。
+    // 改为让眼窝凹坑与眉脊在球体边缘自然形成上眼睑的阴影。
   }
 
     serpent.add(head);
