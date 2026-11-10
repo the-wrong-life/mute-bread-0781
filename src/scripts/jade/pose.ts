@@ -192,8 +192,8 @@ export function snakeCurveAt(time: number, steps = 320): THREE.CatmullRomCurve3 
  * Blender 导入端不保证支持，导出后鳞片会整批消失。这里用固定拓扑的合并网格原地重算，
  * 顶点数与片数在建模阶段就固定，导出即普通 BufferGeometry。
  */
-export const SCALE_ROWS = 44;
-export const SCALE_COLS = 16;
+export const SCALE_ROWS = 40;
+export const SCALE_COLS = 18;
 export const SCALE_SEG_A = 3;
 export const SCALE_SEG_B = 3;
 const SCALE_VERTS = (SCALE_SEG_A + 1) * (SCALE_SEG_B + 1);
@@ -263,10 +263,10 @@ export function updateSnakeScales(positions: Float32Array, normals: Float32Array
     const rowStep = bodyArc / SCALE_ROWS;
     const arcStep = (2 * Math.PI * r) / SCALE_COLS;
     // 片长必须大于行距，后缘才能压住下一行；片宽同理要大于环向步距，两侧才不留缝
-    const plateLen = rowStep * (2.15 - 0.35 * (1 - u));
+    const plateLen = rowStep * (2.05 - 0.3 * (1 - u));
 
-    const plateWid = arcStep * 1.95;
-    const amp = r * 0.17;
+    const plateWid = arcStep * 1.75;
+    const amp = r * 0.09;
     for (let j = 0; j < SCALE_COLS; j += 1) {
       const stagger = (i % 2) * 0.5;
       const ang = ((j + stagger) / SCALE_COLS) * Math.PI * 2;
