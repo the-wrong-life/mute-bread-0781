@@ -1,22 +1,192 @@
 ---
 import NovaShell from '../layouts/NovaShell.astro';
-import NovaCore from '../components/NovaCore.astro';
+import YuhengArt from '../components/YuhengArt.astro';
+import { projects as allProjects } from '../data/projects';
+import { docs as allDocs } from '../data/docs';
+
+const domains = [
+  { number: '01', title: '船舶电气', href: '/marine' },
+  { number: '02', title: '机械设计', href: '/mechanical' },
+  { number: '03', title: 'AI 工程', href: '/ai' },
+  { number: '04', title: '工程工具', href: '/tools' },
+];
+// 首页只引用真实存在的档案，避免出现"待补充"占位卡片
+const projects = allProjects.slice(0, 3).map((item) => ({
+  title: item.title,
+  note: item.domain + ' · ' + item.status,
+  href: '/projects/' + item.slug + '/',
+}));
+const documents = allDocs.slice(0, 3).map((item) => ({
+  title: item.title,
+  note: item.kind + ' · 更新于 ' + item.updated,
+  href: '/docs/' + item.slug + '/',
+}));
+const journals = [
+  { title: '研究日志', note: '按提交记录整理', href: '/blog' },
+  { title: '从想法到实验', note: '方法笔记', href: '/blog' },
+];
 ---
-<NovaShell title="格物致知 · 造物有成" description="DIY 工程实验室：以工程方法探索想法，让创造有迹可循。">
-  <div class="page">
-    <section class="hero" aria-label="DIY 工程实验室首页">
-      <div class="intro"><p class="eyebrow">PROJECT NOVA · 工程实验室</p><h1>格物致知<br />造物有成</h1><p class="english">Engineering Ideas Into Reality</p><p class="lede">以工程方法探索想法<br />让每一次创造都有迹可循</p><a class="enter" href="/projects">进入实验室 <span aria-hidden="true">→</span></a><p class="motto"><span aria-hidden="true"></span>探索 · 验证 · 创造</p></div>
-      <div class="core-stage"><NovaCore size="min(100%, 38rem)" label="NOVA Core：玉衡核心装置" /><div class="core-caption"><span>NOVA CORE · 玉衡</span><span>生生不息 · 求知无尽</span></div></div>
-      <nav class="domains" aria-label="工程领域入口"><p class="domains-title">探索领域 <span aria-hidden="true"></span></p><a href="/projects"><small>01</small><span>船舶电气</span><b aria-hidden="true">→</b></a><a href="/projects"><small>02</small><span>机械设计</span><b aria-hidden="true">→</b></a><a href="/ai"><small>03</small><span>AI 工程</span><b aria-hidden="true">→</b></a><a href="/tools"><small>04</small><span>工程工具</span><b aria-hidden="true">→</b></a></nav>
+
+<NovaShell title="格物致知 · 造物有成" description="DIY 工程实验室：以工程方法探索想法，让创造有迹可循。" active="/">
+  <section class="hero" aria-labelledby="hero-title">
+    <div class="hero-grid">
+      <div class="hero-intro">
+        <p class="eyebrow">PROJECT NOVA · 工程实验室</p>
+        <h1 id="hero-title">格物致知<br />造物有成</h1>
+        <p class="english" lang="en">Engineering Ideas Into Reality</p>
+      </div>
+      <div class="core-stage">
+        <div class="core-breath">
+          <YuhengArt alt="玉衡：青玉球体、金铜衔尾蛇环与倾斜的铜金测量环" />
+        </div>
+      </div>
+      <p class="hero-lede">以工程方法探索想法，让每一次创造都有迹可循。</p>
+      <a class="button primary" href="/projects">进入实验室 <span aria-hidden="true">→</span></a>
+    </div>
+  </section>
+
+  <div class="paper">
+    <section class="section domains-section" aria-labelledby="domains-title">
+      <div class="section-heading">
+        <div><p class="eyebrow">探索领域 / 01</p><h2 id="domains-title">从问题出发</h2></div>
+        <p>从不同方向进入实验室。</p>
+      </div>
+      <nav class="domains" aria-label="工程领域入口">
+        {domains.map((domain) => <a href={domain.href}><span class="number">{domain.number}</span><span>{domain.title}</span><span class="arrow" aria-hidden="true">↗</span></a>)}
+      </nav>
     </section>
-    <nav class="quick-links" aria-label="常用入口"><div class="quick-heading"><strong>从想法，到现实</strong><span>EXPLORE THE LAB</span></div><a href="/projects"><span aria-hidden="true">⌘</span>项目中心 <b aria-hidden="true">→</b></a><a href="/docs"><span aria-hidden="true">▤</span>工程知识库 <b aria-hidden="true">→</b></a><a href="/tools"><span aria-hidden="true">⌖</span>工程工具箱 <b aria-hidden="true">→</b></a></nav>
+
+    <section class="section" aria-labelledby="projects-title">
+      <div class="section-heading">
+        <div><p class="eyebrow">项目档案 / 02</p><h2 id="projects-title">项目精选</h2></div>
+        <p>已建立的档案，含问题、方法与未完成事项。</p>
+      </div>
+      <div class="cards three">
+        {projects.map((item, i) => <a class="card" href={item.href}><span class="number">0{i + 1} / 项目中心</span><span class="card-title">{item.title}</span><span class="card-bottom">{item.note}<span aria-hidden="true">↗</span></span></a>)}
+      </div>
+    </section>
+
+    <section class="section" aria-labelledby="docs-title">
+      <div class="section-heading">
+        <div><p class="eyebrow">工程知识 / 03</p><h2 id="docs-title">工程知识库</h2></div>
+        <p>已发布正文的条目，记录方法与边界条件。</p>
+      </div>
+      <div class="cards three">
+        {documents.map((item, i) => <a class="card" href={item.href}><span class="number">0{i + 1} / 文档中心</span><span class="card-title">{item.title}</span><span class="card-bottom">{item.note}<span aria-hidden="true">↗</span></span></a>)}
+      </div>
+    </section>
+
+    <section class="section" aria-labelledby="journal-title">
+      <div class="section-heading">
+        <div><p class="eyebrow">研究札记 / 04</p><h2 id="journal-title">研究日志</h2></div>
+        <p>保留探索过程，也保留尚未解决的问题。</p>
+      </div>
+      <div class="cards two">
+        {journals.map((item, i) => <a class="card" href={item.href}><span class="number">0{i + 1} / 研究札记</span><span class="card-title">{item.title}</span><span class="card-bottom">{item.note}<span aria-hidden="true">↗</span></span></a>)}
+      </div>
+    </section>
+
+    <section class="section closing" aria-labelledby="closing-title">
+      <p class="eyebrow">从想法，到现实</p>
+      <h2 id="closing-title">让问题成为探索的起点。</h2>
+      <a class="button primary" href="/projects">进入项目中心 <span aria-hidden="true">→</span></a>
+    </section>
   </div>
 </NovaShell>
+
 <style>
-:global(body){background:#f4f0e6;color:#202923}.page{max-width:1440px;margin:auto;padding:0 clamp(20px,3.7vw,58px)}.hero{position:relative;min-height:min(690px,calc(100vh - 80px));display:grid;grid-template-columns:minmax(280px,.95fr) minmax(400px,1.65fr) minmax(250px,.95fr);align-items:center;gap:clamp(18px,2.5vw,38px);padding:24px 0 54px}.intro{position:relative;z-index:1;min-width:0}.eyebrow{margin:0 0 22px;color:#272b25;font:600 12px ui-monospace,monospace;letter-spacing:.12em}.eyebrow:after{content:"";display:block;width:38px;height:3px;margin-top:18px;background:#a74432}.intro h1{margin:0;color:#1e2924;font-family:Georgia,"Noto Serif CJK SC","Songti SC",serif;font-size:clamp(44px,4.8vw,76px);font-weight:600;line-height:1.26;white-space:nowrap}.english{margin:14px 0 18px;color:#32362f;font:italic 15px Georgia,serif;letter-spacing:.11em;white-space:nowrap}.lede{margin:0 0 24px;color:#383a32;font-family:"Noto Serif CJK SC","Songti SC",serif;font-size:17px;line-height:1.75}.enter{min-height:44px;display:inline-flex;align-items:center;justify-content:space-between;gap:28px;min-width:220px;padding:12px 18px;background:#a74432;border:1px solid #a74432;color:#fffaf0;text-decoration:none;font-family:"Noto Serif CJK SC","Songti SC",serif;font-size:18px;transition:background .18s,border-color .18s}.enter:hover{background:#873a2d;border-color:#873a2d}.enter span{font:24px/1 Arial,sans-serif}.enter:focus-visible,.domains a:focus-visible,.quick-links a:focus-visible{outline:2px solid #52735e;outline-offset:4px}.motto{display:flex;align-items:center;gap:14px;margin:26px 0 0;color:#34372f;font-family:"Noto Serif CJK SC","Songti SC",serif;font-size:14px;letter-spacing:.12em}.motto span{width:36px;height:1px;background:#a74432}
-.core-stage{position:relative;display:grid;place-items:center;min-width:0;width:100%;align-self:stretch;padding:8px 0 44px}.core-stage :global(.nova-core){width:min(100%,38rem)!important;max-width:100%}.core-caption{position:absolute;bottom:8px;left:50%;transform:translateX(-50%);width:min(100%,25rem);display:flex;flex-direction:column;align-items:center;gap:5px;text-align:center;color:#262a24;font-family:"Noto Serif CJK SC","Songti SC",serif;font-size:13px;letter-spacing:.18em;white-space:nowrap}.domains{min-width:0;display:flex;flex-direction:column;align-self:center}.domains-title{display:flex;align-items:center;gap:14px;margin:0 0 20px;color:#242820;font-family:"Noto Serif CJK SC","Songti SC",serif;font-size:19px;letter-spacing:.16em}.domains-title span{width:34px;height:1px;background:#a74432}.domains a{display:grid;grid-template-columns:42px minmax(0,1fr) 24px;align-items:center;gap:14px;min-width:0;padding:18px 0;border-bottom:1px solid #d4cbbb;color:#242820;text-decoration:none;font-family:"Noto Serif CJK SC","Songti SC",serif;font-size:clamp(17px,1.55vw,23px);transition:color .18s,border-color .18s}.domains a:hover{color:#a74432;border-color:#a74432}.domains small{color:#3c5143;font:15px Georgia,serif;letter-spacing:.08em}.domains b{font:22px Arial,sans-serif;font-weight:400}.quick-links{display:grid;grid-template-columns:1.05fr repeat(3,1fr);align-items:center;border-top:1px solid #d5cebf;padding:22px 0 25px}.quick-heading{display:flex;flex-direction:column;gap:5px;border-left:4px solid #a74432;padding-left:16px;color:#202923}.quick-heading strong{font-family:"Noto Serif CJK SC","Songti SC",serif;font-size:24px;font-weight:500}.quick-heading span{font:10px ui-monospace,monospace;letter-spacing:.2em}.quick-links a{display:flex;align-items:center;justify-content:center;gap:12px;min-width:0;padding:9px 12px;border-left:1px solid #d5cebf;color:#252a23;text-decoration:none;font-family:"Noto Serif CJK SC","Songti SC",serif;font-size:19px;white-space:nowrap}.quick-links a>span{color:#3f604c;font-size:26px}.quick-links a b{font:20px Arial,sans-serif;font-weight:400}.quick-links a:hover{color:#a74432}
-@media(max-width:1100px) and (min-width:701px){.hero{grid-template-columns:minmax(220px,.9fr) minmax(320px,1.3fr);grid-template-rows:auto auto;min-height:0;gap:16px 28px;padding:34px 0 42px}.core-stage{grid-column:2;grid-row:1 / span 2;min-height:530px}.domains{grid-column:1;grid-row:2}.quick-links{grid-template-columns:1fr 1fr}.quick-heading{grid-column:1/-1;padding:0 0 14px;border:0;border-bottom:1px solid #d5cebf;margin-bottom:8px}.quick-links a:nth-of-type(2){border-left:0}}
-@media(max-width:700px){.page{padding:0 18px}.hero{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-rows:auto auto;gap:4px 10px;min-height:0;padding:18px 0 16px}.intro{grid-column:1;grid-row:1;align-self:center}.eyebrow{font-size:9px;letter-spacing:.04em;margin-bottom:10px}.eyebrow:after{margin-top:9px;width:28px}.intro h1{font-size:clamp(26px,7.2vw,44px);line-height:1.22}.english{font-size:9px;letter-spacing:.015em;margin:7px 0 9px;white-space:normal}.lede{font-size:12px;line-height:1.6;margin:0 0 11px}.enter{min-width:0;width:100%;max-width:190px;padding:9px 11px;gap:9px;font-size:14px}.enter span{font-size:20px}.motto{display:none}.core-stage{grid-column:2;grid-row:1;align-self:center;padding:0 0 29px}.core-stage :global(.nova-core){width:min(46vw,240px)!important;max-width:100%}.core-caption{bottom:0;width:100%;font-size:10px;letter-spacing:.04em;gap:3px}.domains{grid-column:1/-1;grid-row:2;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-top:8px}.domains-title{grid-column:1/-1;font-size:14px;margin:0 0 2px}.domains-title span{width:22px}.domains a{display:flex;flex-direction:column;align-items:flex-start;gap:3px;padding:7px 0 8px;font-size:11px;border-bottom:1px solid #d4cbbb}.domains small{font-size:10px}.domains b{display:none}.quick-links{grid-template-columns:repeat(3,minmax(0,1fr));padding:11px 0 14px}.quick-heading{grid-column:1/-1;flex-direction:row;align-items:baseline;justify-content:space-between;border-left:3px solid #a74432;padding:0 0 7px 9px;margin-bottom:4px}.quick-heading strong{font-size:15px}.quick-heading span{font-size:8px;letter-spacing:.08em}.quick-links a{flex-direction:column;gap:2px;padding:7px 2px;border-left:1px solid #d5cebf;font-size:12px;white-space:normal;text-align:center}.quick-links a:nth-of-type(2){border-left:0}.quick-links a>span{font-size:18px}.quick-links a b{font-size:14px}}
-@media(max-width:380px){.page{padding-inline:14px}.hero{column-gap:6px}.intro h1{font-size:26px}.english{font-size:8px}.lede{font-size:11px}.enter{padding:8px;font-size:12px}.core-stage :global(.nova-core){width:min(45vw,210px)!important}.domains{gap:5px}.domains a{font-size:11px}.english{font-size:9px}.lede{font-size:12px}}
-@media(prefers-reduced-motion:reduce){.enter,.domains a{transition:none}}
+  :global(body) { background: #f4f0e6; color: #202923; }
+  /* 首屏改用暖白纸底：玉衡的通透只在浅底上成立，
+     深绿留给文字与朱砂做点缀，整体更接近参考图的"纸与玉"关系。 */
+  .hero {
+    --core-width: min(100%, 37.5rem);
+    color: #1e2a23;
+    background: radial-gradient(ellipse at 66% 38%, #fdfaf3 0%, #f7f2e7 32%, #f1ece0 66%, #eae3d4 100%);
+    border-bottom: 1px solid #ded6c7;
+  }
+  .hero-grid {
+    max-width: 1440px;
+    min-height: min(740px, calc(100vh - 80px));
+    margin: 0 auto;
+    padding: 56px clamp(24px, 5vw, 72px) 64px;
+    display: grid;
+    grid-template-columns: minmax(270px, .9fr) minmax(0, 1.35fr);
+    grid-template-rows: 1fr auto auto 1fr;
+    grid-template-areas: "intro core" "intro core" "lede core" "cta core";
+    align-items: center;
+    gap: 0 clamp(24px, 4vw, 64px);
+  }
+  .hero-intro { grid-area: intro; align-self: end; min-width: 0; }
+  .eyebrow { margin: 0; color: #52735e; font: 11px/1.5 ui-monospace, monospace; letter-spacing: .14em; overflow-wrap: anywhere; }
+  .hero .eyebrow { color: #4f7a63; }
+  h1, h2, .card-title, .domains a { font-family: "Songti SC", "Noto Serif CJK SC", SimSun, serif; }
+  h1 { margin: 26px 0 15px; font-size: clamp(44px, 5vw, 76px); font-weight: 500; line-height: 1.2; }
+  .english { margin: 0; color: #4d6b58; font: italic clamp(13px, 1.15vw, 17px)/1.5 Georgia, serif; letter-spacing: .06em; overflow-wrap: anywhere; }
+  .hero-lede { grid-area: lede; align-self: start; max-width: 24rem; margin: 24px 0 0; color: #46564c; line-height: 1.8; overflow-wrap: anywhere; }
+  .button { display: inline-flex; align-items: center; justify-content: space-between; gap: 32px; min-height: 48px; padding: 12px 20px; text-decoration: none; font-family: "Songti SC", "Noto Serif CJK SC", SimSun, serif; }
+  .primary { background: #a74432; color: #fffaf0; }
+  .primary:hover { background: #873a2d; }
+  .hero .button { grid-area: cta; justify-self: start; align-self: start; margin-top: 26px; min-width: 220px; }
+  .core-stage { grid-area: core; display: flex; flex-direction: column; align-items: center; justify-content: center; min-width: 0; width: 100%; }
+  .core-stage :global(.nova-shell) { max-width: 100%; }
+  /* 静态主视觉的轻量呼吸：只做极小的位移与亮度起伏，
+     不伪造三维运动；真正的旋转与蛇环动作在 /lab 实时视图里。 */
+  .core-breath { width: 100%; animation: core-breath 9s ease-in-out infinite; will-change: transform; }
+  @keyframes core-breath {
+    0%, 100% { transform: translateY(0) scale(1); filter: brightness(1); }
+    50% { transform: translateY(-6px) scale(1.008); filter: brightness(1.025); }
+  }
+  @media (prefers-reduced-motion: reduce) { .core-breath { animation: none; } }
+  .core-stage :global(.hero-core) { aspect-ratio: 1 / 1; }
+
+
+  .paper { background: #f4f0e6; }
+  .section { max-width: 1440px; margin: 0 auto; padding: clamp(64px, 8vw, 124px) clamp(24px, 5vw, 72px); }
+  .section + .section { border-top: 1px solid #d8d1c3; }
+  .section-heading { display: flex; justify-content: space-between; align-items: end; gap: 24px; margin-bottom: 36px; }
+  .section-heading > div, .section-heading > p { min-width: 0; }
+  h2 { margin: 14px 0 0; font-size: clamp(32px, 3.5vw, 52px); line-height: 1.25; font-weight: 500; overflow-wrap: anywhere; }
+  .section-heading > p { max-width: 27rem; margin: 0; color: #59645b; line-height: 1.7; overflow-wrap: anywhere; }
+  .domains { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); border-top: 1px solid #bcb5a7; }
+  .domains a { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 16px; min-width: 0; min-height: 92px; padding: 16px 20px 16px 0; border-bottom: 1px solid #bcb5a7; color: #202923; font-size: clamp(17px, 1.5vw, 22px); text-decoration: none; overflow-wrap: anywhere; }
+  .domains a + a { padding-left: 20px; border-left: 1px solid #d8d1c3; }
+  .number { color: #52735e; font: 11px/1.5 ui-monospace, monospace; letter-spacing: .05em; }
+  .arrow, .card-bottom span { color: #8f6438; }
+  .cards { display: grid; gap: 18px; }
+  .three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .card { display: flex; flex-direction: column; min-width: 0; min-height: 190px; padding: 24px; border: 1px solid #cfc6b5; color: #202923; text-decoration: none; overflow-wrap: anywhere; }
+  .card-title { margin: 36px 0 20px; font-size: 23px; }
+  .card-bottom { display: flex; justify-content: space-between; gap: 16px; margin-top: auto; color: #59645b; font-size: 13px; }
+  .domains a:hover, .card:hover { color: #3f604c; border-color: #8f6438; }
+  .button:focus-visible, .domains a:focus-visible, .card:focus-visible { outline: 2px solid #b78b57; outline-offset: 4px; }
+  .closing { padding-bottom: clamp(80px, 10vw, 150px); }
+  .closing .button { margin-top: 30px; }
+  @media (max-width: 900px) and (min-width: 701px) {
+    .hero-grid { grid-template-columns: minmax(240px, .9fr) minmax(0, 1.2fr); min-height: 580px; }
+    .domains { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .domains a:nth-child(3) { padding-left: 0; border-left: 0; }
+  }
+  @media (max-width: 700px) {
+    .hero { --core-width: min(88vw, 300px); }
+    .hero-grid { min-height: 0; padding: 20px 20px 32px; grid-template-columns: minmax(0, 1fr); grid-template-rows: auto; grid-template-areas: "intro" "core" "cta" "lede"; gap: 0; }
+    .hero-intro { align-self: auto; }
+    .hero .eyebrow { font-size: 10px; }
+    h1 { margin: 9px 0 5px; font-size: clamp(36px, 10vw, 40px); line-height: 1.16; }
+    .english { font-size: 12px; }
+    .core-stage { margin-top: 4px; }
+    .core-caption { margin-top: 2px; font-size: 11px; }
+    .hero .button { justify-self: stretch; min-width: 0; margin-top: 10px; }
+    .hero-lede { margin-top: 12px; font-size: 13px; line-height: 1.6; }
+    .section { padding: 64px 20px; }
+    .section-heading { display: block; margin-bottom: 24px; }
+    .section-heading > p { margin-top: 12px; }
+    .domains, .three, .two { grid-template-columns: minmax(0, 1fr); }
+    .domains a, .domains a + a { min-height: 56px; padding: 14px 0; border-left: 0; }
+    .card { min-height: 150px; padding: 20px; }
+    .card-title { margin: 24px 0 16px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { scroll-behavior: auto; transition: none; }
+  }
 </style>
