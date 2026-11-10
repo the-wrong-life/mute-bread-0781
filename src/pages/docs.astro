@@ -1,15 +1,30 @@
 ---
 import NovaShell from '../layouts/NovaShell.astro';
 import { docs } from '../data/docs';
+
+const kinds = [...new Set(docs.map((d) => d.kind))];
+const searchHint = '标题、摘要、章节标题与正文关键词都会参与匹配，例如“压降”“回滚”“有效数字”。';
 ---
 <NovaShell title="工程文档" description="工程计算、资料整理与静态部署的参考文档。" active="/docs">
   <div class="page">
     <header class="intro"><p class="eyebrow">知识库 / 参考与方法</p><h1>工程文档<span>.</span></h1><p>从单位换算到部署记录，留下可复查的依据，也写清使用边界。</p></header>
-    <section aria-label="文档列表" class="list">
-      {docs.map((doc, i) => <article class="entry"><span class="number" aria-hidden="true">0{i + 1}</span><div class="body"><div class="meta"><span>{doc.kind}</span><time datetime={doc.updated}>更新于 {doc.updated}</time></div><h2><a href={`/docs/${doc.slug}`}>{doc.title}</a></h2><p>{doc.summary}</p></div><span class="arrow" aria-hidden="true">↗</span></article>)}
+    <section class="finder" aria-label="检索文档">
+      <label class="field" for="doc-query"><span>搜索关键词</span><input id="doc-query" type="search" autocomplete="off" spellcheck="false" placeholder="压降 / 回滚 / 有效数字" aria-describedby="doc-hint" /></label>
+      <label class="field" for="doc-kind"><span>类型</span><select id="doc-kind"><option value="">全部类型</option>{kinds.map((k) => <option value={k}>{k}</option>)}</select></label>
+      <p class="hint" id="doc-hint">{searchHint}</p>
+      <p class="count" id="doc-count" role="status" aria-live="polite">{docs.length} 篇文档</p>
     </section>
+    <section id="doc-list" aria-label="文档列表" class="list">
+      {docs.map((doc, i) => <article class="entry" data-slug={doc.slug} data-kind={doc.kind}><span class="number" aria-hidden="true">0{i + 1}</span><div class="body"><div class="meta"><span>{doc.kind}</span><time datetime={doc.updated}>更新于 {doc.updated}</time></div><h2><a href={"/docs/" + doc.slug}>{doc.title}</a></h2><p>{doc.summary}</p></div><span class="arrow" aria-hidden="true">↗</span></article>)}
+    </section>
+    <p class="empty" id="doc-empty" hidden>没有匹配的文档。换一个关键词，或把类型切回“全部类型”。</p>
   </div>
 </NovaShell>
+<script>
+  import { mountDocsFinder } from '../scripts/docs-finder';
+  mountDocsFinder();
+</script>
 <style>
 .page{max-width:1120px;margin:auto;padding:clamp(60px,10vw,120px) clamp(20px,5vw,72px);color:#202923;overflow-wrap:anywhere}.intro{max-width:70ch;margin-bottom:clamp(44px,7vw,80px)}.eyebrow,.meta,.number{font:12px/1.6 ui-monospace,monospace;letter-spacing:.08em;color:#52735e}.intro h1{font-family:"Songti SC","Noto Serif CJK SC",SimSun,serif;font-size:clamp(44px,7vw,80px);font-weight:600;line-height:1.15;margin:18px 0 22px}.intro h1 span{color:#a74432}.intro>p:last-child{font-size:17px;line-height:1.8;color:#3f604c}.entry{display:grid;grid-template-columns:48px minmax(0,1fr) 24px;gap:20px;padding:26px 0;border-top:1px solid #b78b57}.entry:last-child{border-bottom:1px solid #b78b57}.body{min-width:0}.number{padding-top:5px}.meta{display:flex;flex-wrap:wrap;gap:8px 20px}.body h2{font-family:"Songti SC","Noto Serif CJK SC",SimSun,serif;font-size:clamp(22px,3vw,29px);line-height:1.4;margin:10px 0}.body h2 a{display:inline-flex;align-items:center;min-height:44px;color:#202923;text-decoration:none}.body h2 a:hover{text-decoration:underline;text-decoration-color:#a74432;text-underline-offset:.25em}.body h2 a:focus-visible{outline:2px solid #a74432;outline-offset:4px}.body p{margin:0;max-width:68ch;line-height:1.8;color:#3f604c}.arrow{color:#8f6438}@media(max-width:600px){.entry{grid-template-columns:30px minmax(0,1fr);gap:12px}.arrow{display:none}}
+.finder{display:flex;flex-wrap:wrap;gap:14px 24px;align-items:flex-end;padding:20px 0 24px;border-top:1px solid #b78b57}.field{display:flex;flex-direction:column;gap:6px;font:12px/1.5 ui-monospace,monospace;letter-spacing:.08em;color:#52735e}.field input,.field select{font:16px/1.4 "Songti SC","Noto Serif CJK SC",SimSun,serif;letter-spacing:0;padding:10px 12px;border:1px solid #9d7a4e;background:#fffdf7;color:#202923;border-radius:2px}.field input{min-width:min(320px,70vw)}.field input::placeholder{color:#6c7b70}.field input:focus-visible,.field select:focus-visible{outline:2px solid #a74432;outline-offset:2px}.hint{flex:1 1 100%;order:3;margin:0;font-size:13px;line-height:1.7;color:#5c6b60}.count{order:2;margin:0 0 2px auto;min-width:104px;text-align:right;font:12px/1.6 ui-monospace,monospace;color:#3f604c}.empty{margin:24px 0 0;padding:18px 20px;border:1px dashed #b78b57;color:#3f604c;line-height:1.7}.entry[hidden]{display:none}@media(max-width:600px){.field input{min-width:0;width:100%}.field{width:100%}.count{min-width:0}}
 </style>
