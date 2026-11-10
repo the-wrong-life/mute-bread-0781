@@ -55,7 +55,8 @@ const {
 
     const reduce = window.matchMedia('(prefers-reduced-motion: reduce)');
     const conn = (navigator as unknown as { connection?: { saveData?: boolean; effectiveType?: string } }).connection;
-    const lightNet = conn?.saveData === true || /(^|-)2g$/.test(conn?.effectiveType || '');
+    // 动画素材约 528 KiB（20 帧带接触阴影），1.6 Mbps 的 3G 也要 3 秒以上，按"省流量"处理不自动播放
+    const lightNet = conn?.saveData === true || /(^|-)2g$|(^|-)3g$/.test(conn?.effectiveType || '');
     let stored = (() => {
       try { return window.localStorage.getItem('yuheng-motion'); } catch { return null; }
     })();
