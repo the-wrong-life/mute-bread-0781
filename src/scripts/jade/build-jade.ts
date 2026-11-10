@@ -209,18 +209,20 @@ export function buildJadeModel(options: { quality?: 'high' | 'low' } = {}): Jade
     color: new THREE.Color('#5fa98a'),
     roughness: 0.34,
     metalness: 0,
-    transmission: 0.55,
-    thickness: 0.5,
+    transmission: 0.78,
+    thickness: 0.24,
     ior: 1.45,
     transparent: true,
-    opacity: 0.32,
+    opacity: 0.18,
     depthWrite: false,
     attenuationColor: new THREE.Color('#2c6b52'),
     attenuationDistance: 1.4,
     envMapIntensity: 0.7,
   });
   coreMat.name = 'mat-jade-core';
-  const innerCore = new THREE.Mesh(new THREE.SphereGeometry(0.74, hi ? 72 : 36, hi ? 56 : 28), coreMat);
+  // 半径曾取 0.74（外壳 1.0 的 74%）：它把玉轴、铜环、内珠全挡在后面，
+  // 渲染里"怎么调外壳透射都是奶白球"就是因为它。收到 0.46 后只做珠后的玉色雾团。
+  const innerCore = new THREE.Mesh(new THREE.SphereGeometry(0.46, hi ? 72 : 36, hi ? 56 : 28), coreMat);
   innerCore.name = 'jade-inner-core';
   innerCore.renderOrder = 3;
   root.add(innerCore);
