@@ -1,6 +1,6 @@
 # PROJECT NOVA 内容批次发布记录（2026-11-11）
 
-记录对象：内容与知识库的两次独立发布。两次都只改文档数据与项目事实，不含首页主视觉、不含三维代码，可单独回滚。
+记录对象：本轮三次独立发布。都只改内容数据、工具与项目事实，不含首页主视觉、不含三维代码，可分别回滚。
 
 ## 批次 2：UPS 备用时间文章
 
@@ -46,3 +46,17 @@ node node_modules/astro/bin/astro.mjs check
 node node_modules/astro/bin/astro.mjs build
 node tools/ops/check-links.mjs
 ```
+
+## 批次 4：钣金折弯展开工具 + K 系数文章
+
+- 分支：release/tools4-20261111
+- 生产提交：27f1f6d（父提交 dd51df4）
+- 回滚标签：rollback-before-tools4-20261111 → dd51df4
+- 发布标签：published-tools4-20261111 → 27f1f6d
+- 改动：src/scripts/tools/logic.ts 新增 bendAllowance()；新增 src/scripts/tools/bend.ts；src/pages/tools.astro 增加 06 号工具与目录项；src/data/docs.ts 新增 /docs/bend-allowance
+- 公式与校验：BA = θ(rad)×(R+K·T)、OSSB = (R+T)·tan(θ/2)、BD = 2·OSSB − BA、展开长 = A+B−BD；拒绝 θ≥180°、θ>170°、K>0.5、只填一边、负数与负展开
+- 发布前验证：astro check 0 errors（18 hints）、build 20 页、20 路由 × 4 视口 = 80 组 ISSUES []
+- 数值核对（浏览器实测 vs 独立手算）：T2/R2/90°/K0.44 → BA 4.5239、OSSB 4、BD 3.4761、展开 66.524（手算 66.5239）；T1.5/R1/120°/K0.4 → BA 3.351、OSSB 4.3301、BD 5.3092（手算 5.30922）
+- 错误分支实测：180° 被拒、只填边 A 被拒、K=0.6 被拒、非数字料厚被拒，pageerror 0
+- 手机实测：390 与 320 下六个输入框均 350/280 px 宽、44 px 高，无横向溢出
+- 线上验证：/tools 出现 #bend 工具（nav 六项），示例计算与本地一致；/docs/bend-allowance 返回 200、h1 正确、390 无横向溢出
