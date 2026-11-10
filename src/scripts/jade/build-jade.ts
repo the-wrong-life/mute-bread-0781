@@ -299,7 +299,10 @@ export function buildJadeModel(options: { quality?: 'high' | 'low' } = {}): Jade
   // 3. 衔尾蛇
   const serpent = new THREE.Group();
   serpent.name = 'ouroboros';
-  serpent.rotation.set(0.0, 0.0, 0.0);
+  const SERPENT_TILT = 0.55;
+  // 轨道平面必须相对镜头倾斜：rotation 为 (0,0,0) 时蛇身环几乎侧对镜头、只绕球边缘，
+  // 参考图里的环是斜跨球面（近端压在球前面、远端绕到球后）。TILT 把整圈绕 X 轴抬起来。
+  serpent.rotation.set(SERPENT_TILT, 0.0, 0.0);
   const curve = snakeCurveAt(0);
   // t=0 是尾端（收细到 0.022 以便入口），t=1 是颈端（0.108，与头部颈径衔接）。
   // 管体用固定拓扑 + 每帧原地重算顶点：Frenet 帧在曲率近零处会翻转，

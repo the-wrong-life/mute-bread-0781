@@ -177,7 +177,9 @@ def materials():
     # SSS 半径决定"肉色"：旧值 (0.30,0.62,0.44) 是绿色的，球体再怎么调底都发青；
     # 参考图的玉肉是暖白偏黄（实测 rgb 187,169,136），所以默认改成暖色，并可用 NOVA_SSS_RAD 覆盖。
     sss_rad = tuple(float(v) for v in os.environ.get("NOVA_SSS_RAD", "0.52,0.44,0.32").split(","))
-    rep("mat-jade-shell", sb, 0.22, 0.0, trans=TRANS, ior=1.55, coat=float(os.environ.get("NOVA_COAT", "0.20")), sss=SSS, sss_rad=sss_rad, sss_scale=0.14)
+    # 壳粗糙度可覆盖：参考图是薄玻璃壳，边缘要有 Fresnel 弧光；0.22 的粗糙度会把弧光磨成雾面
+    shell_rough = float(os.environ.get("NOVA_SHELL_ROUGH", "0.22"))
+    rep("mat-jade-shell", sb, shell_rough, 0.0, trans=TRANS, ior=float(os.environ.get("NOVA_IOR", "1.55")), coat=float(os.environ.get("NOVA_COAT", "0.20")), sss=SSS, sss_rad=sss_rad, sss_scale=0.14)
     shell_volume()
     kernel_warm()
     rep("mat-kernel", (1.0, 0.96, 0.88), 0.62, 0.0, emit=(1.0, 0.88, 0.66), emit_str=KERNEL)
@@ -199,8 +201,11 @@ def materials():
     # 给它薄壁玻璃 + 极弱的内部自发光，高光弧由环境灯盘打出。
     # 教训：trans=0.94 + 薄壁 在小球上等于"看不见"——m1 诊断里球心是空的。
     # 参考图的珍珠是"奶白玻璃珠 + 一点内部光"，所以传输压到 0.5，并保留微弱自发光。
-    rep("mat-kernel-glass", (1.0, 0.985, 0.94), 0.05, 0.0, trans=0.50, ior=1.47, coat=1.0, emit=(1.0, 0.94, 0.80), emit_str=0.35)
-    rep("mat-jade-core", (0.30, 0.62, 0.48), 0.22, 0.0, trans=0.30, ior=1.5, sss=0.4, sss_rad=(0.25,0.5,0.4), sss_scale=0.2)
+    # 教训（第 9 轮）：外壳调到 trans=0.95/dens=0.06 仍是奶白球，说明"奶"不来自外壳。
+    # 这两层才是：kernel-glass 罩在内珠外、透射 0.5 又带 0.35 自发光；jade-core 底色是青玉绿。
+    core_rgb = tuple(float(v) for v in os.environ.get("NOVA_CORE_COLOR", "0.30,0.62,0.48").split(","))
+    rep("mat-kernel-glass", (1.0, 0.985, 0.94), 0.05, 0.0, trans=float(os.environ.get("NOVA_GLASS_TRANS", "0.50")), ior=1.47, coat=1.0, emit=(1.0, 0.94, 0.80), emit_str=float(os.environ.get("NOVA_GLASS_EMIT", "0.35")))
+    rep("mat-jade-core", core_rgb, 0.22, 0.0, trans=0.30, ior=1.5, sss=0.4, sss_rad=(0.25,0.5,0.4), sss_scale=0.2)
     rep("mat-jade-axis", (0.78, 0.94, 0.86), 0.14, 0.0, trans=0.30, ior=1.5, coat=0.3, emit=(0.86, 0.98, 0.90), emit_str=AXIS_EMIT)
     rep("mat-copper-ring", (0.78, 0.60, 0.30), 0.26, 0.92)
     rep("mat-copper-tick", (0.90, 0.74, 0.42), 0.22, 0.95)
