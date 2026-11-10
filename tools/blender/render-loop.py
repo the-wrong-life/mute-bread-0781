@@ -205,7 +205,9 @@ def materials():
     # 这两层才是：kernel-glass 罩在内珠外、透射 0.5 又带 0.35 自发光；jade-core 底色是青玉绿。
     core_rgb = tuple(float(v) for v in os.environ.get("NOVA_CORE_COLOR", "0.30,0.62,0.48").split(","))
     rep("mat-kernel-glass", (1.0, 0.985, 0.94), 0.05, 0.0, trans=float(os.environ.get("NOVA_GLASS_TRANS", "0.50")), ior=1.47, coat=1.0, emit=(1.0, 0.94, 0.80), emit_str=float(os.environ.get("NOVA_GLASS_EMIT", "0.35")))
-    rep("mat-jade-core", core_rgb, 0.22, 0.0, trans=0.30, ior=1.5, sss=0.4, sss_rad=(0.25,0.5,0.4), sss_scale=0.2)
+    # 诊断（第 10 轮）：GLB 里 jade-inner-core 直径 1.48，占外壳半径 74%，底色调青绿、透射仅 0.30、
+    # SSS 0.4 —— 它才是"调外壳参数毫无反应"的原因：肉眼看到的那颗球就是它，不是外壳。
+    rep("mat-jade-core", core_rgb, 0.16, 0.0, trans=float(os.environ.get("NOVA_CORE_TRANS", "0.30")), ior=1.5, sss=float(os.environ.get("NOVA_CORE_SSS", "0.4")), sss_rad=(0.25,0.5,0.4), sss_scale=0.2)
     rep("mat-jade-axis", (0.78, 0.94, 0.86), 0.14, 0.0, trans=0.30, ior=1.5, coat=0.3, emit=(0.86, 0.98, 0.90), emit_str=AXIS_EMIT)
     rep("mat-copper-ring", (0.78, 0.60, 0.30), 0.26, 0.92)
     rep("mat-copper-tick", (0.90, 0.74, 0.42), 0.22, 0.95)
