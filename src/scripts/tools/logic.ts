@@ -2,7 +2,10 @@ export const units: Record<string, Record<string, { label: string; factor: numbe
   length: { mm: {label:'mm 毫米',factor:.001}, cm:{label:'cm 厘米',factor:.01}, m:{label:'m 米',factor:1}, km:{label:'km 千米',factor:1000}, in:{label:'in 英寸',factor:.0254}, ft:{label:'ft 英尺',factor:.3048} },
   mass: { g:{label:'g 克',factor:.001}, kg:{label:'kg 千克',factor:1}, oz:{label:'oz 盎司',factor:.028349523125}, lb:{label:'lb 磅',factor:.45359237} },
   temperature: { '°C':{label:'°C 摄氏度',factor:1}, '°F':{label:'°F 华氏度',factor:1}, K:{label:'K 开尔文',factor:1} },
-  power: { W:{label:'W 瓦',factor:1}, kW:{label:'kW 千瓦',factor:1000}, hp:{label:'hp 机械马力',factor:745.6998715822702} }
+  power: { W:{label:'W 瓦',factor:1}, kW:{label:'kW 千瓦',factor:1000}, hp:{label:'hp 机械马力',factor:745.6998715822702} },
+  pressure: { Pa:{label:'Pa 帕',factor:1}, kPa:{label:'kPa 千帕',factor:1000}, MPa:{label:'MPa 兆帕',factor:1e6}, bar:{label:'bar 巴',factor:1e5}, psi:{label:'psi 磅/平方英寸',factor:6894.757293168361}, 'kgf/cm²':{label:'kgf/cm² 公斤力/平方厘米',factor:98066.5} },
+  torque: { 'N·m':{label:'N·m 牛·米',factor:1}, 'kgf·m':{label:'kgf·m 公斤力·米',factor:9.80665}, 'lbf·ft':{label:'lbf·ft 磅力·英尺',factor:1.3558179483314004} },
+  flow: { 'L/min':{label:'L/min 升/分',factor:1}, 'L/s':{label:'L/s 升/秒',factor:60}, 'm³/h':{label:'m³/h 立方米/时',factor:1000/60}, 'gpm(US)':{label:'gpm 美制加仑/分',factor:3.785411784}, 'gpm(UK)':{label:'gpm 英制加仑/分',factor:4.54609} }
 };
 export function convertUnit(raw:string, kind:string, from:string, to:string):number {
   if (!raw.trim()) throw new Error('请输入数值。');
