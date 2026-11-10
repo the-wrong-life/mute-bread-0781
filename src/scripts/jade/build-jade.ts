@@ -227,6 +227,46 @@ export function buildJadeModel(options: { quality?: 'high' | 'low' } = {}): Jade
   innerCore.renderOrder = 3;
   root.add(innerCore);
 
+  // 1b. 球内经纬骨架：参考图的高级感主要来自玻璃球内部一圈圈弧形玉梁，
+  // 而不是外壳的透明度。没有这层结构，球怎么调都是一颗空玻璃球。
+  const lattice = new THREE.Group();
+  lattice.name = 'inner-lattice';
+  const strutMat = new THREE.MeshPhysicalMaterial({
+    color: new THREE.Color('#bcd9c6'),
+    roughness: 0.18,
+    metalness: 0,
+    transmission: 0.35,
+    thickness: 0.12,
+    ior: 1.5,
+    clearcoat: 0.4,
+    emissive: new THREE.Color('#dff0e2'),
+    emissiveIntensity: 0.12,
+  });
+  strutMat.name = 'mat-jade-strut';
+  const STRUT_R = 0.90;
+  const STRUT_TUBE = hi ? 0.020 : 0.024;
+  for (let i = 0; i < 4; i += 1) {
+    const meridian = new THREE.Mesh(
+      new THREE.TorusGeometry(STRUT_R, STRUT_TUBE, hi ? 10 : 6, hi ? 120 : 64),
+      strutMat,
+    );
+    meridian.name = 'lattice-meridian-' + i;
+    meridian.rotation.y = (i / 4) * Math.PI;
+    lattice.add(meridian);
+  }
+  for (const lat of [-0.45, 0.45]) {
+    const ringR = Math.sqrt(Math.max(STRUT_R * STRUT_R - lat * lat, 0.01));
+    const latitude = new THREE.Mesh(
+      new THREE.TorusGeometry(ringR, STRUT_TUBE * 0.9, hi ? 10 : 6, hi ? 120 : 64),
+      strutMat,
+    );
+    latitude.name = 'lattice-latitude';
+    latitude.rotation.x = Math.PI / 2;
+    latitude.position.y = lat;
+    lattice.add(latitude);
+  }
+  root.add(lattice);
+
   // 2. 暖白内核
   const kernelGeo = new THREE.SphereGeometry(0.16, hi ? 72 : 36, hi ? 56 : 28);
   const kernelMat = new THREE.MeshPhysicalMaterial({
