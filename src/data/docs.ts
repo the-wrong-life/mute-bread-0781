@@ -71,4 +71,17 @@ export const docs: Doc[] = [
     sources: [{ label: '方法说明', note: '本篇为简化估算方法的边界说明，不引用具体标准条款；电池厂家放电曲线与选型手册应以实际型号文档为准。' }],
     related: [{ label: 'UPS 备用时间计算器', href: '/tools#ups' }, { label: '工程计算记录方法', href: '/docs/calculation-record' }]
   },
+  {
+    slug: 'perf-field-readings', title: '性能指标的现场读数口径：LCP、CLS 与长任务', kind: '测试记录', updated: '2026-11-11',
+    summary: '用浏览器自带的 PerformanceObserver 量 LCP、CLS 与长任务，并说明这些读数在什么条件下才可比。',
+    sections: [
+      { heading: '为什么不用单一分数代替读数', paragraphs: ['Lighthouse 给出的分数是特定设备模拟、特定网络限速下的合成结果，适合做版本回归，不等于真实访客的体验。要回答"这个页面现在打开多快"，更直接的办法是在真实浏览器里读 LCP、CLS 和长任务这几项原始指标，并同时记录测量条件。'] },
+      { heading: '测量方法', paragraphs: ['在页面加载前注入 PerformanceObserver：largest-contentful-paint 取最后一次上报的 startTime 与元素标签；layout-shift 累加非用户输入引起的偏移值；longtask 取单次最长持续时间。页面 load 后再等待 3 秒，避免把延迟出现的元素漏掉。', '记录时同时抓 navigation timing 的 responseStart（近似 TTFB）与资源条目数量、传输字节数，否则无法判断差异来自页面本身还是网络与缓存。'] },
+      { heading: '本站在 2026-11-11 的实测读数', paragraphs: ['环境：Windows 本机 Chrome、直连 www.token-xxo.cn、静态资源走 CDN；视口 1440×900 与 390×844；每页 load 后观察 3 秒。', '首页：1440 下 LCP 1264 ms（元素为 h1）、CLS 0、最长任务 219 ms；390 下 LCP 1032 ms、CLS 0。', '工具页：1440 下 LCP 852 ms、CLS 0；390 下 LCP 864 ms。文档列表与文档详情：LCP 544–976 ms；其中一篇详情页 TTFB 达 1614 ms。项目列表：LCP 1932–1944 ms。领域页：1440 下 LCP 2196 ms、TTFB 2097 ms；390 下 LCP 976 ms。', '全部 12 组读数 CLS 均为 0；除首页外最长任务均为 0。'] },
+      { heading: '怎么读这些数字', paragraphs: ['CLS 恒为 0 说明这些页面的首屏没有异步插入导致的位移，主要因为图片与字体都有明确尺寸或用系统字体。首页最长任务 219 ms 与首页的脚本（主视觉渲染与交互）相关，是需要继续压缩的对象。', 'LCP 的波动主要跟随 TTFB：同一页面在不同时刻可能相差一秒以上，说明 CDN 冷热缓存影响大于页面自身结构。因此单次读数只能作为对照，不能作为结论；比较两个版本时应在同一会话内交替测量多次。', '这些数字不是 Lighthouse 分数，也不是移动端 4G 模拟结果，不能直接与"Lighthouse Performance ≥90"这类目标换算。'] },
+      { heading: '局限', paragraphs: ['本机网络条件优于普通移动网络，读数偏乐观；未在 Safari、Firefox 下复测；未启用 CPU 降速与网络限速。要评估真实移动端体验，需要在这些条件下重复同一套观测。'] }
+    ],
+    sources: [{ label: 'Web Performance API', note: 'PerformanceObserver 的 largest-contentful-paint / layout-shift / longtask 条目；均为浏览器原生上报，无需第三方库。' }],
+    related: [{ label: '静态站点部署实践', href: '/docs/static-site-deployment' }, { label: '工程计算记录方法', href: '/docs/calculation-record' }]
+  },
 ];
