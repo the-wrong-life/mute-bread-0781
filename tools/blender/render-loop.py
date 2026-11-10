@@ -90,10 +90,14 @@ def serpent_plates():
     brick.inputs['Scale'].default_value = float(os.environ.get("NOVA_PLATE_SCALE", "1.0"))
     brick.inputs['Mortar Size'].default_value = float(os.environ.get("NOVA_PLATE_MORTAR", "0.03"))
     brick.inputs['Mortar Smooth'].default_value = 0.2
-    brick.inputs['Color1'].default_value = (0.13, 0.35, 0.25, 1)
-    brick.inputs['Color2'].default_value = (0.09, 0.27, 0.19, 1)
-    # 缝必须比甲片暗（缝隙=阴影），用金铜色当缝会读成"鱼网袜"
-    brick.inputs['Mortar'].default_value = (0.05, 0.14, 0.10, 1)
+    pc = tuple(float(v) for v in os.environ.get("NOVA_PLATE_COLORS", "0.13,0.35,0.25|0.09,0.27,0.19").split("|")[0].split(","))
+    pc2 = tuple(float(v) for v in os.environ.get("NOVA_PLATE_COLORS", "0.13,0.35,0.25|0.09,0.27,0.19").split("|")[1].split(","))
+    brick.inputs['Color1'].default_value = (pc[0], pc[1], pc[2], 1)
+    brick.inputs['Color2'].default_value = (pc2[0], pc2[1], pc2[2], 1)
+    mc = tuple(float(v) for v in os.environ.get("NOVA_PLATE_MORTAR_COLOR", "0.05,0.14,0.10").split(","))
+    # 缝压暗 = 缝隙阴影；但参考图的蛇是"金铜骨架 + 青玉甲片"，缝偏亮才出金线，
+    # 因此缝色做成可调，默认仍取暗缝（旧结论：缝比甲片亮到极致会读成鱼网袜）。
+    brick.inputs['Mortar'].default_value = (mc[0], mc[1], mc[2], 1)
     uvc = nt.nodes.new('ShaderNodeTexCoord')
     mp = nt.nodes.new('ShaderNodeMapping')
     mp.inputs['Rotation'].default_value[2] = 0.785398
@@ -178,6 +182,9 @@ def materials():
     rep("mat-serpent-mouth", (0.12, 0.07, 0.04), 0.55, 0.0)
     rep("mat-eye", (0.20, 0.72, 0.48), 0.12, 0.0, emit=(0.14, 0.55, 0.34), emit_str=1.2, coat=1.0)
     rep("mat-kernel-glow", (1.0, 0.94, 0.80), 0.9, 0.0)
+    # 内层玻璃珠：参考图球心是一颗能反光的玻璃球，不是一颗发光的小豆。
+    # 给它薄壁玻璃 + 极弱的内部自发光，高光弧由环境灯盘打出。
+    rep("mat-kernel-glass", (0.96, 1.0, 0.97), 0.03, 0.0, trans=0.94, ior=1.46, coat=1.0, emit=(1.0, 0.93, 0.78), emit_str=0.25)
     rep("mat-jade-core", (0.30, 0.62, 0.48), 0.22, 0.0, trans=0.30, ior=1.5, sss=0.4, sss_rad=(0.25,0.5,0.4), sss_scale=0.2)
     rep("mat-jade-axis", (0.78, 0.94, 0.86), 0.14, 0.0, trans=0.30, ior=1.5, coat=0.3, emit=(0.86, 0.98, 0.90), emit_str=AXIS_EMIT)
     rep("mat-copper-ring", (0.78, 0.60, 0.30), 0.26, 0.92)
