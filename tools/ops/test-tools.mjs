@@ -1,6 +1,6 @@
 // 工具箱纯函数测试：不启动浏览器，直接用 Node 的类型剥离运行 TS 源文件。
 import assert from 'node:assert/strict';
-import { convertUnit, dcVoltageDrop, tidyLines, parseJson } from '../../src/scripts/tools/logic.ts';
+import { convertUnit, dcVoltageDrop, upsRuntime, tidyLines, parseJson } from '../../src/scripts/tools/logic.ts';
 
 let pass = 0;
 const near = (a, b, eps = 1e-9) => assert.ok(Math.abs(a - b) < eps, `期望 ${b}，实际 ${a}`);
@@ -30,11 +30,22 @@ throws(() => dcVoltageDrop({ voltage: '24', current: '5', length: '200000', area
 throws(() => dcVoltageDrop({ voltage: '24', current: '5', length: '10', area: '2000', rho: '0.0175', kind: 'dc2' }), /mm²/);
 throws(() => dcVoltageDrop({ voltage: '1', current: '100', length: '10', area: '0.5', rho: '0.0175', kind: 'dc2' }), /超过电源电压/);
 
-// 3. 文本与 JSON
+// 3. UPS 备用时间：100 Ah × 24 V × 80% DoD × 90% 效率 ÷ 150 W
+const ups = upsRuntime({ capacity: '100', voltage: '24', dod: '80', efficiency: '90', load: '150' });
+near(ups.nominalWh, 2400);
+near(ups.usableWh, 1920);
+near(ups.deliveredWh, 1728);
+near(ups.minutes, 691.2);
+throws(() => upsRuntime({ capacity: '0', voltage: '24', dod: '80', efficiency: '90', load: '150' }), /容量/);
+throws(() => upsRuntime({ capacity: '100', voltage: '24', dod: '120', efficiency: '90', load: '150' }), /放电深度/);
+throws(() => upsRuntime({ capacity: '100', voltage: '24', dod: '80', efficiency: '0', load: '150' }), /效率/);
+throws(() => upsRuntime({ capacity: '100', voltage: '24', dod: '80', efficiency: '90', load: '0' }), /功率/);
+
+// 4. 文本与 JSON
 assert.equal(tidyLines('a\n\na \nb', true, false).text, 'a\nb');
 assert.equal(tidyLines('b\na', true, true).text, 'a\nb');
 assert.equal(parseJson('{"a":1}').ok, true);
 assert.equal(parseJson('{a:1}').ok, false);
 
-pass = 21;
+pass = 28;
 console.log(`PASS ${pass} 项断言`);

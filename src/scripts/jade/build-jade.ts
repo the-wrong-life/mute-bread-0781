@@ -493,7 +493,7 @@ export function buildJadeModel(options: { quality?: 'high' | 'low' } = {}): Jade
   head.position.copy(tip).addScaledVector(fwd, 0.025);
   head.quaternion.setFromRotationMatrix(new THREE.Matrix4().makeBasis(fwd, upV, sideV));
   // 头部整体缩到与收细后的蛇身匹配（原建模按蛇身半径 0.134 设计，现为 0.05）
-  head.scale.setScalar(0.88);
+  head.scale.setScalar(1.06);
 
   const headMat = new THREE.MeshPhysicalMaterial({
     color: new THREE.Color('#b08a4e'),
@@ -783,8 +783,9 @@ export function buildJadeModel(options: { quality?: 'high' | 'low' } = {}): Jade
     new THREE.MeshStandardMaterial({ color: new THREE.Color('#e8d3a4'), roughness: 0.3, metalness: 0.9 }),
   );
   baseBadge.add(emblem);
-  baseBadge.position.set(0, -1.3, 0.02);
-  baseBadge.rotation.x = -0.24;
+  // 教训：y=-1.3 时底徽悬在球下方 0.3，读成"吊坠"；贴到球底（-1.02）才像底座
+  baseBadge.position.set(0, -1.02, 0.02);
+  baseBadge.rotation.x = -0.2;
   root.add(baseBadge);
 
   // 7. 右侧辛巳玉牌

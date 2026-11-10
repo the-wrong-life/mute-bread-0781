@@ -17,7 +17,7 @@ export const LOOP_SECONDS = 8;
 export const GAP = 0.16;
 
 /** 蛇环基准半径：球半径 1.0，蛇外沿几乎与球沿齐平。 */
-export const BASE_RADIUS = 1.14;
+export const BASE_RADIUS = 1.16;
 
 const END_ANGLE = Math.PI * 0.25;
 const SWEEP = Math.PI * 2 - GAP;
@@ -31,7 +31,7 @@ const SQUASH_Y = 0.965;
  */
 export function snakeRadius(u: number): number {
   const t = Math.min(Math.max(u, 0), 1);
-  return 0.020 + 0.090 * Math.pow(t, 0.62);
+  return 0.024 + 0.104 * Math.pow(t, 0.55);
 }
 
 /** 时间相位：把秒换成 0–1 的循环相位。 */
