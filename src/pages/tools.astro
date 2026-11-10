@@ -8,13 +8,13 @@ import NovaShell from '../layouts/NovaShell.astro';
     <section id="units" class="tool" aria-labelledby="units-title">
       <div class="heading"><span class="number">01</span><div><h2 id="units-title">单位换算</h2><p>选择类别与单位，输入数值后自动换算；可选择结果的有效数字位数。</p></div></div>
       <div class="unit-grid">
-        <label for="unit-kind">类别<select id="unit-kind"><option value="length">长度</option><option value="mass">质量</option><option value="temperature">温度</option><option value="power">功率</option></select></label>
+        <label for="unit-kind">类别<select id="unit-kind"><option value="length">长度</option><option value="mass">质量</option><option value="temperature">温度</option><option value="power">功率</option><option value="pressure">压力</option><option value="torque">扭矩</option><option value="flow">流量</option></select></label>
         <label for="unit-value">输入数值<input id="unit-value" type="text" inputmode="decimal" autocomplete="off" placeholder="例如 25.4" aria-invalid="false" aria-describedby="unit-status unit-note" /></label>
         <label for="unit-from">原单位<select id="unit-from"></select></label>
         <label for="unit-to">目标单位<select id="unit-to"></select></label>
         <label for="unit-precision">有效数字<select id="unit-precision"><option value="4">4 位</option><option value="6">6 位</option><option value="8">8 位</option><option value="12" selected>12 位</option><option value="15">15 位</option></select></label>
       </div>
-      <p id="unit-note" class="note">输入和结果绝对值均不得超过 1×10¹⁵。温度只适用于绝对温度，不适用于温差；hp 为机械马力。结果供工程前期参考，不替代安全验算。</p>
+      <p id="unit-note" class="note">输入和结果绝对值均不得超过 1×10¹⁵。温度只适用于绝对温度，不适用于温差；hp 为机械马力，psi 与 kgf/cm² 为常用压力单位，gpm 分美制与英制。结果供工程前期参考，不替代安全验算。</p>
       <div class="result" aria-live="polite"><span id="unit-status">等待输入</span><output id="unit-result">—</output></div><div class="actions"><button type="button" id="unit-example">填入示例</button><button type="button" id="unit-copy">复制结果</button><span id="unit-copy-status" role="status"></span></div>
     </section>
     <section id="drop" class="tool" aria-labelledby="drop-title">
