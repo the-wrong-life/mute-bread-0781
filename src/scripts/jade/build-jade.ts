@@ -804,6 +804,26 @@ export function buildJadeModel(options: { quality?: 'high' | 'low' } = {}): Jade
     curveSegments: hi ? 10 : 5,
   });
   tabletGeo.center();
+  // ExtrudeGeometry 的默认 UV 是"模型单位"而不是 0..1，直接贴图只会采到左下角一小块（渲成十字纹）。
+  // 这里按法线重新铺 UV：正反面按 x/y 归一化，侧壁按周长/厚度铺。
+  {
+    const pos = tabletGeo.attributes.position;
+    const nor = tabletGeo.attributes.normal;
+    const uvs = new Float32Array(pos.count * 2);
+    for (let i = 0; i < pos.count; i += 1) {
+      const nx = nor.getX(i);
+      const ny = nor.getY(i);
+      const nz = nor.getZ(i);
+      if (Math.abs(nz) >= 0.5) {
+        uvs[i * 2] = pos.getX(i) / (2 * tw) + 0.5;
+        uvs[i * 2 + 1] = pos.getY(i) / (2 * th) + 0.5;
+      } else {
+        uvs[i * 2] = (Math.atan2(nx, ny) / Math.PI) * 0.5 + 0.5;
+        uvs[i * 2 + 1] = pos.getZ(i) / 0.05 + 0.5;
+      }
+    }
+    tabletGeo.setAttribute('uv', new THREE.BufferAttribute(uvs, 2));
+  }
   const tabletMat = new THREE.MeshPhysicalMaterial({
     color: new THREE.Color('#b9e0c9'),
     map: createTabletTexture('辛', '巳'),
@@ -816,10 +836,22 @@ export function buildJadeModel(options: { quality?: 'high' | 'low' } = {}): Jade
   tabletMat.name = 'mat-tablet';
   const tablet = new THREE.Mesh(tabletGeo, tabletMat);
   tablet.name = 'xin-si-tablet';
-  // 参考图的辛巳牌挂在右下方、与蛇环之间留出空隙；贴在环上会读成"挂在蛇身上的标签"。
-  tablet.position.set(1.16, -0.88, 0.54);
-  tablet.rotation.set(-0.04, -0.46, 0.06);
+  // 参考图的辛巳牌坠在蛇环右下方外侧，牌面朝观众、长轴顺半径向外；离环太远会读成"浮在空中的绿卡片"，
+  // 所以外沿半径取 1.16（环 1.14），并用一枚金环把牌顶与蛇环连起来。
+  const tabletAngle = -Math.PI * 0.30;
+  const tabletR = 1.16;
+  tablet.position.set(Math.cos(tabletAngle) * tabletR, Math.sin(tabletAngle) * tabletR, 0.55);
+  tablet.rotation.set(-0.05, -0.30, tabletAngle + Math.PI / 2);
   root.add(tablet);
+
+  const tabletLink = new THREE.Mesh(
+    new THREE.TorusGeometry(0.034, 0.011, 10, hi ? 24 : 12),
+    ringMat,
+  );
+  tabletLink.name = 'tablet-link';
+  tabletLink.position.set(Math.cos(tabletAngle) * (tabletR - 0.20), Math.sin(tabletAngle) * (tabletR - 0.20), 0.55);
+  tabletLink.rotation.set(Math.PI / 2, 0, tabletAngle + Math.PI / 2);
+  root.add(tabletLink);
 
   // 8. 七星刻纹
   const stars = new THREE.Group();
