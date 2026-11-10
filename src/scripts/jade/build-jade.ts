@@ -376,11 +376,18 @@ export function buildJadeModel(options: { quality?: 'high' | 'low' } = {}): Jade
   const bodyPos = new Float32Array(vCount * 3);
   const bodyNor = new Float32Array(vCount * 3);
   const bodyUv = new Float32Array(vCount * 2);
+  // UV 必须按物理尺度铺，不能按参数尺度：旧写法 u=t*20、v=j*3 让"管长 : 周长"约 6:1，
+  // 方形砖格因此被拉成 6 倍长条——Scale 小看不出甲片、Scale 大整条变金点，怎么调都不收敛。
+  // 这里按弧长（≈2πR）与当地周长（2πr(t)）取同一套 UV 密度，甲片才是正方形。
+  const SNAKE_ARC = 2 * Math.PI * 1.14;
+  const PLATES_PER_UNIT = 16;
   for (let i = 0; i <= SEG; i += 1) {
+    const t = i / SEG;
+    const ringLen = 2 * Math.PI * snakeRadius(t);
     for (let j = 0; j <= RAD; j += 1) {
       const k = (i * (RAD + 1) + j) * 2;
-      bodyUv[k] = (i / SEG) * 20;
-      bodyUv[k + 1] = (j / RAD) * 3;
+      bodyUv[k] = t * SNAKE_ARC * PLATES_PER_UNIT;
+      bodyUv[k + 1] = (j / RAD) * ringLen * PLATES_PER_UNIT;
     }
   }
   const bodyIdx: number[] = [];

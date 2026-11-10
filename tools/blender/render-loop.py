@@ -85,12 +85,15 @@ def serpent_plates():
     out = [n for n in nt.nodes if n.type == 'OUTPUT_MATERIAL'][0]
     brick = nt.nodes.new('ShaderNodeTexBrick')
     # 甲片密度与缝宽可调：缝用金铜色才读得出"金底嵌青玉甲片"，但尺度过大就成编织袋。
-    brick.inputs['Scale'].default_value = float(os.environ.get("NOVA_PLATE_SCALE", "13.0"))
-    brick.inputs['Mortar Size'].default_value = float(os.environ.get("NOVA_PLATE_MORTAR", "0.006"))
+    # 几何侧 UV 已改成物理尺度（约 1 个 UV 单位 = 1 片甲片），Scale 取 1.0 才不再被拉长；
+    # 旧值 13.0 是给"参数尺度 UV"打的补丁，UV 修好后继续用会变成满身金点。
+    brick.inputs['Scale'].default_value = float(os.environ.get("NOVA_PLATE_SCALE", "1.0"))
+    brick.inputs['Mortar Size'].default_value = float(os.environ.get("NOVA_PLATE_MORTAR", "0.03"))
     brick.inputs['Mortar Smooth'].default_value = 0.2
     brick.inputs['Color1'].default_value = (0.13, 0.35, 0.25, 1)
     brick.inputs['Color2'].default_value = (0.09, 0.27, 0.19, 1)
-    brick.inputs['Mortar'].default_value = (0.55, 0.42, 0.18, 1)
+    # 缝必须比甲片暗（缝隙=阴影），用金铜色当缝会读成"鱼网袜"
+    brick.inputs['Mortar'].default_value = (0.05, 0.14, 0.10, 1)
     uvc = nt.nodes.new('ShaderNodeTexCoord')
     mp = nt.nodes.new('ShaderNodeMapping')
     mp.inputs['Rotation'].default_value[2] = 0.785398

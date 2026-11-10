@@ -64,3 +64,45 @@ export function tidyLines(text:string, trim:boolean, sort:boolean) {
   if(sort)result.sort((a,b)=>a.localeCompare(b,'zh-CN'));
   return {text:result.join('\n'),before:lines.length,after:result.length,duplicates};
 }
+
+/** 直流线路压降：两线制（去程 + 回程）用 2·I·L·ρ/A，单线回路用 1·I·L·ρ/A。
+ *  ρ 单位 Ω·mm²/m（20 ℃）：退火铜 0.01724、硬铜/接线常用 0.0175、铝 0.0282。
+ *  只做工程前期估算，不替代按标准（如 IEC 60364-5-52）做的载流量与保护校验。 */
+export type DropKind = 'dc2' | 'dc1';
+export function parsePositive(raw: string, label: string, allowZero = false): number {
+  const s = raw.trim();
+  if (!s) throw new Error(`请填写${label}。`);
+  if (!/^[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?$/.test(s)) throw new Error(`${label}必须是十进制数字。`);
+  const n = Number(s);
+  if (!Number.isFinite(n)) throw new Error(`${label}必须是有限数字。`);
+  if (allowZero ? n < 0 : n <= 0) throw new Error(allowZero ? `${label}不能为负数。` : `${label}必须大于 0。`);
+  return n;
+}
+export interface DropResult {
+  /** 压降（V） */
+  drop: number;
+  /** 压降占电源电压的百分比 */
+  percent: number;
+  /** 负载端电压（V） */
+  endVoltage: number;
+  /** 回路总电阻（Ω） */
+  resistance: number;
+  /** 计入回程的导体总长（m） */
+  loopLength: number;
+}
+export function dcVoltageDrop(p: { voltage: string; current: string; length: string; area: string; rho: string; kind: DropKind }): DropResult {
+  const voltage = parsePositive(p.voltage, '电源电压');
+  const current = parsePositive(p.current, '负载电流', true);
+  const length = parsePositive(p.length, '单程线长');
+  const area = parsePositive(p.area, '导体截面积');
+  const rho = parsePositive(p.rho, '电阻率');
+  if (area > 1000) throw new Error('导体截面积超过 1000 mm²，请确认单位是否为 mm²。');
+  if (length > 100000) throw new Error('单程线长超过 100 km，请确认单位是否为 m。');
+  const factor = p.kind === 'dc1' ? 1 : 2;
+  const loopLength = length * factor;
+  const resistance = (rho * loopLength) / area;
+  const drop = current * resistance;
+  const percent = (drop / voltage) * 100;
+  if (percent >= 100) throw new Error('计算压降已达到或超过电源电压，请检查输入是否合理。');
+  return { drop, percent, endVoltage: voltage - drop, resistance, loopLength };
+}
