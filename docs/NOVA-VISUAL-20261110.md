@@ -7,7 +7,8 @@
 
 - 首页视觉从「深墨绿底 + Three.js 实时球」改为「暖白纸底 + Blender 离线渲染的青玉主视觉」。
 - 三维资产采用双轨：`/lab` 保留可旋转、可导出 GLB 的 Three.js 实时模型；首页使用 51 KB 的透明 WebP。
-- 全站 11 条路由 × 4 视口 = 44 组合实测通过，无横向溢出、无 JS 错误、无资源加载失败。
+- 全站 17 条路由 × 4 视口 = 68 组合实测通过，无横向溢出、无 JS 错误、无资源加载失败。
+  （此前回报的「11 条路由」不完整，漏计 6 条，完整清单见第六节。）
 - **未发布到生产**。理由见第七节：这是重大视觉改版，需要先确认视觉方向。
 
 ## 二、为什么必须换到离线渲染
@@ -52,7 +53,13 @@
 
 ## 六、功能验收
 
-**全站审计**（`nova-site-audit.mjs`）：11 路由 × 4 视口 = 44 组合，全部 200、有 h1、无溢出、无错误。
+**全站审计**（`nova-audit-all.mjs`，脚本从 `dist/` 实际构建产物生成路由清单）：17 路由 × 4 视口 = 68 组合，
+全部 200、有 h1、无溢出、无 pageerror、无 requestfailed。
+
+完整路由（由 `dist/**/index.html` 枚举）：`/`、`/about`、`/ai`、`/blog`、`/docs`、`/docs/calculation-record`、
+`/docs/reusable-archives`、`/docs/static-site-deployment`、`/docs/unit-conversion`、`/lab`、`/lab-material`、
+`/projects`、`/projects/engineering-notes`、`/projects/engineering-toolbox`、`/projects/project-nova`、
+`/projects/yuheng-core`、`/tools`。
 
 **工程工具箱**（`nova-tools-test.mjs`）：
 

@@ -53,9 +53,9 @@ def rep(name, base, rough, metal, trans=0.0, ior=1.45, coat=0.0, emit=None, emit
         noise.inputs['Roughness'].default_value = 0.62
         nr = nt.nodes.new('ShaderNodeValToRGB')
         nr.color_ramp.elements[0].position = 0.36
-        nr.color_ramp.elements[0].color = (0.40, 0.70, 0.58, 1)
+        nr.color_ramp.elements[0].color = (0.20, 0.48, 0.36, 1)
         nr.color_ramp.elements[1].position = 0.68
-        nr.color_ramp.elements[1].color = (0.80, 0.95, 0.86, 1)
+        nr.color_ramp.elements[1].color = (0.62, 0.88, 0.74, 1)
         nt.links.new(noise.outputs['Fac'], nr.inputs['Fac'])
         nt.links.new(nr.outputs['Color'], bs.inputs['Base Color'])
     if sss > 0 and 'Subsurface Weight' in bs.inputs:
@@ -73,8 +73,10 @@ def rep(name, base, rough, metal, trans=0.0, ior=1.45, coat=0.0, emit=None, emit
     nt.links.new(bs.outputs['BSDF'], out.inputs['Surface'])
 
 # 参考图是暖白纸底上的青玉：玉必须浅、透、有内部散射，不能是深墨绿
-rep("mat-jade-shell", (0.58, 0.86, 0.73), 0.09, 0.0, trans=0.86, ior=1.55, coat=0.55, sss=0.22, sss_rad=(0.45,0.85,0.65), sss_scale=0.25)
-rep("mat-kernel", (1.0, 0.96, 0.86), 0.5, 0.0, emit=(1.0, 0.88, 0.62), emit_str=5.5)
+# 实心浅青玉：透射只留一点点做边缘水头，主体靠次表面散射表现"玉肉"，这样球心不会再透出背景的白。
+rep("mat-jade-shell", (0.30, 0.62, 0.48), 0.10, 0.0, trans=0.12, ior=1.55, coat=0.5, sss=0.9, sss_rad=(0.42,0.80,0.58), sss_scale=0.5)
+# 内核只作柔光核：强度过高时透过球壳形成边界生硬的中央白斑（本轮诊断已确认）
+rep("mat-kernel", (1.0, 0.95, 0.86), 0.62, 0.0, emit=(1.0, 0.88, 0.66), emit_str=2.8)
 rep("mat-serpent", (0.72, 0.54, 0.24), 0.20, 0.75, coat=0.35)
 def serpent_plates():
     m = bpy.data.materials.get("mat-serpent")
@@ -82,17 +84,22 @@ def serpent_plates():
     bs = [n for n in nt.nodes if n.type == 'BSDF_PRINCIPLED'][0]
     out = [n for n in nt.nodes if n.type == 'OUTPUT_MATERIAL'][0]
     brick = nt.nodes.new('ShaderNodeTexBrick')
-    brick.inputs['Scale'].default_value = 15.0
-    brick.inputs['Mortar Size'].default_value = 0.007
+    brick.inputs['Scale'].default_value = 1.6
+    brick.inputs['Mortar Size'].default_value = 0.014
     brick.inputs['Mortar Smooth'].default_value = 0.2
     brick.inputs['Bias'].default_value = 0.0
     brick.inputs['Brick Width'].default_value = 0.5
     brick.inputs['Row Height'].default_value = 0.5
-    brick.inputs['Color1'].default_value = (0.50, 0.34, 0.12, 1)
-    brick.inputs['Color2'].default_value = (0.26, 0.17, 0.06, 1)
-    brick.inputs['Mortar'].default_value = (0.62, 0.45, 0.18, 1)
+    # 甲片取深青玉，砖缝取金铜：远看是金铜蛇裹青玉甲，近看有鳞片分界
+    brick.inputs['Color1'].default_value = (0.10, 0.30, 0.23, 1)
+    brick.inputs['Color2'].default_value = (0.07, 0.22, 0.17, 1)
+    brick.inputs['Mortar'].default_value = (0.66, 0.48, 0.20, 1)
     uvc = nt.nodes.new('ShaderNodeTexCoord')
-    nt.links.new(uvc.outputs['UV'], brick.inputs['Vector'])
+    # 砖格旋转 45° 成菱形：横竖方砖读起来是"砖墙"，菱形才是覆瓦甲片
+    mp = nt.nodes.new('ShaderNodeMapping')
+    mp.inputs['Rotation'].default_value[2] = 0.785398
+    nt.links.new(uvc.outputs['UV'], mp.inputs['Vector'])
+    nt.links.new(mp.outputs['Vector'], brick.inputs['Vector'])
     nt.links.new(brick.outputs['Color'], bs.inputs['Base Color'])
     bump = nt.nodes.new('ShaderNodeBump')
     bump.inputs['Strength'].default_value = 0.55
@@ -151,6 +158,47 @@ if mr:
     nt2.links.new(bmp2.outputs['Normal'], bs2.inputs['Normal'])
     print("COPPER-TICKS ok")
 
+# 球壳加实体壁厚：单面球壳在 transmission 下内壁相互反射，中央出现形状不规则的大块亮区。
+# Solidify 给出真实壁厚后，厚度差才能被体积吸收正确读出。
+# 注意：不要给球壳加 Solidify。球面本身是闭合曲面，Volume Absorption 会在球内生效；
+# 一旦加厚成双层壳，体积被限制在 0.085 的壁内，路径太短，吸收几乎失效，球心会直接透出背景的白色。
+_sh = bpy.data.objects.get("jade-shell")
+print("SHELL", _sh.name if _sh else "MISSING")
+
+# 蛇头单独给青玉材质：
+# 蛇身用砖格贴图表达甲片，但蛇头是球体 UV，砖格在头上只铺到一两块，读成整块金铜色，
+# 于是头和身颜色断开、像"绿管子插了块金石头"。这里按对象直接换成与蛇身同色系的青玉。
+def head_material():
+    m = bpy.data.materials.new("mat-serpent-head-jade")
+    m.use_nodes = True
+    nt = m.node_tree
+    bs = [n for n in nt.nodes if n.type == 'BSDF_PRINCIPLED'][0]
+    bs.inputs['Base Color'].default_value = (0.11, 0.33, 0.25, 1)
+    bs.inputs['Roughness'].default_value = 0.22
+    bs.inputs['Metallic'].default_value = 0.35
+    if 'Coat Weight' in bs.inputs:
+        bs.inputs['Coat Weight'].default_value = 0.6
+    # 头部保留一点细鳞起伏，避免完全塑料感
+    noise = nt.nodes.new('ShaderNodeTexNoise')
+    noise.inputs['Scale'].default_value = 46.0
+    noise.inputs['Detail'].default_value = 4.0
+    bump = nt.nodes.new('ShaderNodeBump')
+    bump.inputs['Strength'].default_value = 0.28
+    bump.inputs['Distance'].default_value = 0.02
+    nt.links.new(noise.outputs['Fac'], bump.inputs['Height'])
+    nt.links.new(bump.outputs['Normal'], bs.inputs['Normal'])
+    return m
+
+_hm = head_material()
+for _n in ("serpent-skull", "serpent-snout", "serpent-jaw"):
+    _o = bpy.data.objects.get(_n)
+    if _o and _o.type == 'MESH':
+        _o.data.materials.clear()
+        _o.data.materials.append(_hm)
+        print("HEAD-JADE", _n)
+    else:
+        print("HEAD-MISS", _n)
+
 # 球壳体积吸收：让厚度决定深浅，玉的关键
 ms = bpy.data.materials.get("mat-jade-shell")
 if ms and ms.use_nodes:
@@ -158,7 +206,7 @@ if ms and ms.use_nodes:
     o3 = [n for n in nt3.nodes if n.type == 'OUTPUT_MATERIAL'][0]
     vol = nt3.nodes.new('ShaderNodeVolumeAbsorption')
     vol.inputs['Color'].default_value = (0.16, 0.52, 0.36, 1)
-    vol.inputs['Density'].default_value = 1.75
+    vol.inputs['Density'].default_value = 1.4
     nt3.links.new(vol.outputs['Volume'], o3.inputs['Volume'])
     print("SHELL-VOLUME ok")
 

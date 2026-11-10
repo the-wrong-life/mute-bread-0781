@@ -10,9 +10,12 @@
 | 首页主视觉 | Blender Cycles 渲染的 WebP（透明背景） | 次表面散射、体积吸收、金属反射在离线渲染中才成立；首页首屏也不应加载 500 KB 的 three.js |
 | `/lab` 开发预览 | Three.js 实时渲染 | 可旋转、缩放、导出 GLB，用于持续迭代几何 |
 
-实测结论：同一 GLB，Three.js `MeshPhysicalMaterial` 的 transmission 在深色背景上只会得到「白玻璃」或「暗玻璃」，
-无法表达玉的厚度沉积；Blender 侧改用 `Volume Absorption` + `Subsurface` 后才出现真实玉感。
-因此首页改用离线图，实时模型保留在 `/lab`。
+**本轮实验结果（限定条件，不作为渲染器的普遍结论）**：在使用本仓库当前参数（transmission 0.86 / thickness 0.4 /
+attenuationDistance 4.5 / 深色或中等亮度背景）时，Three.js `MeshPhysicalMaterial` 的输出偏向「白玻璃」或「暗玻璃」两端，
+未达到目标玉质；同一 GLB 在 Blender 侧加上 `Volume Absorption` + `Subsurface` 后接近目标。
+需要说明的是，Three.js 的 `MeshPhysicalMaterial` 本身提供 `thickness`、`attenuationColor`、`attenuationDistance`
+等体积近似参数，理论上也能表达厚度沉积——是**本轮参数与布光组合未调出目标效果**，不是引擎能力缺失。
+后续若要让实时版本承担主视觉，应先在该组参数上重做对照实验。
 
 ## 目录
 
@@ -37,15 +40,31 @@
 
 ## 关键参数与教训
 
-- **玉必须靠体积吸收**：`Volume Absorption` 取 Color=(0.16,0.52,0.36)、Density=1.75，
-  厚度差才产生深青沉积；只调 Base Color 永远得到「奶绿塑料」。
-- **透明背景是给暖白纸底用的**：首屏背景必须是暖白（#f7f2e7 系）。先在深墨绿首屏上试过，球体发灰绿、像塑料。
+- **体积吸收是本轮玉感的主要来源**：`Volume Absorption` 取 Color=(0.16,0.52,0.36)、Density=1.75 时，
+  厚度差产生深青沉积。仅调整 Base Color（不接体积/次表面）在本轮实验中没有得到玉感。
+- **透明背景是给暖白纸底用的**：本轮首屏为暖白（#f7f2e7 系），在深墨绿首屏上试过，同一张图发灰绿、像塑料。
+  这是**背景色与透射材质耦合**的现象，不代表深色底一律不可用。
 - **蛇必须贴球面**：路径用球面参数化（半径 1.086，纬度按 `cos(a)*0.125` 起伏）；平面圆环无论怎么调都像呼啦圈。
 - **刻度齿不要做成几何**：60 个 BoxGeometry 齿在 1100px 渲染里退化成白点圈，严重廉价化；刻度改由铜环带自身的 Wave 纹理表达。
 - **材质必须命名**：`mat-jade-shell` / `mat-serpent` 等 14 个名字是 GLB → Blender 的唯一锚点，
   Blender 脚本按名字覆写；不命名则导入后全部变成 `Material_N`。
 - **自定义 ShaderMaterial 无法导出 GLB**：导出前必须临时替换成同名 `MeshPhysicalMaterial` 代理，
   否则 Blender 侧报 MISSING、玉球变白球。
+
+## 复现参数（渲染侧）
+
+| 项 | 值 |
+| --- | --- |
+| 相机 | 位置 (0, -10, 0.35)，焦距 92 mm，朝向 (0, 0, 0.05) |
+| 采样 | 1400×1400，Cycles CPU，128 samples，denoise 开 |
+| 色彩 | AgX，Look = Medium High Contrast |
+| 背景 | 渐变世界（0.62/0.60/0.54 → 0.96/0.94/0.88），强度 1.15；`film_transparent=True` |
+| 灯光 | key (5.2,-7.0,6.4) 1500W size 7；rim (-6.8,2.2,3.6) 900W size 6；back (0.2,5.2,2.0) 700W size 5；fill (-3.4,-7.6,0.8) 320W size 6 |
+| 球壳 | Transmission 0.86 / IOR 1.55 / Coat 0.55 / Subsurface 0.22；Volume Absorption (0.16,0.52,0.36) Density 1.75 |
+| 蛇身 | 半径 0.098，砖格程序化（scale 15），金铜双色 + 亮金细缝 |
+
+诊断脚本（`_work/nova-render-v19.py`，未入库）先 `read_factory_settings(use_empty=True)` 清空出厂场景，
+打印导入后对象清单，再按「关内核 / 全开 / 单灯各一张 / 只内核」输出 700² 64 samples 对照图，用于定位高光来源。
 
 ## 状态
 

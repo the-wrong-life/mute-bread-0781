@@ -43,7 +43,9 @@ function taperedTube(
       const nz = cos * N.z + sin * B.z;
       positions.push(P.x + r * nx, P.y + r * ny, P.z + r * nz);
       normals.push(nx, ny, nz);
-      uvs.push(t * 3.5, (j / radialSegments) * 1.2);
+      // 鳞片密度：沿蛇身一圈约 40 段、周向 6 段；UV 直接按"片数"给，
+      // 这样 Blender 侧砖格纹理 scale=1 就能出整齐鳞片，而不是被拉成细条纹。
+      uvs.push(t * 20, (j / radialSegments) * 3);
     }
   }
   for (let i = 1; i <= tubularSegments; i += 1) {
@@ -68,20 +70,22 @@ function taperedTube(
  * 使正面看成一条完整闭合的环，而不是散成两段螺旋。
  */
 function serpentCurve(): THREE.CatmullRomCurve3 {
-  // 关键修正：蛇必须贴着球面绕行，否则无论怎么调都像独立呼啦圈。
-  // 用球面参数化：半径 R 略大于球半径（1.0），让蛇身半嵌入玉体；
-  // 纬度随经度做一次正弦起伏，形成真实的立体盘绕而不是平面圆。
+  // 蛇身是绕球的「外圈轮廓」：环面基本面向相机（XY 平面），半径明显大于球（1.26 > 1.0），
+  // 这样主相机能看到一圈完整的外环，而不是横穿球体的横杆。
+  // 前后起伏用 z 的正弦给出，让下半圈绕到球体背后，保留空间关系。
   const pts: THREE.Vector3[] = [];
-  const steps = 300;
-  const sweep = Math.PI * 2 - 0.16;
-  const R = 1.086;
-  const latAmp = 0.125;
+  const steps = 320;
+  const gap = 0.38; // 咬合缺口，蛇头咬住尾尖
+  const sweep = Math.PI * 2 - gap;
+  const R = 1.26;
+  const squashY = 0.965;
+  const zAmp = 0.24;
+  const endAngle = Math.PI * 0.25; // 蛇头落在画面右上 45°
   for (let i = 0; i <= steps; i += 1) {
     const t = i / steps;
-    const a = Math.PI * 0.42 - sweep * t;
-    const lat = Math.cos(a) * latAmp;
-    const r = Math.cos(lat) * R;
-    pts.push(new THREE.Vector3(Math.cos(a) * r, Math.sin(lat) * R, Math.sin(a) * r));
+    const a = endAngle - sweep * (1 - t);
+    const z = Math.sin(a - 0.45) * zAmp;
+    pts.push(new THREE.Vector3(Math.cos(a) * R, Math.sin(a) * R * squashY, z));
   }
   return new THREE.CatmullRomCurve3(pts, false, 'centripetal', 0.5);
 }
@@ -124,11 +128,11 @@ export function buildJadeModel(options: { quality?: 'high' | 'low' } = {}): Jade
   innerShell.visible = false;
 
   // 2. 暖白内核
-  const kernelGeo = new THREE.SphereGeometry(0.26, hi ? 72 : 36, hi ? 56 : 28);
+  const kernelGeo = new THREE.SphereGeometry(0.48, hi ? 72 : 36, hi ? 56 : 28);
   const kernelMat = new THREE.MeshPhysicalMaterial({
     color: new THREE.Color('#fffdf6'),
     emissive: new THREE.Color('#ffe6b8'),
-    emissiveIntensity: 4.2,
+    emissiveIntensity: 2.4,
     envMapIntensity: 0.4,
     roughness: 0.55,
     metalness: 0,
@@ -146,7 +150,7 @@ export function buildJadeModel(options: { quality?: 'high' | 'low' } = {}): Jade
   serpent.name = 'ouroboros';
   serpent.rotation.set(0.0, 0.0, 0.0);
   const curve = serpentCurve();
-  const bodyGeo = taperedTube(curve, (t) => 0.098 - 0.032 * Math.pow(t, 2.0), hi ? 460 : 230, hi ? 44 : 26);
+  const bodyGeo = taperedTube(curve, (t) => 0.132 - 0.038 * Math.pow(t, 2.0), hi ? 460 : 230, hi ? 44 : 26);
   bodyGeo.scale(1, 1, 1);
   const bodyMat = new THREE.MeshPhysicalMaterial({
     color: new THREE.Color('#c9a05e'),
@@ -182,6 +186,9 @@ export function buildJadeModel(options: { quality?: 'high' | 'low' } = {}): Jade
   bellyMat.name = 'mat-serpent-belly';
   const belly = new THREE.Mesh(bellyGeo, bellyMat);
   belly.name = 'serpent-belly';
+  // 腹鳞管在离线渲染里会被读成"第二根环"，与蛇身轮廓冲突，默认隐藏；
+  // 节点保留以便将来用位移或法线表达腹鳞。
+  belly.visible = false;
   serpent.add(belly);
 
   // 蛇头
@@ -197,16 +204,17 @@ export function buildJadeModel(options: { quality?: 'high' | 'low' } = {}): Jade
   head.position.copy(tip);
   head.quaternion.setFromRotationMatrix(new THREE.Matrix4().makeBasis(fwd, upV, sideV));
 
-  const skullGeo = new THREE.SphereGeometry(0.118, hi ? 48 : 24, hi ? 36 : 18);
+  const skullGeo = new THREE.SphereGeometry(0.152, hi ? 48 : 24, hi ? 36 : 18);
   const skull = new THREE.Mesh(skullGeo, bodyMat);
-  skull.scale.set(2.05, 0.84, 1.15);
+  // 蛇头不能是扁球：横向再拉长、竖向压薄、宽度收窄，吻部才有探出感
+  skull.scale.set(2.35, 0.70, 0.92);
   skull.name = 'serpent-skull';
   head.add(skull);
 
   // 吻部：向前拉出的锥体，让头有"咬合"指向而不是圆球
-  const snout = new THREE.Mesh(new THREE.ConeGeometry(0.072, 0.236, hi ? 32 : 18), bodyMat);
+  const snout = new THREE.Mesh(new THREE.ConeGeometry(0.086, 0.40, hi ? 32 : 18), bodyMat);
   snout.name = 'serpent-snout';
-  snout.position.set(0.175, -0.006, 0);
+  snout.position.set(0.245, -0.004, 0);
   snout.rotation.z = -Math.PI / 2;
   snout.scale.set(1, 1, 0.72);
   head.add(snout);
@@ -301,7 +309,16 @@ export function buildJadeModel(options: { quality?: 'high' | 'low' } = {}): Jade
 
   // 5. 倾斜铜环（绕到球体背后）
   // 参考图的铜环是"宽扁测量带"而不是细圆环：用开口圆柱面做带子
-  const bandGeo = new THREE.CylinderGeometry(1.30, 1.30, 0.072, hi ? 200 : 120, 1, true);
+  // 用 Lathe 生成矩形截面的实体环：有内外壁、上下环面与自然倒角，
+  // 取代原先的「开口圆柱侧面」（薄片无厚度，近看边缘是毛边）。
+  const ringProfile = [
+    new THREE.Vector2(1.238, -0.042),
+    new THREE.Vector2(1.302, -0.042),
+    new THREE.Vector2(1.302, 0.042),
+    new THREE.Vector2(1.238, 0.042),
+    new THREE.Vector2(1.238, -0.042),
+  ];
+  const bandGeo = new THREE.LatheGeometry(ringProfile, hi ? 220 : 128);
   const ringMat = new THREE.MeshStandardMaterial({
     color: new THREE.Color('#c99a52'),
     roughness: 0.26,
@@ -314,7 +331,9 @@ export function buildJadeModel(options: { quality?: 'high' | 'low' } = {}): Jade
   ringMat.side = THREE.DoubleSide;
   const copperRing = new THREE.Mesh(bandGeo, ringMat);
   copperRing.name = 'copper-ring';
-  copperRing.rotation.set(0.13, 0.0, -0.06);
+  // 环面法线倾出视线约 49°，正面投影成清楚的斜向椭圆，
+  // 与基本正对相机的蛇环（R=1.26）形成交叉关系，两者不再挤成一团。
+  copperRing.rotation.set(Math.PI / 2 - 0.86, 0.0, -0.2);
   copperRing.scale.set(1, 1, 1);
   copperRing.castShadow = true;
   root.add(copperRing);
@@ -335,7 +354,7 @@ export function buildJadeModel(options: { quality?: 'high' | 'low' } = {}): Jade
   );
   tickFace.position.z = 0.066;
   tick.add(tickFace);
-  tick.position.set(1.34, 0.0, 0.0);
+  tick.position.set(1.27, 0.0, 0.052);
   tick.rotation.z = Math.PI / 2;
   copperRing.add(tick);
 
@@ -383,8 +402,8 @@ export function buildJadeModel(options: { quality?: 'high' | 'low' } = {}): Jade
   tabletMat.name = 'mat-tablet';
   const tablet = new THREE.Mesh(tabletGeo, tabletMat);
   tablet.name = 'xin-si-tablet';
-  tablet.position.set(-1.02, -0.5, 0.62);
-  tablet.rotation.set(-0.02, 0.55, -0.08);
+  tablet.position.set(0.98, -0.66, 0.58);
+  tablet.rotation.set(-0.04, -0.42, 0.06);
   root.add(tablet);
 
   // 8. 七星刻纹
