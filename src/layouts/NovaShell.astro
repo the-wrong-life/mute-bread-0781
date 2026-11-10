@@ -1,6 +1,8 @@
 ---
 export interface Props { title: string; description?: string; active?: string; }
 const { title, description = 'DIY 工程实验室 — 工程、实验与可复用工具。', active = '' } = Astro.props;
+// canonical 必须由 site + 当前路径生成，而不是硬编码：文档详情、项目详情共用一个布局。
+const canonical = new URL(Astro.url.pathname, Astro.site ?? 'https://www.token-xxo.cn').href;
 const links = [
   { href: '/projects', label: '项目' }, { href: '/docs', label: '文档' },
   { href: '/tools', label: '工具' }, { href: '/ai', label: 'AI' },
@@ -15,6 +17,14 @@ const links = [
     <meta name="description" content={description} />
     <meta name="theme-color" content="#f4f0e6" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="canonical" href={canonical} />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="DIY 工程实验室" />
+    <meta property="og:locale" content="zh_CN" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta name="twitter:card" content="summary" />
     <title>{title} · DIY 工程实验室</title>
   </head>
   <body>
