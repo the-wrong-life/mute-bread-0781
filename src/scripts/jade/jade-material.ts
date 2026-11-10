@@ -21,11 +21,11 @@ export function createJadeMaterial(): THREE.ShaderMaterial {
     side: THREE.FrontSide,
     uniforms: {
       uCoreColor: { value: new THREE.Color('#fffaea') },
-      uMidColor: { value: new THREE.Color('#7fc9a8') },
-      uEdgeColor: { value: new THREE.Color('#2d7d5e') },
+      uMidColor: { value: new THREE.Color('#4e9a76') },
+      uEdgeColor: { value: new THREE.Color('#14432f') },
       uRimColor: { value: new THREE.Color('#dcfff0') },
       uLightDir: { value: new THREE.Vector3(0.34, 0.82, 0.46).normalize() },
-      uCorePower: { value: 0.34 },
+      uCorePower: { value: 0.26 },
       uRimPower: { value: 2.1 },
       uSpecPower: { value: 34.0 },
       uEnv: { value: null as THREE.Texture | null },
@@ -94,7 +94,7 @@ export function createJadeMaterial(): THREE.ShaderMaterial {
         float body = smoothstep(0.0, 0.92, facing);
         vec3 col = mix(uEdgeColor, uMidColor, body);
         // 中心暖白光核，只在正对处出现，范围收窄，避免整球发白
-        float coreGlow = pow(facing, 5.5) * uCorePower;
+        float coreGlow = pow(facing, 9.0) * uCorePower;
         col += uCoreColor * coreGlow;
 
         // 3. 菲涅尔边缘亮环：玉器的水头
@@ -123,7 +123,7 @@ export function createJadeMaterial(): THREE.ShaderMaterial {
         col *= mix(0.55, 1.0, body);
 
         // 厚度感即透明度：中心最薄最透，边缘最厚接近实心
-        float alpha = mix(0.92, 0.42, smoothstep(0.05, 0.98, facing));
+        float alpha = mix(0.94, 0.55, smoothstep(0.08, 0.96, facing));
         gl_FragColor = vec4(col, alpha);
         #include <colorspace_fragment>
       }
