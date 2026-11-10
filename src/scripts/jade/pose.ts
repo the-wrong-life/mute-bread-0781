@@ -176,3 +176,130 @@ export function snakeCurveAt(time: number, steps = 320): THREE.CatmullRomCurve3 
   }
   return new THREE.CatmullRomCurve3(pts, false, 'centripetal', 0.5);
 }
+
+/* ------------------------------------------------------------------ */
+/* 覆瓦鳞片：铺满全身的几何甲片（替代砖格贴图）                          */
+/* ------------------------------------------------------------------ */
+
+/**
+ * 铺满蛇身的覆瓦甲片。
+ *
+ * 为什么不用贴图：Blender 与 WebGL 两侧实测都证明，砖格 UV 的「金缝 + 青玉甲片」
+ * 在 10 单位相机距离下只会读成编织袋/鱼网，缝隙越亮越像绳编。真鳞片要有
+ * ① 沿身体的片长大于片宽 ② 后缘压在下一片之上 ③ 片间留出底色缝 —— 这三条只能靠几何。
+ *
+ * 为什么不用 InstancedMesh：GLTFExporter 导出实例需要 EXT_mesh_gpu_instancing，
+ * Blender 导入端不保证支持，导出后鳞片会整批消失。这里用固定拓扑的合并网格原地重算，
+ * 顶点数与片数在建模阶段就固定，导出即普通 BufferGeometry。
+ */
+export const SCALE_ROWS = 44;
+export const SCALE_COLS = 16;
+export const SCALE_SEG_A = 3;
+export const SCALE_SEG_B = 3;
+const SCALE_VERTS = (SCALE_SEG_A + 1) * (SCALE_SEG_B + 1);
+export const SCALE_VERT_COUNT = SCALE_ROWS * SCALE_COLS * SCALE_VERTS;
+
+/** 静态拓扑：每片甲片一张 (SEG_A × SEG_B) 的方格网，片与片之间不共享顶点（保持硬边缝）。 */
+export function buildScaleIndex(): number[] {
+  const idx: number[] = [];
+  for (let plate = 0; plate < SCALE_ROWS * SCALE_COLS; plate += 1) {
+    const base = plate * SCALE_VERTS;
+    for (let a = 0; a < SCALE_SEG_A; a += 1) {
+      for (let b = 0; b < SCALE_SEG_B; b += 1) {
+        const i0 = base + a * (SCALE_SEG_B + 1) + b;
+        const i1 = i0 + 1;
+        const i2 = i0 + (SCALE_SEG_B + 1);
+        const i3 = i2 + 1;
+        idx.push(i0, i2, i1, i1, i2, i3);
+      }
+    }
+  }
+  return idx;
+}
+
+/** 片间 UV：整片 0–1，供将来做边缘色差或法线细节。 */
+export function buildScaleUv(): Float32Array {
+  const uv = new Float32Array(SCALE_ROWS * SCALE_COLS * SCALE_VERTS * 2);
+  let k = 0;
+  for (let plate = 0; plate < SCALE_ROWS * SCALE_COLS; plate += 1) {
+    for (let a = 0; a <= SCALE_SEG_A; a += 1) {
+      for (let b = 0; b <= SCALE_SEG_B; b += 1) {
+        uv[k] = a / SCALE_SEG_A;
+        uv[k + 1] = b / SCALE_SEG_B;
+        k += 2;
+      }
+    }
+  }
+  return uv;
+}
+
+/**
+ * 每帧原地重算甲片顶点。与 updateSnakeTube 同源（同一 snakePoint / snakeTangent / snakeRadius），
+ * 因此鳞片永远贴在管体表面上，不会出现"动画一动就飞出去"。
+ */
+export function updateSnakeScales(positions: Float32Array, normals: Float32Array, time: number): void {
+  const p = new THREE.Vector3();
+  const tan = new THREE.Vector3();
+  const radial = new THREE.Vector3();
+  const side = new THREE.Vector3();
+  const dir = new THREE.Vector3();
+  const wdir = new THREE.Vector3();
+  const centre = new THREE.Vector3();
+  const v = new THREE.Vector3();
+  let k = 0;
+  const bodyArc = 2 * Math.PI * BASE_RADIUS;
+  for (let i = 0; i < SCALE_ROWS; i += 1) {
+    // 收进 0.5 个步距，避免尾端与颈端出现半片
+    const u = (i + 0.5) / SCALE_ROWS;
+    snakePoint(u, time, p);
+    snakeTangent(u, time, tan);
+    radial.copy(p).normalize();
+    radial.addScaledVector(tan, -radial.dot(tan));
+    if (radial.lengthSq() < 1e-8) radial.set(0, 0, 1);
+    radial.normalize();
+    side.crossVectors(tan, radial).normalize();
+    const r = snakeRadius(u);
+    // 片长按身体弧长给（不收细处也跟着缩），片宽按当地周长给
+    const rowStep = bodyArc / SCALE_ROWS;
+    const arcStep = (2 * Math.PI * r) / SCALE_COLS;
+    // 片长必须大于行距，后缘才能压住下一行；片宽同理要大于环向步距，两侧才不留缝
+    const plateLen = rowStep * (2.15 - 0.35 * (1 - u));
+
+    const plateWid = arcStep * 1.95;
+    const amp = r * 0.17;
+    for (let j = 0; j < SCALE_COLS; j += 1) {
+      const stagger = (i % 2) * 0.5;
+      const ang = ((j + stagger) / SCALE_COLS) * Math.PI * 2;
+      dir.copy(radial).multiplyScalar(Math.cos(ang)).addScaledVector(side, Math.sin(ang)).normalize();
+      wdir.crossVectors(dir, tan).normalize();
+      centre.copy(p).addScaledVector(dir, r * 0.95);
+      for (let a = 0; a <= SCALE_SEG_A; a += 1) {
+        const ua = a / SCALE_SEG_A;
+        // 前缘贴实在管体上、后缘抬起压住下一片：这才是覆瓦，不是贴一排小鼓包
+        const lead = Math.min(1, ua * 4.0);
+        const rise = 0.05 + 0.95 * Math.pow(ua, 1.6);
+        const lift = amp * lead * rise;
+        const along = (ua - 0.5) * plateLen;
+        for (let b = 0; b <= SCALE_SEG_B; b += 1) {
+          const vb = b / SCALE_SEG_B;
+          const across = (vb - 0.5) * plateWid;
+          // 横向收边：两侧压低，片才有隆起的弧面
+          const edge = Math.sin(Math.PI * vb) ** 0.6;
+          v.copy(centre).addScaledVector(tan, along).addScaledVector(wdir, across).addScaledVector(dir, lift * edge);
+          positions[k] = v.x;
+          positions[k + 1] = v.y;
+          positions[k + 2] = v.z;
+          // 法线：径向为主，向四边轻微外倾，近看才有圆瓦感
+          const nx = dir.x * 0.86 + tan.x * (ua - 0.5) * 0.75 + wdir.x * (vb - 0.5) * 0.75;
+          const ny = dir.y * 0.86 + tan.y * (ua - 0.5) * 0.75 + wdir.y * (vb - 0.5) * 0.75;
+          const nz = dir.z * 0.86 + tan.z * (ua - 0.5) * 0.75 + wdir.z * (vb - 0.5) * 0.75;
+          const nl = Math.hypot(nx, ny, nz) || 1;
+          normals[k] = nx / nl;
+          normals[k + 1] = ny / nl;
+          normals[k + 2] = nz / nl;
+          k += 3;
+        }
+      }
+    }
+  }
+}

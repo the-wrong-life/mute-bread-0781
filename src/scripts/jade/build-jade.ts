@@ -6,6 +6,10 @@ import {
   snakeTangent,
   snakeCurveAt,
   updateSnakeTube,
+  updateSnakeScales,
+  buildScaleIndex,
+  buildScaleUv,
+  SCALE_VERT_COUNT,
   snakeRadius,
   headYaw,
   ringSwing,
@@ -160,99 +164,6 @@ function sampleHead(sections: HeadSection[], x: number): { w: number; h: number;
   }
   const last = sections[sections.length - 1];
   return { w: last.w, h: last.h, cy: last.cy };
-}
-
-/**
- * 鳞片样段：在一小段蛇身上生成覆瓦状几何甲片，用于与砖格法线方案做同机位对照。
- * 每片甲片是压扁的半球（8×6 段），沿切线方向重叠 45%、逐行错位半个步距，
- * 尺寸随蛇身半径缩放，方向取"顺着蛇身走"的局部坐标架。
- * 返回单个合并网格，节点名 serpent-scales-sample，便于 Blender 侧单独赋材质或隐藏。
- */
-function buildScaleSample(
-  curve: THREE.CatmullRomCurve3,
-  t0: number,
-  t1: number,
-  radiusAt: (t: number) => number,
-  hi: boolean,
-): THREE.Mesh | null {
-  const pos: number[] = [];
-  const nor: number[] = [];
-  const uvs: number[] = [];
-  const idx: number[] = [];
-  const rows = hi ? 26 : 14;      // 沿蛇身
-  const cols = hi ? 12 : 8;       // 绕一周
-  const segA = hi ? 6 : 4;        // 甲片纵向段数
-  const segB = hi ? 5 : 4;        // 甲片横向段数
-  const len = curve.getLength();
-  const tmpT = new THREE.Vector3();
-  const tmpN = new THREE.Vector3();
-  const tmpB = new THREE.Vector3();
-  const v = new THREE.Vector3();
-  for (let i = 0; i < rows; i += 1) {
-    const fi = i / (rows - 1);
-    const t = t0 + (t1 - t0) * fi;
-    const p = curve.getPointAt(t);
-    const tan = curve.getTangentAt(t).normalize();
-    // 外法线取径向（环在 XY 平面上绕原点），再用切向正交化
-    tmpN.copy(p).normalize();
-    tmpN.sub(tan.clone().multiplyScalar(tmpN.dot(tan))).normalize();
-    tmpB.crossVectors(tan, tmpN).normalize();
-    const r = radiusAt(t);
-    // 甲片长度按弧长给，保证重叠比例稳定：步距 = 弧长/rows，片长 = 步距×1.45
-    const step = (len * (t1 - t0)) / rows;
-    const plateLen = step * 1.45;
-    const plateWid = ((2 * Math.PI * r) / cols) * 1.55;
-    const plateHt = r * 0.30;
-    for (let j = 0; j < cols; j += 1) {
-      // 逐行错位半格：读成覆瓦而不是方格阵
-      const phase = ((j + (i % 2) * 0.5) / cols) * Math.PI * 2;
-      const radial = tmpN.clone().multiplyScalar(Math.cos(phase)).add(tmpB.clone().multiplyScalar(Math.sin(phase)));
-      const centre = p.clone().addScaledVector(radial, r * 0.92);
-      const base = pos.length / 3;
-      for (let a = 0; a <= segA; a += 1) {
-        const u = a / segA;
-        // 沿切向：前端薄、后端厚，形成叠压的"檐口"
-        const along = (u - 0.5) * plateLen;
-        const taper = Math.sin(Math.PI * Math.min(u, 1)) ** 0.55;
-        for (let b = 0; b <= segB; b += 1) {
-          const w = (b / segB - 0.5) * plateWid;
-          const across = Math.sin(Math.PI * Math.min(b / segB, 1)) ** 0.6;
-          const lift = plateHt * taper * across;
-          v.copy(centre).addScaledVector(tan, along).addScaledVector(tmpB, w).addScaledVector(radial, lift);
-          pos.push(v.x, v.y, v.z);
-          // 法线近似取径向 + 少量切向倾斜，甲片才有"贴着蛇身"的立体感
-          nor.push(radial.x * 0.86 + tan.x * (u - 0.5) * 0.5, radial.y * 0.86 + tan.y * (u - 0.5) * 0.5, radial.z * 0.86 + tan.z * (u - 0.5) * 0.5);
-          uvs.push(u, b / segB);
-        }
-      }
-      for (let a = 0; a < segA; a += 1) {
-        for (let b = 0; b < segB; b += 1) {
-          const q = base + a * (segB + 1) + b;
-          idx.push(q, q + 1, q + segB + 1, q + segB + 1, q + 1, q + segB + 2);
-        }
-      }
-    }
-  }
-  if (!idx.length) return null;
-  const geo = new THREE.BufferGeometry();
-  geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
-  geo.setAttribute('normal', new THREE.Float32BufferAttribute(nor, 3));
-  geo.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
-  geo.setIndex(idx);
-  geo.computeVertexNormals();
-  const mat = new THREE.MeshPhysicalMaterial({
-    color: new THREE.Color('#12402e'),
-    roughness: 0.24,
-    metalness: 0.42,
-    clearcoat: 0.6,
-    clearcoatRoughness: 0.1,
-    envMapIntensity: 1.8,
-    side: THREE.DoubleSide,
-  });
-  mat.name = 'mat-serpent-scale';
-  const mesh = new THREE.Mesh(geo, mat);
-  mesh.name = 'serpent-scales-sample';
-  return mesh;
 }
 
 export function buildJadeModel(options: { quality?: 'high' | 'low' } = {}): JadeParts {
@@ -435,12 +346,34 @@ export function buildJadeModel(options: { quality?: 'high' | 'low' } = {}): Jade
   const body = new THREE.Mesh(bodyGeo, bodyMat);
   body.name = 'serpent-body';
   serpent.add(body);
-  // ---- 鳞片样段（第 4 条：先做局部，再铺满）----
-  // 现有方案是砖格法线/颜色（一张 canvas 贴图 + bumpMap），远看是菱形网、近看像编织袋。
-  // 这里用几何甲片做对照样段：每片是压扁的半球，沿切线方向重叠 45%、逐行错位半个步距，
-  // 尺寸随蛇身半径变化（颈部大、尾部小），方向始终顺着蛇身走向。
-  const scales = buildScaleSample(curve, 0.66, 0.80, snakeRadius, hi);
-  if (scales) serpent.add(scales);
+  // ---- 覆瓦鳞片：铺满全身的几何甲片 ----
+  // 结论来自两轮对照：砖格 UV（金缝 + 青玉甲片）在正常观看距离只会读成编织袋/鱼网，
+  // 缝隙越亮越像绳编；而几何甲片即使简化成 4x4 方格网也能读成鳞。
+  // 因此这里不再是"样段"，而是整条蛇身：72 行 x 10 列 = 720 片，每片 18 个三角面，
+  // 合计约 1.3 万三角面（远低于手机预算），固定拓扑原地重算，动画时不重建几何。
+  const scalePos = new Float32Array(SCALE_VERT_COUNT * 3);
+  const scaleNor = new Float32Array(SCALE_VERT_COUNT * 3);
+  const scaleGeo = new THREE.BufferGeometry();
+  scaleGeo.setAttribute('position', new THREE.BufferAttribute(scalePos, 3));
+  scaleGeo.setAttribute('normal', new THREE.BufferAttribute(scaleNor, 3));
+  scaleGeo.setAttribute('uv', new THREE.BufferAttribute(buildScaleUv(), 2));
+  scaleGeo.setIndex(buildScaleIndex());
+  updateSnakeScales(scalePos, scaleNor, 0);
+  scaleGeo.computeBoundingSphere();
+  // 甲片是青玉，蛇身底色是金铜：参考图的蛇正是"金铜底 + 青玉甲片"，
+  // 纯青玉蛇压在青玉球上首页尺寸下会直接消失（前一版的实际结果）。
+  const scaleMat = new THREE.MeshPhysicalMaterial({
+    color: new THREE.Color('#2f7a58'),
+    roughness: 0.24,
+    metalness: 0.3,
+    clearcoat: 0.55,
+    clearcoatRoughness: 0.14,
+    envMapIntensity: 2.1,
+  });
+  scaleMat.name = 'mat-serpent-scale';
+  const scales = new THREE.Mesh(scaleGeo, scaleMat);
+  scales.name = 'serpent-scales';
+  serpent.add(scales);
 
   // 腹鳞：沿内侧的一条薄带
   const bellyCurvePts: THREE.Vector3[] = [];
@@ -931,6 +864,12 @@ export function buildJadeModel(options: { quality?: 'high' | 'low' } = {}): Jade
     posAttr.needsUpdate = true;
     norAttr.needsUpdate = true;
     bodyGeo.computeBoundingSphere();
+
+    // 1b) 甲片跟着同一套取样走：否则蛇身一动，鳞片还留在上一帧的管面上
+    updateSnakeScales(scalePos, scaleNor, time);
+    (scaleGeo.getAttribute('position') as THREE.BufferAttribute).needsUpdate = true;
+    (scaleGeo.getAttribute('normal') as THREE.BufferAttribute).needsUpdate = true;
+    scaleGeo.computeBoundingSphere();
 
     // 2) 颈端姿态：颈部与蛇头必须跟着同一套取样走，否则动起来就脱开
     snakePoint(1, time, pTip);
