@@ -85,13 +85,17 @@ const {
     // 上次手动暂停过：直接以静态态呈现，按钮文案与状态必须一致，不能只留默认文案
     if (stored === 'paused') showStatic();
 
+    // 动画素材约 448 KB：在窄屏与弱网下不自动播放，避免把 LCP 拖到 4 秒以上（本机实测 390 视口 1.6 Mbps 下 LCP 7.6 s）。
+    // 宽屏下立即开始取，让动画图尽早成为 LCP 候选，而不是等 idle 之后才发起请求。
+    const wide = window.matchMedia('(min-width: 900px)');
     if (!reduce.matches && !lightNet) {
       btn.hidden = false;
-      IDLE(() => {
+      if (wide.matches) {
         const pre = new Image();
+        pre.fetchPriority = 'high';
         pre.onload = () => { if (allowed()) showAnim(); };
         pre.src = animSrc;
-      });
+      }
     }
 
     btn.addEventListener('click', () => {
