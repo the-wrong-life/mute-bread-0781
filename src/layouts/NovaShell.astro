@@ -1,9 +1,10 @@
 ---
 export interface Props { title: string; description?: string; active?: string; }
-const { title, description = 'DIY Engineering Lab — 工程、实验与可复用工具。', active = '' } = Astro.props;
+const { title, description = 'DIY 工程实验室 — 工程、实验与可复用工具。', active = '' } = Astro.props;
 const links = [
   { href: '/projects', label: '项目' }, { href: '/docs', label: '文档' },
-  { href: '/tools', label: '工具' }, { href: '/ai', label: '人工智能' }, { href: '/blog', label: '札记' }, { href: '/about', label: '关于' }
+  { href: '/tools', label: '工具' }, { href: '/ai', label: 'AI' },
+  { href: '/blog', label: '札记' }, { href: '/about', label: '关于' }
 ];
 ---
 <!doctype html>
@@ -12,25 +13,54 @@ const links = [
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="description" content={description} />
-    <meta name="theme-color" content="#f5f1e8" />
+    <meta name="theme-color" content="#f4f0e6" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <title>{title} · DIY Engineering Lab</title>
+    <title>{title} · DIY 工程实验室</title>
   </head>
   <body>
+    <a class="skip-link" href="#main-content">跳到主要内容</a>
     <header class="site-header">
       <a class="brand" href="/" aria-label="返回实验室首页"><span class="brand-mark" aria-hidden="true">✦</span><span>DIY 工程实验室</span></a>
-      <nav class="desktop-navigation" aria-label="主导航">{links.map((link) => <a href={link.href} aria-current={active === link.href ? "page" : undefined}>{link.label}</a>)}</nav>
+      <nav class="desktop-navigation" aria-label="主导航">{links.map((link) => <a href={link.href} aria-current={active === link.href ? 'page' : undefined}>{link.label}</a>)}</nav>
       <details class="navigation">
-        <summary aria-label="切换主导航" aria-controls="primary-navigation"><span class="menu-icon" aria-hidden="true"></span><span class="menu-label">导航</span></summary>
-        <nav id="primary-navigation" aria-label="主导航">{links.map((link) => <a class:list={{ active: active === link.href }} href={link.href} aria-current={active === link.href ? "page" : undefined}>{link.label}</a>)}</nav>
+        <summary aria-label="切换主导航" aria-controls="primary-navigation"><span class="menu-icon" aria-hidden="true"></span><span>导航</span></summary>
+        <nav id="primary-navigation" aria-label="移动端主导航">{links.map((link) => <a href={link.href} aria-current={active === link.href ? 'page' : undefined}>{link.label}</a>)}</nav>
       </details>
     </header>
-    <main><slot /></main>
-    <footer><span>DIY 工程实验室</span><span>工程想法 → 可验证现实</span></footer>
+    <main id="main-content" tabindex="-1"><slot /></main>
+    <footer><span>DIY 工程实验室</span><span>工程想法 → 可验证现实</span><span>© 2026 DIY 工程实验室</span></footer>
   </body>
 </html>
 <style>
-  :global(html){background:#f5f1e8;color:#29251f} :global(body){margin:0;min-width:320px;background:#f5f1e8;font-family:ui-sans-serif,system-ui,"Noto Sans CJK SC",sans-serif} :global(*){box-sizing:border-box}
-  .site-header{display:flex;justify-content:space-between;align-items:center;gap:24px;max-width:1280px;margin:auto;padding:24px clamp(20px,5vw,72px);border-bottom:1px solid #d8d0c1}.brand{display:flex;gap:11px;align-items:center;color:#29251f;text-decoration:none;font-size:15px;font-weight:650;white-space:nowrap}.brand-mark{color:#b43b2c;font-size:20px}.navigation{display:none;align-items:center}summary{display:none}nav{display:flex;gap:clamp(12px,2.5vw,30px)}nav a{display:inline-flex;align-items:center;min-height:40px;padding:6px 2px;color:#625b50;text-decoration:none;font-size:14px}nav a:hover,nav a.active{color:#a93227}nav a.active{box-shadow:inset 0 -2px #b43b2c}footer{display:flex;justify-content:space-between;max-width:1280px;margin:80px auto 0;padding:26px clamp(20px,5vw,72px);border-top:1px solid #d8d0c1;color:#71695d;font-size:12px}
-  @media(max-width:720px){.site-header{position:relative;padding:18px 20px}.desktop-navigation{display:none}.navigation{display:block;position:relative}summary{display:flex;align-items:center;gap:8px;min-height:44px;padding:0 10px;list-style:none;color:#29251f;cursor:pointer;border:1px solid #cfc5b4;border-radius:4px}summary::-webkit-details-marker{display:none}.menu-icon,.menu-icon::before,.menu-icon::after{display:block;width:17px;height:2px;background:#a93227;position:relative}.menu-icon::before,.menu-icon::after{content:"";position:absolute;left:0}.menu-icon::before{top:-5px}.menu-icon::after{top:5px}.menu-label{font-size:13px}.navigation nav{display:none;position:absolute;z-index:5;right:0;top:calc(100% + 8px);min-width:180px;padding:8px 14px;background:#fbf8f1;border:1px solid #d8d0c1;box-shadow:0 8px 24px #29251f20}.navigation[open] nav{display:flex;flex-direction:column;gap:0}.navigation nav a{min-height:44px;border-bottom:1px solid #e7e0d4}.navigation nav a:last-child{border-bottom:0}footer{display:flex;flex-direction:column;gap:4px;line-height:2.2}}
+  :global(html){background:#f4f0e6;color:#202923}
+  :global(body){margin:0;min-width:320px;background:#f4f0e6;font-family:ui-sans-serif,system-ui,"Noto Sans CJK SC",sans-serif}
+  :global(*){box-sizing:border-box}
+  :global(h1),:global(h2),:global(h3){font-family:"Songti SC","Noto Serif CJK SC",SimSun,serif}
+  :global(a:focus-visible),:global(button:focus-visible),summary:focus-visible{outline:2px solid #a74432;outline-offset:3px}
+  main{min-width:0;overflow-wrap:anywhere}
+  .skip-link{position:absolute;z-index:20;left:16px;top:8px;padding:12px;background:#202923;color:#f4f0e6;transform:translateY(-160%)}
+  .skip-link:focus{transform:translateY(0)}
+  .site-header{display:flex;justify-content:space-between;align-items:center;gap:24px;max-width:1280px;margin:auto;padding:20px clamp(20px,5vw,72px);border-bottom:1px solid #b78b57}
+  .brand{display:flex;gap:11px;align-items:center;min-height:44px;color:#202923;text-decoration:none;font-size:15px;font-weight:650;white-space:nowrap}
+  .brand-mark{color:#a74432;font-size:20px}
+  .navigation{display:none}
+  .desktop-navigation,nav{display:flex;gap:clamp(12px,2.5vw,30px)}
+  nav a{display:inline-flex;align-items:center;min-height:44px;padding:6px 2px;color:#3f604c;text-decoration:none;font-size:14px}
+  nav a:hover{color:#202923}
+  nav a[aria-current="page"]{color:#202923;box-shadow:inset 0 -2px #a74432}
+  footer{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;max-width:1280px;margin:80px auto 0;padding:26px clamp(20px,5vw,72px);border-top:1px solid #b78b57;color:#3f604c;font-size:12px}
+  @media(max-width:720px){
+    .site-header{position:relative;padding:16px 20px}
+    .desktop-navigation{display:none}
+    .navigation{display:block;position:relative}
+    summary{display:flex;align-items:center;gap:8px;min-width:44px;min-height:44px;padding:0 10px;list-style:none;color:#202923;cursor:pointer;border:1px solid #8f6438;border-radius:3px;font-size:13px}
+    summary::-webkit-details-marker{display:none}
+    .menu-icon,.menu-icon::before,.menu-icon::after{display:block;width:17px;height:2px;background:#52735e;position:relative}
+    .menu-icon::before,.menu-icon::after{content:"";position:absolute;left:0}.menu-icon::before{top:-5px}.menu-icon::after{top:5px}
+    .navigation nav{display:none;position:absolute;z-index:10;right:0;top:calc(100% + 8px);min-width:180px;padding:8px 14px;background:#f4f0e6;border:1px solid #b78b57;box-shadow:0 8px 24px #20292320}
+    .navigation[open] nav{display:flex;flex-direction:column;gap:0}
+    .navigation nav a{min-height:44px;border-bottom:1px solid #d9d1bf}
+    .navigation nav a:last-child{border-bottom:0}
+    footer{flex-direction:column;gap:6px;margin-top:36px}
+  }
 </style>

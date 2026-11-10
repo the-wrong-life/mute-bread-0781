@@ -1,16 +1,21 @@
 ---
 import NovaShell from '../layouts/NovaShell.astro';
-const projects = [
-  { code: 'P-001', name: '项目档案位', note: '项目资料尚未录入。这里将记录目标、约束、实验记录与验收结论。' },
-  { code: 'P-002', name: '原型档案位', note: '暂无已核实原型。新增内容前会标注证据来源与验证状态。' },
-  { code: 'P-003', name: '工具档案位', note: '暂无已发布工具。仅在完成测试后提供可复现入口。' },
-];
+import { projects } from '../data/projects';
 ---
-<NovaShell title="Projects" description="DIY Engineering Lab 的项目档案入口。" active="/projects">
-  <section class="page-head"><p class="eyebrow">PROJECT REGISTRY / 01</p><h1>Projects<span class="dot">.</span></h1><p class="lede">把想法拆成假设、原型和可验证结果。当前目录为空，以下是明确的内容占位，不代表已完成项目。</p></section>
-  <section class="grid" aria-label="项目档案占位">{projects.map((project) => <article class="card"><span class="code">{project.code}</span><h2>{project.name}</h2><p>{project.note}</p><span class="status">STATUS / EMPTY</span></article>)}</section>
-  <p class="note">项目页面会优先展示原始记录、测试方法和失败条件，而不是未经证实的成果。</p>
+<NovaShell title="项目中心" description="以真实记录整理的工程项目档案。" active="/projects">
+  <div class="page">
+    <header class="page-head"><p class="eyebrow">项目档案 / PROJECTS</p><h1>把想法，<br />变成可验证的工作。</h1><p class="lede">从问题出发，记录方案、实验与尚未补齐的资料。这里的项目持续更新，未完成的部分会如实标注。</p></header>
+    <section aria-label="项目列表" class="grid">
+      {projects.map((project, index) => <a class="card" href={`/projects/${project.slug}/`}>
+        <div class="card-top"><span class="number">{String(index + 1).padStart(2, '0')}</span><span class="status">{project.status}</span></div>
+        <div class="card-main"><p class="domain">{project.domain}</p><h2>{project.title}</h2><p class="summary">{project.subtitle}</p></div>
+        <div class="card-bottom"><ul aria-label="技术与方法">{project.stack.map(item => <li>{item}</li>)}</ul><span class="arrow" aria-hidden="true">↗</span></div>
+      </a>)}
+    </section>
+    <p class="note">档案整理日期不等于测试日期。实测与待验证事项请在各项目详情中查看。</p>
+    <nav class="related" aria-label="相关入口"><a href="/docs">工程知识 <span aria-hidden="true">→</span></a><a href="/tools">工程工具 <span aria-hidden="true">→</span></a></nav>
+  </div>
 </NovaShell>
 <style>
-.page-head,.grid,.note{max-width:1120px;margin-left:auto;margin-right:auto}.page-head{padding:clamp(70px,12vw,150px) clamp(20px,5vw,72px) 70px}.eyebrow,.code,.status{color:#79d7ef;font:11px ui-monospace,monospace;letter-spacing:.16em}.page-head h1{margin:18px 0;font-size:clamp(50px,9vw,112px);line-height:.9;letter-spacing:-.07em}.dot{color:#79d7ef}.lede{max-width:620px;color:#a9b6c0;line-height:1.8;font-size:17px}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;padding:0 clamp(20px,5vw,72px)}.card{min-height:245px;padding:25px;border:1px solid #293744;background:#11181e}.card h2{margin:48px 0 12px;font-size:21px}.card p{color:#91a0ab;line-height:1.7;font-size:14px}.status{display:block;margin-top:28px;color:#73818d}.note{padding:40px clamp(20px,5vw,72px);color:#71808c;font-size:13px;line-height:1.8}@media(max-width:760px){.grid{grid-template-columns:1fr}.card{min-height:190px}}
+.page{max-width:1280px;margin:auto;padding:0 clamp(20px,5vw,72px);color:#202923;overflow-wrap:anywhere}.page-head{padding:clamp(64px,9vw,120px) 0 52px;max-width:820px}.eyebrow,.number,.domain{font:12px ui-monospace,monospace;letter-spacing:.1em;color:#3f604c}.eyebrow{border-left:3px solid #a74432;padding-left:12px}h1,h2{font-family:"Songti SC","Noto Serif CJK SC",SimSun,serif;font-weight:600}h1{font-size:clamp(38px,6vw,72px);line-height:1.22;margin:25px 0}.lede{max-width:650px;line-height:1.9;color:#4b554b}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}.card{min-width:0;min-height:250px;display:flex;flex-direction:column;justify-content:space-between;gap:28px;padding:clamp(22px,3vw,32px);border:1px solid #cbb99e;background:#faf8f1;color:inherit;text-decoration:none;transition:border-color .18s,background .18s}.card:hover{border-color:#8f6438;background:#fffdf7}.card:focus-visible,.related a:focus-visible{outline:3px solid #52735e;outline-offset:3px}.card-top,.card-bottom{display:flex;align-items:center;justify-content:space-between;gap:16px}.status{border:1px solid #b78b57;color:#3f604c;padding:5px 10px;font-size:12px}.card-main{min-width:0}.domain{margin:0 0 12px}.card h2{font-size:clamp(24px,3vw,32px);margin:0 0 10px}.summary{margin:0;color:#596359;line-height:1.7}.card-bottom ul{display:flex;flex-wrap:wrap;gap:6px;padding:0;margin:0;list-style:none}.card-bottom li{font-size:12px;color:#3f604c;background:#e6ebe2;padding:5px 9px}.arrow{font-size:22px;color:#8f6438}.note{margin:32px 0;color:#596359;font-size:14px;line-height:1.8}.related{display:flex;flex-wrap:wrap;gap:14px;border-top:1px solid #cbb99e;padding-top:20px}.related a{display:inline-flex;align-items:center;gap:18px;min-height:44px;padding:0 12px;color:#3f604c;text-decoration:none}.related a:hover{text-decoration:underline;text-decoration-color:#a74432;text-underline-offset:5px}@media(max-width:700px){.grid{grid-template-columns:minmax(0,1fr)}.card{min-height:220px}.page-head{padding-bottom:38px}}@media(prefers-reduced-motion:reduce){.card{transition:none}}
 </style>
