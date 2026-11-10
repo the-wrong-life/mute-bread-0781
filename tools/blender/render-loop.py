@@ -122,7 +122,9 @@ def shell_volume():
     nt = m.node_tree
     out = [n for n in nt.nodes if n.type == 'OUTPUT_MATERIAL'][0]
     vol = nt.nodes.new('ShaderNodeVolumeAbsorption')
-    vol.inputs['Color'].default_value = (0.16, 0.52, 0.36, 1)
+    # 吸收色决定"透出来的玉色"：深绿 → 薄荷绿；参考图是暖白偏青，R 分量必须接近 G。
+    ac = tuple(float(v) for v in os.environ.get("NOVA_ABS_COLOR", "0.16,0.52,0.36").split(","))
+    vol.inputs['Color'].default_value = (ac[0], ac[1], ac[2], 1)
     dens = float(os.environ.get("NOVA_DENS", "2.1"))
     # 用三维噪声调制吸收密度：玉的"棉絮/色根"应该是体积里的，
     # 只画在表面色阶上会读成球面上一层云斑（本轮实测）。
@@ -168,13 +170,20 @@ def ground_shadow():
 
 def materials():
     sb = tuple(float(v) for v in SHELL_BASE.split(","))
-    rep("mat-jade-shell", sb, 0.22, 0.0, trans=TRANS, ior=1.55, coat=0.20, sss=SSS, sss_rad=(0.30,0.62,0.44), sss_scale=0.14)
+    # SSS 半径决定"肉色"：旧值 (0.30,0.62,0.44) 是绿色的，球体再怎么调底都发青；
+    # 参考图的玉肉是暖白偏黄（实测 rgb 187,169,136），所以默认改成暖色，并可用 NOVA_SSS_RAD 覆盖。
+    sss_rad = tuple(float(v) for v in os.environ.get("NOVA_SSS_RAD", "0.52,0.44,0.32").split(","))
+    rep("mat-jade-shell", sb, 0.22, 0.0, trans=TRANS, ior=1.55, coat=float(os.environ.get("NOVA_COAT", "0.20")), sss=SSS, sss_rad=sss_rad, sss_scale=0.14)
     shell_volume()
     kernel_warm()
     rep("mat-kernel", (1.0, 0.96, 0.88), 0.62, 0.0, emit=(1.0, 0.88, 0.66), emit_str=KERNEL)
     rep("mat-serpent", (0.66, 0.48, 0.19), 0.30, 0.85, coat=0.30)
     serpent_plates()
-    rep("mat-serpent-scale", (0.10, 0.32, 0.22), 0.24, 0.42)
+    # 甲片底色可覆盖：参考图是"金铜蛇身 + 细密甲片"，青玉甲片在首页尺寸下会整条读成绿管
+    rep("mat-serpent-scale",
+        tuple(float(v) for v in os.environ.get("NOVA_SCALE_BASE", "0.10,0.32,0.22").split(",")),
+        float(os.environ.get("NOVA_SCALE_ROUGH", "0.24")),
+        float(os.environ.get("NOVA_SCALE_METAL", "0.42")))
     # 蛇头材质名是 mat-serpent-head（build-jade.ts 里 headMat），之前误按旧名
     # mat-serpent-upper-jaw 覆写，导致头部保持 GLB 里的铜色、与绿色蛇身断开。
     for n in ("mat-serpent-head", "mat-serpent-brow-l", "mat-serpent-brow-r"):
@@ -184,7 +193,9 @@ def materials():
     rep("mat-kernel-glow", (1.0, 0.94, 0.80), 0.9, 0.0)
     # 内层玻璃珠：参考图球心是一颗能反光的玻璃球，不是一颗发光的小豆。
     # 给它薄壁玻璃 + 极弱的内部自发光，高光弧由环境灯盘打出。
-    rep("mat-kernel-glass", (0.96, 1.0, 0.97), 0.03, 0.0, trans=0.94, ior=1.46, coat=1.0, emit=(1.0, 0.93, 0.78), emit_str=0.25)
+    # 教训：trans=0.94 + 薄壁 在小球上等于"看不见"——m1 诊断里球心是空的。
+    # 参考图的珍珠是"奶白玻璃珠 + 一点内部光"，所以传输压到 0.5，并保留微弱自发光。
+    rep("mat-kernel-glass", (1.0, 0.985, 0.94), 0.05, 0.0, trans=0.50, ior=1.47, coat=1.0, emit=(1.0, 0.94, 0.80), emit_str=0.35)
     rep("mat-jade-core", (0.30, 0.62, 0.48), 0.22, 0.0, trans=0.30, ior=1.5, sss=0.4, sss_rad=(0.25,0.5,0.4), sss_scale=0.2)
     rep("mat-jade-axis", (0.78, 0.94, 0.86), 0.14, 0.0, trans=0.30, ior=1.5, coat=0.3, emit=(0.86, 0.98, 0.90), emit_str=AXIS_EMIT)
     rep("mat-copper-ring", (0.78, 0.60, 0.30), 0.26, 0.92)
@@ -222,17 +233,21 @@ def lights():
     # 会在玉壳的高光里映成几个大椭圆光斑，看着像"球里有团云"——本轮实测确认这就是云斑来源，
     # 不是玉絮噪声。缩到 4–5 单位后高光收成一个柔和亮点。
     k = float(os.environ.get("NOVA_LIGHT_SCALE", "1.0"))
-    add("key", (5.2, -7.0, 6.4), 900, 3.5 * k, (1.0, 0.97, 0.90))
-    add("rim", (-6.8, 2.2, 3.6), 700, 4.5 * k, (0.92, 0.98, 1.0))
-    add("back", (0.2, 5.2, 2.0), 520, 4.0 * k, (1.0, 0.98, 0.92))
-    add("fill", (-3.4, -7.6, 0.8), 260, 3.5 * k, (1.0, 1.0, 1.0))
+    # 能量单独可调：参考图的高光是很小很亮的点/条（p90 亮度 233），
+    # 我们的旧参数是"大而软的灯盘"，高光糊成一片，p90 只有 181。收缩灯盘并提亮才有硬高光。
+    le = float(os.environ.get("NOVA_LIGHT_ENERGY", "1.0"))
+    add("key", (5.2, -7.0, 6.4), 900 * le, 3.5 * k, (1.0, 0.97, 0.90))
+    add("rim", (-6.8, 2.2, 3.6), 700 * le, 4.5 * k, (0.92, 0.98, 1.0))
+    add("back", (0.2, 5.2, 2.0), 520 * le, 4.0 * k, (1.0, 0.98, 0.92))
+    add("fill", (-3.4, -7.6, 0.8), 260 * le, 3.5 * k, (1.0, 1.0, 1.0))
 
 def world():
     w = bpy.data.worlds.new("w"); bpy.context.scene.world = w
     w.use_nodes = True
     bg = w.node_tree.nodes['Background']
-    bg.inputs['Color'].default_value = (0.92, 0.93, 0.88, 1)
-    bg.inputs['Strength'].default_value = 0.55
+    wc = tuple(float(v) for v in os.environ.get("NOVA_WORLD_COLOR", "0.92,0.93,0.88").split(","))
+    bg.inputs['Color'].default_value = (wc[0], wc[1], wc[2], 1)
+    bg.inputs['Strength'].default_value = float(os.environ.get("NOVA_WORLD_STR", "0.55"))
 
 def render_settings():
     sc = bpy.context.scene

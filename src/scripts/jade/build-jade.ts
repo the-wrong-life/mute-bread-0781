@@ -209,11 +209,11 @@ export function buildJadeModel(options: { quality?: 'high' | 'low' } = {}): Jade
     color: new THREE.Color('#5fa98a'),
     roughness: 0.34,
     metalness: 0,
-    transmission: 0.22,
+    transmission: 0.55,
     thickness: 0.5,
     ior: 1.45,
     transparent: true,
-    opacity: 0.46,
+    opacity: 0.32,
     depthWrite: false,
     attenuationColor: new THREE.Color('#2c6b52'),
     attenuationDistance: 1.4,
@@ -242,6 +242,29 @@ export function buildJadeModel(options: { quality?: 'high' | 'low' } = {}): Jade
   kernel.name = 'default-kernel';
   kernel.position.set(0, 0.06, 0);
   root.add(kernel);
+
+  // 2b. 玻璃珍珠：参考图的球心是一颗能反光的珠子，不是一个发光豆。
+  // 半径取 0.20（直径 0.40，约占球半径 1/5，与参考图 110px/560px 一致），
+  // 内核 0.16 被它包住，光从珠内透出来；高光靠 clearcoat + 低粗糙度打出小亮点。
+  const pearlMat = new THREE.MeshPhysicalMaterial({
+    color: new THREE.Color('#fffdf4'),
+    roughness: 0.04,
+    metalness: 0,
+    transmission: 0.55,
+    thickness: 0.3,
+    ior: 1.47,
+    clearcoat: 1,
+    clearcoatRoughness: 0.02,
+    envMapIntensity: 1.6,
+    emissive: new THREE.Color('#fff1d0'),
+    emissiveIntensity: 0.28,
+  });
+  pearlMat.name = 'mat-kernel-glass';
+  const pearl = new THREE.Mesh(new THREE.SphereGeometry(0.20, hi ? 64 : 32, hi ? 48 : 24), pearlMat);
+  pearl.name = 'jade-pearl';
+  pearl.position.set(0, 0.06, 0);
+  pearl.renderOrder = 4;
+  root.add(pearl);
 
   // 1c. 光晕：包裹内核的加法混合球，让白光向外柔和衰减，
   // 否则内核在玉壳里是硬边白圆盘，读不出"珠中有光"。
