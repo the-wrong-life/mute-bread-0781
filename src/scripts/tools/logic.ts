@@ -238,3 +238,59 @@ export function supplyCurrent(p: { phase: SupplyPhase; input: SupplyInput; value
   if (current > 1e6) throw new Error('线电流超过 1e6 A，请检查输入单位。');
   return { current, apparent, active, reactive };
 }
+
+/** 允许负数的十进制解析（温度等）。 */
+export function parseNumber(raw: string, label: string): number {
+  const s = raw.trim();
+  if (!s) throw new Error('请填写' + label + '。');
+  if (!/^[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?$/.test(s)) throw new Error(label + '必须是十进制数字。');
+  const n = Number(s);
+  if (!Number.isFinite(n)) throw new Error(label + '必须是有限数字。');
+  return n;
+}
+/** 电气柜热损耗与散热估算。
+ *  自然散热：P_nat = k · A · ΔT（k 为表面综合换热系数，经验值）。
+ *  强制通风：Q = 3.12 · P · 3600 / (3.12e3) … 直接用 Q[m³/h] ≈ 3.12 · P[W] / ΔT[K]
+ *  （35 ℃ 空气 ρ·cp ≈ 1154 J/(m³·K)，3600/1154 ≈ 3.12）。
+ *  只做方案比较：实际柜温还受安装位置、阳光、邻近热源、风道与滤网压损影响。 */
+export interface CabinetResult {
+  /** 允许温升 K */
+  deltaT: number;
+  /** 有效散热面积 m² */
+  area: number;
+  /** 自然散热可排功率 W */
+  natural: number;
+  /** 需要强制通风带走的风量 m³/h（含安全系数） */
+  airflow: number;
+  /** 未含安全系数的理论风量 m³/h */
+  airflowBase: number;
+  /** 自然散热是否足够 */
+  passiveOk: boolean;
+}
+export function cabinetThermal(p: {
+  loss: string; area: string; ambient: string; inside: string; k: string; safety: string;
+}): CabinetResult {
+  const loss = parsePositive(p.loss, '柜内总损耗', true);
+  const area = parsePositive(p.area, '有效散热面积');
+  const ambient = parseNumber(p.ambient, '环境温度');
+  const inside = parseNumber(p.inside, '允许柜内温度');
+  const k = parsePositive(p.k, '换热系数');
+  const safety = parsePositive(p.safety, '安全系数');
+  if (loss > 200000) throw new Error('柜内总损耗超过 200 kW，请确认单位是否为 W。');
+  if (area > 2000) throw new Error('散热面积超过 2000 m²，请确认单位是否为 m²。');
+  if (ambient < -40 || ambient > 80) throw new Error('环境温度应在 -40 至 80 ℃ 之间。');
+  if (inside > 100) throw new Error('柜内允许温度超过 100 ℃，请确认是否误填。');
+  const deltaT = inside - ambient;
+  if (deltaT <= 0) throw new Error('允许柜内温度必须高于环境温度。');
+  if (deltaT > 60) throw new Error('温升超过 60 K，请确认两个温度是否填反。');
+  if (k < 1 || k > 15) throw new Error('换热系数应在 1–15 W/(m²·K) 之间。');
+  if (safety < 1 || safety > 3) throw new Error('安全系数应在 1–3 之间。');
+  const natural = k * area * deltaT;
+  const passiveOk = loss <= natural;
+  const airflowBase = (3.12 * loss) / deltaT;
+  const airflow = airflowBase * safety;
+  for (const v of [natural, airflowBase, airflow]) {
+    if (!Number.isFinite(v)) throw new Error('计算结果溢出，请检查输入范围。');
+  }
+  return { deltaT, area, natural, airflow, airflowBase, passiveOk };
+}
