@@ -204,3 +204,37 @@ export function bendAllowance(p: { thickness: string; radius: string; angle: str
   }
   return { allowance, setback, deduction, legs, flat, angleRad };
 }
+
+/** 电源容量与电流估算。
+ *  单相：I = S / U；三相：I = S / (√3·U)。S 为视在功率，P = S·cosφ，Q = S·sinφ。
+ *  仅用于选型前期估算，不替代载流量、保护整定与短路校验。 */
+export type SupplyPhase = 'single' | 'three';
+export type SupplyInput = 'kw' | 'kva';
+export interface SupplyResult {
+  /** 线电流 A */
+  current: number;
+  /** 视在功率 kVA */
+  apparent: number;
+  /** 有功功率 kW */
+  active: number;
+  /** 无功功率 kvar */
+  reactive: number;
+}
+export function supplyCurrent(p: { phase: SupplyPhase; input: SupplyInput; value: string; voltage: string; pf: string }): SupplyResult {
+  const value = parsePositive(p.value, p.input === 'kw' ? '有功功率' : '视在功率');
+  const voltage = parsePositive(p.voltage, '电压');
+  const pf = parsePositive(p.pf, '功率因数');
+  if (pf > 1) throw new Error('功率因数应在 0–1 之间，不能大于 1。');
+  if (pf < 0.1) throw new Error('功率因数低于 0.1，请确认是否误填了百分比。');
+  if (voltage < 12) throw new Error('电压低于 12 V，请确认单位是否为 V。');
+  if (voltage > 1000) throw new Error('电压超过 1000 V，超出本工具的低压估算范围。');
+  if (value > 1e6) throw new Error('功率超过 1e6，请确认单位是否为 kW 或 kVA。');
+  const apparent = p.input === 'kw' ? value / pf : value;
+  const active = apparent * pf;
+  const reactive = apparent * Math.sqrt(Math.max(0, 1 - pf * pf));
+  const divisor = p.phase === 'three' ? Math.sqrt(3) * voltage : voltage;
+  const current = (apparent * 1000) / divisor;
+  if (!Number.isFinite(current)) throw new Error('计算结果溢出，请检查输入范围。');
+  if (current > 1e6) throw new Error('线电流超过 1e6 A，请检查输入单位。');
+  return { current, apparent, active, reactive };
+}

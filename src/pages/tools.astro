@@ -4,7 +4,7 @@ import NovaShell from '../layouts/NovaShell.astro';
 <NovaShell title="工程工具箱" description="单位换算、JSON 格式化和文本整理，均在浏览器本地完成。" active="/tools">
   <div class="page">
     <header class="hero"><p class="eyebrow">ENGINEERING TOOLBOX / 工程工具箱</p><h1>让细节<br /><em>有据可循。</em></h1><p class="lead">六个轻量工具，帮助处理工程工作中的常见小事。输入仅在当前浏览器处理，不会通过工具上传。</p></header>
-    <nav class="tool-nav" aria-label="工具目录"><a href="#units">单位换算</a><a href="#drop">直流压降</a><a href="#ups">UPS 备用时间</a><a href="#bend">折弯展开</a><a href="#json">JSON 校验</a><a href="#text">文本整理</a></nav>
+    <nav class="tool-nav" aria-label="工具目录"><a href="#units">单位换算</a><a href="#drop">直流压降</a><a href="#ups">UPS 备用时间</a><a href="#supply">电源容量</a><a href="#bend">折弯展开</a><a href="#json">JSON 校验</a><a href="#text">文本整理</a></nav>
     <section id="units" class="tool" aria-labelledby="units-title">
       <div class="heading"><span class="number">01</span><div><h2 id="units-title">单位换算</h2><p>选择类别与单位，输入数值后自动换算；可选择结果的有效数字位数。</p></div></div>
       <div class="unit-grid">
@@ -80,9 +80,23 @@ import NovaShell from '../layouts/NovaShell.astro';
       <div class="actions"><label class="check"><input type="checkbox" id="text-trim" checked />去除行首尾空白</label><label class="check"><input type="checkbox" id="text-sort" />按文字排序</label><button type="button" id="text-example">填入示例</button><button type="button" id="text-process">整理文本</button></div>
       <p class="note">去重区分大小写；未勾选去除首尾空白时，保留原始空格，但纯空白行仍会删除。</p><p id="text-status" class="status" role="status">等待输入</p><label for="text-output">输出结果<textarea id="text-output" rows="8" readonly></textarea></label><div class="actions"><button type="button" id="text-copy">复制结果</button><span id="text-copy-status" role="status"></span></div>
     </section>
+    <section id="supply" class="tool" aria-labelledby="supply-title">
+      <div class="heading"><span class="number">07</span><div><h2 id="supply-title">电源容量与电流</h2><p>按相制、线电压与功率因数换算视在功率和线电流，用于选线、选断路器与 UPS 容量估算。</p></div></div>
+      <div class="unit-grid">
+        <label for="supply-phase">相制<select id="supply-phase"><option value="three" selected>三相（线电压）</option><option value="single">单相</option></select></label>
+        <label for="supply-input">输入量<select id="supply-input"><option value="kw" selected>有功功率 P（kW）</option><option value="kva">视在功率 S（kVA）</option></select></label>
+        <label for="supply-value"><span id="supply-value-label">有功功率 P kW</span><input id="supply-value" type="text" inputmode="decimal" autocomplete="off" placeholder="例如 15" aria-invalid="false" /></label>
+        <label for="supply-voltage">线电压 V<input id="supply-voltage" type="text" inputmode="decimal" autocomplete="off" value="380" aria-invalid="false" /></label>
+        <label for="supply-pf">功率因数 cosφ<input id="supply-pf" type="text" inputmode="decimal" autocomplete="off" value="0.85" aria-invalid="false" /></label>
+      </div>
+      <p id="supply-note" class="note">公式：S = P ÷ cosφ；三相 I = S × 1000 ÷（√3 × U），单相 I = S × 1000 ÷ U；无功 Q = S × sinφ。三相按线电压、负载三相对称估算；直接输入视在功率时功率因数只影响有功与无功拆分。选线仍需按敷设方式、环境温度、成组系数与保护整定查表核对，本工具不能替代。</p>
+      <div class="result" aria-live="polite"><span id="supply-status">等待输入</span><output id="supply-result">—</output></div>
+      <p id="supply-detail" class="status"></p>
+      <div class="actions"><button type="button" id="supply-example">填入示例</button><button type="button" id="supply-copy">复制结果</button><span id="supply-copy-status" role="status"></span></div>
+    </section>
   </div>
 </NovaShell>
-<script>import { mountTools } from '../scripts/tools/ui'; import { mountDcDrop } from '../scripts/tools/dc-drop'; import { mountUps } from '../scripts/tools/ups'; import { mountBend } from '../scripts/tools/bend'; mountTools(); mountDcDrop(); mountUps(); mountBend();</script>
+<script>import { mountTools } from '../scripts/tools/ui'; import { mountDcDrop } from '../scripts/tools/dc-drop'; import { mountUps } from '../scripts/tools/ups'; import { mountBend } from '../scripts/tools/bend'; import { mountSupply } from '../scripts/tools/supply'; mountTools(); mountDcDrop(); mountUps(); mountBend(); mountSupply();</script>
 <style>
 .page{max-width:1120px;margin:auto;padding:clamp(48px,8vw,100px) clamp(20px,5vw,64px) 90px;color:#202923}.page *{box-sizing:border-box;min-width:0}.hero{max-width:700px}.eyebrow,.number{font:12px ui-monospace,monospace;letter-spacing:.14em;color:#52735e}h1,h2{font-family:"Songti SC","Noto Serif CJK SC",SimSun,serif;font-weight:600}h1{font-size:clamp(42px,6vw,76px);line-height:1.14;margin:20px 0}h1 em{font-style:normal;color:#52735e}.lead,.heading p{line-height:1.8;color:#4b5b50}.tool-nav{display:flex;flex-wrap:wrap;gap:8px;margin:34px 0 0}.tool-nav a{display:inline-flex;align-items:center;min-height:44px;padding:8px 16px;border:1px solid #b78b57;color:#3f604c;text-decoration:none}.tool{margin-top:36px;border-top:1px solid #b78b57;padding-top:28px;scroll-margin-top:24px}.heading{display:flex;gap:22px;align-items:baseline}.heading h2{font-size:clamp(26px,3vw,36px);margin:0}.heading p{margin:10px 0 22px}.unit-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:14px}.unit-grid--rho{margin-top:14px;grid-template-columns:repeat(2,minmax(0,1fr))}label{display:grid;gap:8px;font-size:14px;color:#3f604c}input,select,textarea,button{font:inherit;color:#202923;border:1px solid #b78b57;border-radius:2px;background:#fbf9f3}input,select,button{min-height:44px}input,select,textarea{width:100%;padding:10px}textarea{display:block;resize:vertical;font:14px/1.6 ui-monospace,monospace;overflow-wrap:anywhere}button{cursor:pointer;padding:10px 16px;color:#3f604c}button:hover,.tool-nav a:hover{background:#e8ecdf}button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid #a74432;outline-offset:2px}[aria-invalid="true"]{border-color:#a74432}.note,.status{font-size:13px;line-height:1.7;color:#526458;overflow-wrap:anywhere}.result{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;border-left:3px solid #a74432;background:#eeeade;padding:18px;margin:16px 0}.result output{font:600 20px ui-monospace,monospace;overflow-wrap:anywhere;user-select:all}.actions{display:flex;align-items:center;flex-wrap:wrap;gap:10px;margin:14px 0}.actions span{font-size:13px;color:#3f604c}.inline-label{display:flex;align-items:center;gap:8px}.inline-label select{width:auto}.check{display:flex;align-items:center;gap:8px;min-height:44px}.check input{width:20px;height:20px;min-height:0;accent-color:#52735e}@media(max-width:850px){.unit-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:480px){.unit-grid{grid-template-columns:1fr}.heading{gap:12px}.result{display:grid}}@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto}}
 </style>
