@@ -15,11 +15,11 @@ OUT = os.environ.get("NOVA_OUT", ".")
 RES = int(os.environ.get("NOVA_RES", "720"))
 SAMPLES = int(os.environ.get("NOVA_SAMPLES", "24"))
 # 单变量诊断开关：同一帧同一机位只改一个参数，用于定位内部层次与过曝
-KERNEL = float(os.environ.get("NOVA_KERNEL", "7.0"))
-SSS = float(os.environ.get("NOVA_SSS", "0.52"))
-TRANS = float(os.environ.get("NOVA_TRANS", "0.36"))
+KERNEL = float(os.environ.get("NOVA_KERNEL", "14.0"))
+SSS = float(os.environ.get("NOVA_SSS", "0.50"))
+TRANS = float(os.environ.get("NOVA_TRANS", "0.42"))
 AXIS_EMIT = float(os.environ.get("NOVA_AXIS_EMIT", "0.0"))
-SHELL_BASE = os.environ.get("NOVA_SHELL_BASE", "0.09,0.34,0.24")
+SHELL_BASE = os.environ.get("NOVA_SHELL_BASE", "0.06,0.26,0.19")
 
 def reset():
     bpy.ops.wm.read_factory_settings(use_empty=True)
@@ -49,14 +49,16 @@ def rep(name, base, rough, metal, trans=0.0, ior=1.45, coat=0.0, emit=None, emit
         bs.inputs['Emission Strength'].default_value = emit_str
     if name == 'mat-jade-shell':
         noise = nt.nodes.new('ShaderNodeTexNoise')
-        noise.inputs['Scale'].default_value = 3.4
-        noise.inputs['Detail'].default_value = 8.0
-        noise.inputs['Roughness'].default_value = 0.62
+        noise.inputs['Scale'].default_value = float(os.environ.get("NOVA_VEIN_SCALE", "7.5"))
+        noise.inputs['Detail'].default_value = 6.0
+        noise.inputs['Roughness'].default_value = 0.55
         nr = nt.nodes.new('ShaderNodeValToRGB')
-        nr.color_ramp.elements[0].position = 0.36
-        nr.color_ramp.elements[0].color = (0.10, 0.33, 0.23, 1)
-        nr.color_ramp.elements[1].position = 0.68
-        nr.color_ramp.elements[1].color = (0.44, 0.74, 0.58, 1)
+        # 色阶两端别拉太开：0.10→0.44 的对比在球面上渲成一团团大云斑，
+        # 参考图的玉絮是细的、贴着实心玉肉走的。
+        nr.color_ramp.elements[0].position = 0.40
+        nr.color_ramp.elements[0].color = (0.16, 0.42, 0.31, 1)
+        nr.color_ramp.elements[1].position = 0.62
+        nr.color_ramp.elements[1].color = (0.30, 0.62, 0.47, 1)
         nt.links.new(noise.outputs['Fac'], nr.inputs['Fac'])
         nt.links.new(nr.outputs['Color'], bs.inputs['Base Color'])
     if tex_img is not None:
@@ -82,12 +84,13 @@ def serpent_plates():
     bs = [n for n in nt.nodes if n.type == 'BSDF_PRINCIPLED'][0]
     out = [n for n in nt.nodes if n.type == 'OUTPUT_MATERIAL'][0]
     brick = nt.nodes.new('ShaderNodeTexBrick')
-    brick.inputs['Scale'].default_value = 6.5
-    brick.inputs['Mortar Size'].default_value = 0.018
+    # 甲片密度与缝宽可调：缝用金铜色才读得出"金底嵌青玉甲片"，但尺度过大就成编织袋。
+    brick.inputs['Scale'].default_value = float(os.environ.get("NOVA_PLATE_SCALE", "13.0"))
+    brick.inputs['Mortar Size'].default_value = float(os.environ.get("NOVA_PLATE_MORTAR", "0.006"))
     brick.inputs['Mortar Smooth'].default_value = 0.2
-    brick.inputs['Color1'].default_value = (0.20, 0.44, 0.31, 1)
-    brick.inputs['Color2'].default_value = (0.15, 0.36, 0.25, 1)
-    brick.inputs['Mortar'].default_value = (0.10, 0.27, 0.19, 1)
+    brick.inputs['Color1'].default_value = (0.13, 0.35, 0.25, 1)
+    brick.inputs['Color2'].default_value = (0.09, 0.27, 0.19, 1)
+    brick.inputs['Mortar'].default_value = (0.55, 0.42, 0.18, 1)
     uvc = nt.nodes.new('ShaderNodeTexCoord')
     mp = nt.nodes.new('ShaderNodeMapping')
     mp.inputs['Rotation'].default_value[2] = 0.785398
@@ -101,15 +104,74 @@ def serpent_plates():
     nt.links.new(bump.outputs['Normal'], bs.inputs['Normal'])
     nt.links.new(bs.outputs['BSDF'], out.inputs['Surface'])
 
+def shell_volume():
+    """球壳体积吸收：玉的深浅必须由光程决定，缺这一层就渲成奶白玻璃（本机实测对比）。
+
+    教训：这一层只加在 rep() 里的 Principled 上不生效，必须单独接 Volume Absorption 到
+    Material Output 的 Volume 口；Density 越大越沉（1.7 为当前定稿，0.75 会明显发透）。
+    """
+    m = bpy.data.materials.get("mat-jade-shell")
+    if not m or not m.use_nodes: return
+    nt = m.node_tree
+    out = [n for n in nt.nodes if n.type == 'OUTPUT_MATERIAL'][0]
+    vol = nt.nodes.new('ShaderNodeVolumeAbsorption')
+    vol.inputs['Color'].default_value = (0.16, 0.52, 0.36, 1)
+    dens = float(os.environ.get("NOVA_DENS", "2.1"))
+    # 用三维噪声调制吸收密度：玉的"棉絮/色根"应该是体积里的，
+    # 只画在表面色阶上会读成球面上一层云斑（本轮实测）。
+    noise = nt.nodes.new('ShaderNodeTexNoise')
+    noise.noise_dimensions = '3D'
+    noise.inputs['Scale'].default_value = float(os.environ.get("NOVA_VOL_SCALE", "3.2"))
+    noise.inputs['Detail'].default_value = 8.0
+    noise.inputs['Roughness'].default_value = 0.55
+    ramp = nt.nodes.new('ShaderNodeValToRGB')
+    ramp.color_ramp.elements[0].position = 0.34
+    ramp.color_ramp.elements[0].color = (0.45, 0.45, 0.45, 1)
+    ramp.color_ramp.elements[1].position = 0.70
+    ramp.color_ramp.elements[1].color = (1.7, 1.7, 1.7, 1)
+    mul = nt.nodes.new('ShaderNodeMath'); mul.operation = 'MULTIPLY'; mul.inputs[1].default_value = dens
+    nt.links.new(noise.outputs['Fac'], ramp.inputs['Fac'])
+    nt.links.new(ramp.outputs['Color'], mul.inputs[0])
+    nt.links.new(mul.outputs[0], vol.inputs['Density'])
+    nt.links.new(vol.outputs['Volume'], out.inputs['Volume'])
+
+def kernel_warm():
+    """内核单独建暖白自发光材质：GLB 里的 mat-kernel 是纯白高亮，渲出来是一块硬边白盘。"""
+    o = bpy.data.objects.get("default-kernel")
+    if not o or o.type != 'MESH': return
+    m = bpy.data.materials.new("mat-kernel-warm"); m.use_nodes = True
+    bs = [n for n in m.node_tree.nodes if n.type == 'BSDF_PRINCIPLED'][0]
+    bs.inputs['Base Color'].default_value = (1.0, 0.95, 0.82, 1)
+    bs.inputs['Roughness'].default_value = 0.42
+    bs.inputs['Emission Color'].default_value = (1.0, 0.90, 0.70, 1)
+    bs.inputs['Emission Strength'].default_value = KERNEL
+    o.data.materials.clear(); o.data.materials.append(m)
+
+def ground_shadow():
+    """接触阴影：没有它，玉衡在暖白页面上是"浮着"的。
+
+    用 shadow catcher 平面，配合 film_transparent 输出到 alpha，页面背景仍由 CSS 决定。
+    """
+    if os.environ.get("NOVA_GROUND", "1") == "0": return
+    bpy.ops.mesh.primitive_plane_add(size=40, location=(0, 0, float(os.environ.get("NOVA_GROUND_Z", "-1.58"))))
+    p = bpy.context.active_object
+    p.name = "ground-shadow"
+    p.is_shadow_catcher = True
+    print("GROUND-SHADOW ok")
+
 def materials():
     sb = tuple(float(v) for v in SHELL_BASE.split(","))
-    rep("mat-jade-shell", sb, 0.10, 0.0, trans=TRANS, ior=1.55, coat=0.55, sss=SSS, sss_rad=(0.30,0.62,0.44), sss_scale=0.14)
+    rep("mat-jade-shell", sb, 0.22, 0.0, trans=TRANS, ior=1.55, coat=0.20, sss=SSS, sss_rad=(0.30,0.62,0.44), sss_scale=0.14)
+    shell_volume()
+    kernel_warm()
     rep("mat-kernel", (1.0, 0.96, 0.88), 0.62, 0.0, emit=(1.0, 0.88, 0.66), emit_str=KERNEL)
     rep("mat-serpent", (0.66, 0.48, 0.19), 0.30, 0.85, coat=0.30)
     serpent_plates()
     rep("mat-serpent-scale", (0.10, 0.32, 0.22), 0.24, 0.42)
-    for n in ("mat-serpent-upper-jaw",):
-        rep(n, (0.09, 0.30, 0.21), 0.28, 0.30, sss=0.35, sss_rad=(0.2,0.4,0.3), sss_scale=0.1)
+    # 蛇头材质名是 mat-serpent-head（build-jade.ts 里 headMat），之前误按旧名
+    # mat-serpent-upper-jaw 覆写，导致头部保持 GLB 里的铜色、与绿色蛇身断开。
+    for n in ("mat-serpent-head", "mat-serpent-brow-l", "mat-serpent-brow-r"):
+        rep(n, (0.52, 0.36, 0.14), 0.26, 0.82, coat=0.25)
     rep("mat-serpent-mouth", (0.12, 0.07, 0.04), 0.55, 0.0)
     rep("mat-eye", (0.20, 0.72, 0.48), 0.12, 0.0, emit=(0.14, 0.55, 0.34), emit_str=1.2, coat=1.0)
     rep("mat-kernel-glow", (1.0, 0.94, 0.80), 0.9, 0.0)
@@ -124,11 +186,18 @@ def materials():
     rep("mat-relief", (0.72, 0.56, 0.28), 0.32, 0.85)
 
 def camera():
-    cd = bpy.data.cameras.new("cam"); cd.lens = 92
+    # NOVA_CAM="x,y,z,tx,ty,tz,lens" 可换机位做局部检查（默认首页正向）
+    spec = os.environ.get("NOVA_CAM", "").strip()
+    if spec:
+        vals = [float(v) for v in spec.split(",")]
+        loc, tgt, lens = tuple(vals[0:3]), tuple(vals[3:6]), vals[6]
+    else:
+        loc, tgt, lens = (0, -10.0, 0.35), (0, 0, 0.1), 92
+    cd = bpy.data.cameras.new("cam"); cd.lens = lens
     cam = bpy.data.objects.new("cam", cd)
     bpy.context.scene.collection.objects.link(cam)
-    cam.location = (0, -10.0, 0.35)
-    cam.rotation_euler = (mathutils.Vector((0,0,0.1)) - mathutils.Vector(cam.location)).to_track_quat('-Z','Y').to_euler()
+    cam.location = loc
+    cam.rotation_euler = (mathutils.Vector(tgt) - mathutils.Vector(cam.location)).to_track_quat('-Z','Y').to_euler()
     bpy.context.scene.camera = cam
 
 def lights():
@@ -139,10 +208,14 @@ def lights():
         bpy.context.scene.collection.objects.link(o)
         v = mathutils.Vector((0,0,0.1)) - mathutils.Vector(loc)
         o.rotation_euler = v.to_track_quat('-Z','Y').to_euler()
-    add("key", (5.2, -7.0, 6.4), 1050, 12.0, (1.0, 0.97, 0.90))
-    add("rim", (-6.8, 2.2, 3.6), 900, 10.0, (0.92, 0.98, 1.0))
-    add("back", (0.2, 5.2, 2.0), 700, 9.0, (1.0, 0.98, 0.92))
-    add("fill", (-3.4, -7.6, 0.8), 320, 10.0, (1.0, 1.0, 1.0))
+    # 灯盘尺寸必须小：12 单位的 DISK 在 10 单位距离上张角约 60°，
+    # 会在玉壳的高光里映成几个大椭圆光斑，看着像"球里有团云"——本轮实测确认这就是云斑来源，
+    # 不是玉絮噪声。缩到 4–5 单位后高光收成一个柔和亮点。
+    k = float(os.environ.get("NOVA_LIGHT_SCALE", "1.0"))
+    add("key", (5.2, -7.0, 6.4), 900, 3.5 * k, (1.0, 0.97, 0.90))
+    add("rim", (-6.8, 2.2, 3.6), 700, 4.5 * k, (0.92, 0.98, 1.0))
+    add("back", (0.2, 5.2, 2.0), 520, 4.0 * k, (1.0, 0.98, 0.92))
+    add("fill", (-3.4, -7.6, 0.8), 260, 3.5 * k, (1.0, 1.0, 1.0))
 
 def world():
     w = bpy.data.worlds.new("w"); bpy.context.scene.world = w
@@ -181,7 +254,7 @@ for f in files:
     reset()
     bpy.ops.import_scene.gltf(filepath=f)
     hide_objects()
-    materials(); camera(); lights(); world(); render_settings()
+    materials(); camera(); lights(); world(); ground_shadow(); render_settings()
     name = os.path.basename(f).replace(".glb", ".png")
     bpy.context.scene.render.filepath = os.path.join(OUT, name)
     bpy.ops.render.render(write_still=True)

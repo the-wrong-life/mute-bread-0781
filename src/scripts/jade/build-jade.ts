@@ -85,16 +85,34 @@ type HeadSection = { x: number; w: number; h: number; cy: number };
  * 沿 +X 轴放样一组椭圆截面，用于蛇头上/下颌这类楔形形体。
  * 球+锥的拼接读不出蛇头轮廓，放样才能同时给出吻部收窄、上颌拱起与颈部过渡。
  */
-function loftHead(sections: HeadSection[], radial: number): THREE.BufferGeometry {
+function loftHead(
+  sections: HeadSection[],
+  radial: number,
+  crease?: { cosY: number; band: number; depth: number },
+): THREE.BufferGeometry {
   const pos: number[] = [];
   const uvs: number[] = [];
   const indices: number[] = [];
   const N = sections.length;
   for (let i = 0; i < N; i += 1) {
     const s = sections[i];
+    // 嘴缝只从第二个截面开始，头部后端保持光滑；越靠吻端越深。
+    const w = i <= 1 ? 0 : Math.min(1, (i - 1) / 3);
     for (let j = 0; j <= radial; j += 1) {
       const a = (j / radial) * Math.PI * 2;
-      pos.push(s.x, s.cy + Math.cos(a) * s.h, Math.sin(a) * s.w);
+      let y = s.cy + Math.cos(a) * s.h;
+      let z = Math.sin(a) * s.w;
+      if (crease && w > 0) {
+        // 沿"绕头一圈"的高度方向压一道凹槽：不新增网格、不靠贴图，
+        // 任何光照角度都会在嘴线处产生自体阴影，这是小尺寸下最可靠的可读性来源。
+        const d = Math.abs(Math.cos(a) - crease.cosY);
+        if (d < crease.band) {
+          const k = (1 - d / crease.band) * w * crease.depth;
+          y -= Math.cos(a) * k;
+          z -= Math.sin(a) * k;
+        }
+      }
+      pos.push(s.x, y, z);
       uvs.push(i / (N - 1), j / radial);
     }
   }
@@ -124,6 +142,24 @@ function loftHead(sections: HeadSection[], radial: number): THREE.BufferGeometry
   geo.setIndex(indices);
   geo.computeVertexNormals();
   return geo;
+}
+
+/** 按 x 在放样截面上线性插值，避免改 headSections 后忘记重算眼位。 */
+function sampleHead(sections: HeadSection[], x: number): { w: number; h: number; cy: number } {
+  for (let i = 0; i < sections.length - 1; i += 1) {
+    const a = sections[i];
+    const b = sections[i + 1];
+    if (x <= b.x) {
+      const t = (x - a.x) / Math.max(b.x - a.x, 1e-6);
+      return {
+        w: a.w + (b.w - a.w) * t,
+        h: a.h + (b.h - a.h) * t,
+        cy: a.cy + (b.cy - a.cy) * t,
+      };
+    }
+  }
+  const last = sections[sections.length - 1];
+  return { w: last.w, h: last.h, cy: last.cy };
 }
 
 /**
@@ -450,7 +486,7 @@ export function buildJadeModel(options: { quality?: 'high' | 'low' } = {}): Jade
   head.position.copy(tip).addScaledVector(fwd, 0.025);
   head.quaternion.setFromRotationMatrix(new THREE.Matrix4().makeBasis(fwd, upV, sideV));
   // 头部整体缩到与收细后的蛇身匹配（原建模按蛇身半径 0.134 设计，现为 0.05）
-  head.scale.setScalar(0.82);
+  head.scale.setScalar(0.88);
 
   const headMat = new THREE.MeshPhysicalMaterial({
     color: new THREE.Color('#b08a4e'),
@@ -472,16 +508,20 @@ export function buildJadeModel(options: { quality?: 'high' | 'low' } = {}): Jade
   // 颈部截面 0.208 × 0.180 略细于蛇身直径 0.216，让头部从蛇身里自然长出来。
   const headSections: HeadSection[] = [
     { x: -0.24, w: 0.104, h: 0.090, cy: 0.004 },
-    { x: -0.18, w: 0.126, h: 0.098, cy: 0.006 },
-    { x: -0.10, w: 0.146, h: 0.112, cy: 0.010 },
-    { x: -0.02, w: 0.148, h: 0.116, cy: 0.012 },
-    { x: 0.05, w: 0.138, h: 0.110, cy: 0.008 },
-    { x: 0.11, w: 0.118, h: 0.096, cy: 0.002 },
-    { x: 0.16, w: 0.096, h: 0.082, cy: -0.004 },
-    { x: 0.20, w: 0.070, h: 0.064, cy: -0.010 },
-    { x: 0.215, w: 0.052, h: 0.048, cy: -0.014 },
+    { x: -0.18, w: 0.128, h: 0.100, cy: 0.006 },
+    { x: -0.10, w: 0.150, h: 0.114, cy: 0.010 },
+    { x: -0.02, w: 0.152, h: 0.118, cy: 0.012 },
+    { x: 0.05, w: 0.142, h: 0.112, cy: 0.008 },
+    { x: 0.11, w: 0.124, h: 0.100, cy: 0.002 },
+    { x: 0.16, w: 0.104, h: 0.088, cy: -0.002 },
+    { x: 0.20, w: 0.082, h: 0.070, cy: -0.004 },
+    { x: 0.225, w: 0.062, h: 0.054, cy: -0.006 },
   ];
-  const upperJaw = new THREE.Mesh(loftHead(headSections, hi ? 44 : 22), headMat);
+  // 嘴缝：cos(a) = −0.30 对应截面下三分之一处，band 0.22 给出一道窄槽。
+  const upperJaw = new THREE.Mesh(
+    loftHead(headSections, hi ? 44 : 22, { cosY: -0.30, band: 0.26, depth: 0.030 }),
+    headMat,
+  );
   upperJaw.name = 'serpent-upper-jaw';
   head.add(upperJaw);
 
@@ -555,9 +595,10 @@ export function buildJadeModel(options: { quality?: 'high' | 'low' } = {}): Jade
   // 眼位必须跟着 headSections 插值重算，否则眼球会浮在头外（上一版就浮过）。
   // x=0.03 落在 (−0.02, 0.148/0.116/0.012) 与 (0.05, 0.138/0.110/0.008) 之间，t=0.714。
   const eyeX = 0.03;
-  const eyeH = 0.1117;
-  const eyeW = 0.1409;
-  const eyeCy = 0.0092;
+  const eyeSec = sampleHead(headSections, eyeX);
+  const eyeH = eyeSec.h;
+  const eyeW = eyeSec.w;
+  const eyeCy = eyeSec.cy;
   const theta = 1.02;
   for (const side of [1, -1]) {
     const ey = eyeCy + Math.cos(theta) * eyeH;
@@ -713,7 +754,7 @@ export function buildJadeModel(options: { quality?: 'high' | 'low' } = {}): Jade
   const baseBadge = new THREE.Group();
   baseBadge.name = 'base-badge';
   const plinthMat = new THREE.MeshPhysicalMaterial({
-    color: new THREE.Color('#cfe6d6'),
+    color: new THREE.Color('#8fc7ae'),
     roughness: 0.16,
     transmission: 0.34,
     thickness: 0.4,
@@ -764,7 +805,7 @@ export function buildJadeModel(options: { quality?: 'high' | 'low' } = {}): Jade
   });
   tabletGeo.center();
   const tabletMat = new THREE.MeshPhysicalMaterial({
-    color: new THREE.Color('#dfeee0'),
+    color: new THREE.Color('#b9e0c9'),
     map: createTabletTexture('辛', '巳'),
     roughness: 0.22,
     transmission: 0.28,
@@ -775,8 +816,9 @@ export function buildJadeModel(options: { quality?: 'high' | 'low' } = {}): Jade
   tabletMat.name = 'mat-tablet';
   const tablet = new THREE.Mesh(tabletGeo, tabletMat);
   tablet.name = 'xin-si-tablet';
-  tablet.position.set(0.98, -0.66, 0.58);
-  tablet.rotation.set(-0.04, -0.42, 0.06);
+  // 参考图的辛巳牌挂在右下方、与蛇环之间留出空隙；贴在环上会读成"挂在蛇身上的标签"。
+  tablet.position.set(1.16, -0.88, 0.54);
+  tablet.rotation.set(-0.04, -0.46, 0.06);
   root.add(tablet);
 
   // 8. 七星刻纹
