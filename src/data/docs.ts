@@ -125,4 +125,19 @@ export const docs: Doc[] = [
     sources: [{ label: '本仓库工具实现', note: '公式与校验见 src/scripts/tools/logic.ts 的 supplyCurrent；页面见 /tools#supply。' }, { label: '功率定义与单位', note: 'S² = P² + Q² 与功率因数定义为交流电路基础关系；载流量与修正系数应查所用标准与厂家数据。' }],
     related: [{ label: '电源容量与电流计算器', href: '/tools#supply' }, { label: '工程计算记录方法', href: '/docs/calculation-record' }]
   },
+  {
+    slug: 'knowledge-search', title: '知识库检索：构建期索引与首屏零成本', kind: '制作记录', updated: '2026-11-11',
+    summary: '把全文索引放在构建期生成，首屏不加载；只在用户开始检索时取一次 JSON，并有页面内文字的降级路径。',
+    sections: [
+      { heading: '要解决的不是“有没有搜索框”', paragraphs: ['文档数量少时，浏览器自带的查找就够用；需要搜索框，是因为读者往往不知道关键词落在摘要、章节标题还是正文里。所以检索范围必须覆盖标题、摘要、章节标题、正文段落、列表、表格与代码片段，并且要能按文档类型筛选。', '反过来，如果为了一个搜索框在首屏加载几百 KB 的索引，静态站点的性能优势就被吃掉了。约束是两条：覆盖要全，首屏要零成本。'] },
+      { heading: '索引在构建期生成', paragraphs: ['用 Astro 的静态端点把 src/data/docs.ts 的每篇文档摊平成一条记录：slug、title、kind、updated、summary 与 text。text 由标题、类型、摘要、各章节的标题、段落、列表、表格单元格与代码块拼成，统一转小写后以空格连接。', '端点输出 dist/docs-index.json（当前 9 篇文档约 24 KB），不依赖任何运行时服务；内容更新时随构建一起更新，不存在索引过期的问题。'] },
+      { heading: '首屏不加载索引', paragraphs: ['页面 HTML 里只有列表本身，索引文件不在初始请求里。逻辑写在独立模块 src/scripts/docs-finder.ts 里，由页面内联脚本 import 后调用 mountDocsFinder()。', '触发时机有两处：输入框第一次获得焦点时预取一次，输入时再取一次（同一个 Promise，只发一个请求）。当前实测：打开 /docs/ 时索引请求数为 0，开始输入后为 1。'] },
+      { heading: '匹配规则', paragraphs: ['关键词按空白切成多个 token，全部命中才算匹配（AND），大小写不敏感；类型下拉为空表示不限类型。计数文案在有条件时显示“显示 X / 共 N 篇”，无条件时显示“N 篇文档”。', '没有命中时显示一条明确提示，而不是留一片空白；把关键词和类型都清空后，列表恢复全部条目。'] },
+      { heading: '降级路径', paragraphs: ['索引请求失败（离线、被拦截、文件缺失）时不抛错到控制台，而是退回用页面里已有条目的 textContent 建本地索引，检索仍然可用，只是匹配范围限于列表展示的文字。', '这里有一个必须记住的教训：索引与 DOM 是两套来源，选择器写错（例如漏掉列表容器的 id）时，过滤逻辑会因为“找不到条目”而静默返回，看起来像搜索没生效而不是报错。'] },
+      { heading: '验证方法', paragraphs: ['用真实浏览器按固定步骤跑：打开页面记录条目数；输入“压降”应只剩两篇；把类型切到“计算记录”结果不变；输入不可能命中的关键词时计数为 0 且提示可见；清空后恢复全部条目。每一步同时记录 pageerror、横向溢出（innerWidth 与 scrollWidth 相等）。'], list: ['1440×900：9 条 → 搜索 2 条 → 无命中 0 条且提示可见 → 清空恢复 9 条，无报错，无横向溢出', '390×844：同上，无报错，无横向溢出', '索引文件：HTTP 200，条数 9，字段为 slug / title / kind / updated / summary / text'] },
+      { heading: '已知限制', paragraphs: ['当前实现是子串匹配，没有分词、词干化与相关度排序；中文没有空格，多个字连写时要整段命中。文档规模继续增长（比如超过几百篇）时，应该改成构建期生成倒排索引与按词切分的方案，而不是继续放大这个 JSON。', '索引与页面文字是两份数据，新增文档时只要经过 docs.ts 就会同时更新；如果手工在页面里加条目而不同步数据源，搜索结果会缺这一篇。'] },
+    ],
+    sources: [{ label: '实现位置', note: '索引端点 src/pages/docs-index.json.ts；前端模块 src/scripts/docs-finder.ts；页面 src/pages/docs.astro。' }, { label: '实测记录', note: '浏览器验证脚本 _work/nova-test-docs-search.mjs 与 _work/nova-poll-docs10.mjs；线上验证于 2026-11-11 完成。' }],
+    related: [{ label: '打开知识库检索', href: '/docs' }, { label: '静态站点部署实践', href: '/docs/static-site-deployment' }]
+  },
 ];
