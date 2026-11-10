@@ -1,6 +1,17 @@
 import * as THREE from 'three';
 import { createScaleTextures, createTabletTexture } from './procedural-textures';
 import { createJadeMaterial } from './jade-material';
+import {
+  snakePoint,
+  snakeTangent,
+  snakeCurveAt,
+  updateSnakeTube,
+  headYaw,
+  ringSwing,
+  kernelPulse,
+  bodyFloat,
+  type SnakeTubeTargets,
+} from './pose';
 
 export interface JadeParts {
   root: THREE.Group;
@@ -13,6 +24,8 @@ export interface JadeParts {
   tablet: THREE.Mesh;
   stars: THREE.Group;
   relief: THREE.Mesh;
+  /** 按时间求值并原地更新全部运动部件。网页预览与导出共用同一姿态函数（见 pose.ts）。 */
+  updatePose: (time: number) => void;
 }
 
 /** 变半径管：沿曲线生成半径渐变的蛇身 */
@@ -205,40 +218,13 @@ function buildScaleSample(
   return mesh;
 }
 
-/**
- * 蛇身路径：贴着球面绕行一整圈（衔尾），纬度基本恒定在赤道附近并缓慢起伏，
- * 使正面看成一条完整闭合的环，而不是散成两段螺旋。
- */
-function serpentCurve(): THREE.CatmullRomCurve3 {
-  // 蛇是「贴着球面的外圈」：R=1.14（球 1.0），只比球面外扩一点，
-  // 参考图里蛇的外沿几乎与球沿齐平，R 过大就读成悬在远处的呼啦圈。
-  // 前后起伏用 z 的正弦给出，一半绕到球后，保留空间关系。
-  const pts: THREE.Vector3[] = [];
-  const steps = 320;
-  const gap = 0.16; // 咬合缺口：只留出吻部宽度，尾尖正好被衔在口中
-  const sweep = Math.PI * 2 - gap;
-  const R = 1.14;
-  const squashY = 0.965;
-  const zAmp = 0.10;
-  const endAngle = Math.PI * 0.25; // 蛇头落在画面右上 45°
-  for (let i = 0; i <= steps; i += 1) {
-    const t = i / steps;
-    const a = endAngle - sweep * (1 - t);
-    // 深度按整圈正弦给：两端在缺口处都回到 0，咬合才贴合；
-    // 而不是只把整个环转一个角度（那样侧视会塌成一条线）。
-    const z = Math.sin(((a - (endAngle - sweep)) / sweep) * Math.PI * 2) * zAmp;
-    pts.push(new THREE.Vector3(Math.cos(a) * R, Math.sin(a) * R * squashY, z));
-  }
-  return new THREE.CatmullRomCurve3(pts, false, 'centripetal', 0.5);
-}
-
 export function buildJadeModel(options: { quality?: 'high' | 'low' } = {}): JadeParts {
   const quality = options.quality ?? 'high';
   const hi = quality === 'high';
   const root = new THREE.Group();
   root.name = 'jade-heng';
 
-  const scaleTex = createScaleTextures('jade');
+  const scaleTex = createScaleTextures('gold');
 
   // 1. 青玉球壳
   const shellGeo = new THREE.SphereGeometry(1, hi ? 128 : 64, hi ? 96 : 48);
@@ -269,6 +255,28 @@ export function buildJadeModel(options: { quality?: 'high' | 'low' } = {}): Jade
   innerShell.name = 'jade-shell-inner';
   innerShell.visible = false;
 
+  // 1b-2. 内层玉胎（用户第 1 条"多层玉质结构"）：外壳之内再一层更实的青玉，
+  // 让视线穿过外壳时能看到"第二层壁"，而不是一眼看穿到一个空球。
+  const coreMat = new THREE.MeshPhysicalMaterial({
+    color: new THREE.Color('#5fa98a'),
+    roughness: 0.34,
+    metalness: 0,
+    transmission: 0.22,
+    thickness: 0.5,
+    ior: 1.45,
+    transparent: true,
+    opacity: 0.46,
+    depthWrite: false,
+    attenuationColor: new THREE.Color('#2c6b52'),
+    attenuationDistance: 1.4,
+    envMapIntensity: 0.7,
+  });
+  coreMat.name = 'mat-jade-core';
+  const innerCore = new THREE.Mesh(new THREE.SphereGeometry(0.74, hi ? 72 : 36, hi ? 56 : 28), coreMat);
+  innerCore.name = 'jade-inner-core';
+  innerCore.renderOrder = 3;
+  root.add(innerCore);
+
   // 2. 暖白内核
   const kernelGeo = new THREE.SphereGeometry(0.16, hi ? 72 : 36, hi ? 56 : 28);
   const kernelMat = new THREE.MeshPhysicalMaterial({
@@ -294,9 +302,9 @@ export function buildJadeModel(options: { quality?: 'high' | 'low' } = {}): Jade
   glowCanvas.height = 256;
   const gctx = glowCanvas.getContext('2d')!;
   const grad = gctx.createRadialGradient(128, 128, 0, 128, 128, 128);
-  grad.addColorStop(0, 'rgba(255,246,222,0.95)');
-  grad.addColorStop(0.42, 'rgba(255,232,186,0.42)');
-  grad.addColorStop(0.72, 'rgba(246,214,160,0.14)');
+  grad.addColorStop(0, 'rgba(255,242,214,0.72)');
+  grad.addColorStop(0.34, 'rgba(255,226,176,0.30)');
+  grad.addColorStop(0.66, 'rgba(246,210,152,0.09)');
   grad.addColorStop(1, 'rgba(240,206,150,0.0)');
   gctx.fillStyle = grad;
   gctx.fillRect(0, 0, 256, 256);
@@ -311,7 +319,7 @@ export function buildJadeModel(options: { quality?: 'high' | 'low' } = {}): Jade
     side: THREE.BackSide,
   });
   glowMat.name = 'mat-kernel-glow';
-  const glow = new THREE.Mesh(new THREE.SphereGeometry(0.62, 48, 36), glowMat);
+  const glow = new THREE.Mesh(new THREE.SphereGeometry(0.40, 40, 30), glowMat);
   glow.name = 'kernel-glow';
   glow.position.set(0, 0.06, 0);
   glow.renderOrder = 5;
@@ -321,21 +329,63 @@ export function buildJadeModel(options: { quality?: 'high' | 'low' } = {}): Jade
   const serpent = new THREE.Group();
   serpent.name = 'ouroboros';
   serpent.rotation.set(0.0, 0.0, 0.0);
-  const curve = serpentCurve();
-  // t=0 是尾端（收细到 0.020 以便入口），t=1 是颈端（0.132，与头部颈径衔接）
-  const bodyGeo = taperedTube(curve, (t) => 0.022 + 0.086 * Math.pow(Math.min(t * 1.7, 1), 0.65), hi ? 460 : 230, hi ? 44 : 26);
-  bodyGeo.scale(1, 1, 1);
-  // 与 Blender 渲染保持一致：蛇身是深青玉 (0.06,0.20,0.14)，不是金铜。
-  // 上一版 Three 侧仍是 #c9a05e 金铜，导致 /lab 与首页渲染同一模型却颜色不同。
+  const curve = snakeCurveAt(0);
+  // t=0 是尾端（收细到 0.022 以便入口），t=1 是颈端（0.108，与头部颈径衔接）。
+  // 管体用固定拓扑 + 每帧原地重算顶点：Frenet 帧在曲率近零处会翻转，
+  // 静态建几何时看不出来，一旦沿时间连续变形就会整段扭麻花，所以改用平行传输（见 pose.ts）。
+  const SEG = hi ? 300 : 170;
+  const RAD = hi ? 32 : 22;
+  const vCount = (SEG + 1) * (RAD + 1);
+  const bodyPos = new Float32Array(vCount * 3);
+  const bodyNor = new Float32Array(vCount * 3);
+  const bodyUv = new Float32Array(vCount * 2);
+  for (let i = 0; i <= SEG; i += 1) {
+    for (let j = 0; j <= RAD; j += 1) {
+      const k = (i * (RAD + 1) + j) * 2;
+      bodyUv[k] = (i / SEG) * 20;
+      bodyUv[k + 1] = (j / RAD) * 3;
+    }
+  }
+  const bodyIdx: number[] = [];
+  for (let i = 1; i <= SEG; i += 1) {
+    for (let j = 1; j <= RAD; j += 1) {
+      const a = (RAD + 1) * (i - 1) + (j - 1);
+      const b = (RAD + 1) * i + (j - 1);
+      const c = (RAD + 1) * i + j;
+      const d = (RAD + 1) * (i - 1) + j;
+      bodyIdx.push(a, b, d, b, c, d);
+    }
+  }
+  const tubeTarget: SnakeTubeTargets = {
+    positions: bodyPos,
+    normals: bodyNor,
+    tubularSegments: SEG,
+    radialSegments: RAD,
+  };
+  updateSnakeTube(tubeTarget, 0);
+  const bodyGeo = new THREE.BufferGeometry();
+  bodyGeo.setAttribute('position', new THREE.BufferAttribute(bodyPos, 3));
+  bodyGeo.setAttribute('normal', new THREE.BufferAttribute(bodyNor, 3));
+  bodyGeo.setAttribute('uv', new THREE.BufferAttribute(bodyUv, 2));
+  bodyGeo.setIndex(bodyIdx);
+  bodyGeo.computeBoundingSphere();
+  // 参考图的衔尾蛇是「金铜底 + 青玉甲片」，不是全绿蛇。
+  // 关键教训：深绿蛇身压在深绿玉球上，在首页尺寸下完全读不出来（环直接消失）。
+  // 所以底色必须回到金铜，青色只作为甲片浮雕存在。
   const bodyMat = new THREE.MeshPhysicalMaterial({
-    color: new THREE.Color('#0f3324'),
+    color: new THREE.Color('#c39a56'),
+    map: scaleTex.map,
     bumpMap: scaleTex.bump,
-    bumpScale: 0.32,
-    roughness: 0.28,
-    metalness: 0.34,
-    envMapIntensity: 1.6,
-    clearcoat: 0.3,
-    clearcoatRoughness: 0.15,
+    bumpScale: 0.38,
+    roughness: 0.34,
+    // 教训：金属完全靠环境图出亮度。viewer 的环境图是压暗版，
+    // metalness 0.78 的金蛇在这套环境里直接渲染成近黑色，正面看像是蛇环消失了。
+    metalness: 0.42,
+    envMapIntensity: 1.9,
+    emissive: new THREE.Color('#3a2a10'),
+    emissiveIntensity: 0.22,
+    clearcoat: 0.22,
+    clearcoatRoughness: 0.18,
   });
   bodyMat.name = 'mat-serpent';
   const body = new THREE.Mesh(bodyGeo, bodyMat);
@@ -377,8 +427,8 @@ export function buildJadeModel(options: { quality?: 'high' | 'low' } = {}): Jade
   // 球+锥的组装做不到这一点（上一版读成"鸭嘴/勺头"），这里改为沿 +X 轴放样的楔形头。
   const head = new THREE.Group();
   head.name = 'serpent-head';
-  const tip = curve.getPointAt(1);
-  const fwd = curve.getTangentAt(1).normalize();
+  const tip = snakePoint(1, 0);
+  const fwd = snakeTangent(1, 0);
 
   // 颈套筒：沿蛇身切向反向延伸的短管，盖住 taperedTube 的端面，消除头身之间的直角台阶
   const neckGeo = new THREE.CylinderGeometry(0.086, 0.080, 0.20, 28, 1, false);
@@ -443,9 +493,10 @@ export function buildJadeModel(options: { quality?: 'high' | 'low' } = {}): Jade
 
   // 旧方案（沿颌线铺一根细管）已删除：CatmullRom 在凸起的头面上会在中段切进、两端浮出，
   // 灰模里读成"一根粘在颌骨上的棍子"。改为在吻端做真正的张口：深色锥筒，尾尖从筒口进入。
-  // 张口尺寸按尾尖半径（约 0.024）反推：口内径 0.030、外沿 0.034，长度 0.055，
-  // 只比尾尖略大一圈，读成"衔住"，不是套一个喇叭。
-  const gapeGeo = new THREE.CylinderGeometry(0.034, 0.030, 0.055, 18, 1, true);
+  // 张口尺寸须大于"尾尖相对口心的径向偏距"，又不能大到读成套喇叭（上一版 0.046/0.020 就翻成喇叭了）。
+  // 口内径按"尾尖相对口心的径向偏距"反推：实测该偏距随姿态在 0.028–0.037 之间变化，
+  // 取外沿 0.042 / 内沿 0.038 才让尾尖始终落在口沿之内，读成"衔住"而不是"擦着唇边"。
+  const gapeGeo = new THREE.CylinderGeometry(0.042, 0.038, 0.055, 18, 1, true);
   gapeGeo.rotateZ(-Math.PI / 2); // 圆柱轴 Y → +X（吻端方向）
   const gape = new THREE.Mesh(gapeGeo, seamMat);
   gape.name = 'serpent-mouth-gape';
@@ -619,9 +670,9 @@ export function buildJadeModel(options: { quality?: 'high' | 'low' } = {}): Jade
   const bandGeo = new THREE.LatheGeometry(ringProfile, hi ? 220 : 128);
   const ringMat = new THREE.MeshStandardMaterial({
     color: new THREE.Color('#c99a52'),
-    roughness: 0.26,
-    metalness: 0.95,
-    envMapIntensity: 3.4,
+    roughness: 0.30,
+    metalness: 0.55,
+    envMapIntensity: 2.6,
     emissive: new THREE.Color('#4a3210'),
     emissiveIntensity: 0.3,
   });
@@ -755,7 +806,56 @@ export function buildJadeModel(options: { quality?: 'high' | 'low' } = {}): Jade
   reliefGlyph.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), dir);
   root.add(reliefGlyph);
 
-  return { root, shell, kernel, serpent, axis, copperRing, baseBadge, tablet, stars, relief };
+  // ---- 时间驱动：网页预览、GLB 导出与 Blender 动画共用 pose.ts 的同一套公式 ----
+  const RING_BASE_X = Math.PI / 2 - 0.855;
+  const RING_BASE_Z = -0.18;
+  const AXIS_Z = new THREE.Vector3(0, 0, 1);
+  const pTip = new THREE.Vector3();
+  const pFwd = new THREE.Vector3();
+  const pUp = new THREE.Vector3();
+  const pUpV = new THREE.Vector3();
+  const pSideV = new THREE.Vector3();
+  const basis = new THREE.Matrix4();
+
+  function updatePose(time: number) {
+    // 1) 蛇身顶点原地重算（拓扑不变，无新显存分配）
+    updateSnakeTube(tubeTarget, time);
+    const posAttr = bodyGeo.getAttribute('position') as THREE.BufferAttribute;
+    const norAttr = bodyGeo.getAttribute('normal') as THREE.BufferAttribute;
+    posAttr.needsUpdate = true;
+    norAttr.needsUpdate = true;
+    bodyGeo.computeBoundingSphere();
+
+    // 2) 颈端姿态：颈部与蛇头必须跟着同一套取样走，否则动起来就脱开
+    snakePoint(1, time, pTip);
+    snakeTangent(1, time, pFwd);
+    neck.quaternion.setFromUnitVectors(AXIS_Z, pFwd.clone().negate());
+    neck.position.copy(pTip).addScaledVector(pFwd, -0.06);
+
+    pUp.copy(pTip).normalize();
+    pUpV.copy(pUp).sub(pFwd.clone().multiplyScalar(pUp.dot(pFwd))).normalize();
+    pSideV.crossVectors(pFwd, pUpV).normalize();
+    head.position.copy(pTip).addScaledVector(pFwd, 0.025);
+    head.quaternion.setFromRotationMatrix(basis.makeBasis(pFwd, pUpV, pSideV));
+    // 头颈轻微摆动：绕本地上轴小角度转头，幅度 0.10 rad，不破坏衔尾
+    head.rotateY(headYaw(time));
+
+    // 3) 铜环缓慢摆转（幅度小，始终可辨认是环）
+    const swing = ringSwing(time);
+    copperRing.rotation.set(RING_BASE_X + swing * 0.35, 0, RING_BASE_Z + swing);
+    // 4) 内核柔和明暗（不做闪烁）
+    const kp = kernelPulse(time);
+    kernel.scale.setScalar(kp);
+    glow.scale.setScalar(kp * 1.02);
+    kernelMat.emissiveIntensity = 1.5 * kp;
+
+    // 5) 整体轻微悬浮
+    root.position.y = bodyFloat(time);
+  }
+
+  updatePose(0);
+
+  return { root, shell, kernel, serpent, axis, copperRing, baseBadge, tablet, stars, relief, updatePose };
 }
 
 export function jadePartNames(parts: JadeParts): string[] {

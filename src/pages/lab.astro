@@ -7,7 +7,7 @@ import JadeViewer from '../components/JadeViewer.astro';
     <p class="eyebrow">DEVELOPMENT PREVIEW / 玉衡</p>
     <h1>玉衡 · 三维开发预览<span class="dot">。</span></h1>
     <p class="lede">这是开发预览页，不属于正式对外内容。模型由 Three.js 程序化建模，部件分组命名可编辑；拖动旋转、滚轮缩放，可切换正面/侧面/背面视角。</p>
-    <p class="warn">状态：基础结构已完成，正进行 GLB 导出与 Blender 导入验证。<strong>尚未验收</strong>：材质写实度、蛇首与尾部衔接细节、跨软件一致性。</p>
+    <p class="warn">状态：基础结构已完成；蛇身姿态、头部摆动、尾部联动与铜环摆转已接入时间驱动（8 秒无缝循环）。<strong>尚未验收</strong>：材质写实度、蛇首放大细节、内部层次（暖白内珠/玉轴/铜环前后）与跨软件一致性。</p>
   </section>
 
   <section class="stage" aria-label="三维预览">
@@ -17,6 +17,7 @@ import JadeViewer from '../components/JadeViewer.astro';
       <button type="button" data-view="side">侧面</button>
       <button type="button" data-view="back">背面</button>
       <button type="button" data-export>导出 GLB</button>
+      <button type="button" data-pause aria-pressed="false">暂停动作</button>
       <label class="toggle"><input type="checkbox" data-auto checked /> 自动旋转</label>
       <output data-export-status class="out" role="status">未导出</output>
     </div>
@@ -63,7 +64,13 @@ import JadeViewer from '../components/JadeViewer.astro';
 
 <script>
   const root = document.querySelector<HTMLElement>('[data-jade-viewer]');
-  const api = (window as unknown as { __jadeViewer?: { orbitTo: (v: 'front'|'side'|'back') => void; exportGLB: () => Promise<ArrayBuffer> } }).__jadeViewer;
+  type JadeApi = {
+    orbitTo: (v: 'front' | 'side' | 'back') => void;
+    exportGLB: () => Promise<ArrayBuffer>;
+    setPaused: (paused: boolean) => void;
+    isPaused: () => boolean;
+  };
+  const api = (window as unknown as { __jadeViewer?: JadeApi }).__jadeViewer;
   const out = document.querySelector<HTMLElement>('[data-export-status]');
   document.querySelectorAll<HTMLButtonElement>('[data-view]').forEach((btn) => {
     btn.addEventListener('click', () => {
@@ -92,6 +99,14 @@ import JadeViewer from '../components/JadeViewer.astro';
     } finally {
       btn.disabled = false;
     }
+  });
+  document.querySelector<HTMLButtonElement>('[data-pause]')?.addEventListener('click', (event) => {
+    const btn = event.currentTarget as HTMLButtonElement;
+    const next = !(api?.isPaused() ?? false);
+    api?.setPaused(next);
+    btn.setAttribute('aria-pressed', String(next));
+    btn.textContent = next ? '继续动作' : '暂停动作';
+    if (out) out.textContent = next ? '动作已暂停（可拖动查看结构）' : '动作进行中';
   });
   document.querySelector<HTMLInputElement>('[data-auto]')?.addEventListener('change', (event) => {
     const el = event.currentTarget as HTMLInputElement;

@@ -21,8 +21,8 @@ export function createJadeMaterial(): THREE.ShaderMaterial {
     side: THREE.FrontSide,
     uniforms: {
       uCoreColor: { value: new THREE.Color('#fffaea') },
-      uMidColor: { value: new THREE.Color('#4e9a76') },
-      uEdgeColor: { value: new THREE.Color('#14432f') },
+      uMidColor: { value: new THREE.Color('#2f7a5c') },
+      uEdgeColor: { value: new THREE.Color('#123f2c') },
       uRimColor: { value: new THREE.Color('#dcfff0') },
       uLightDir: { value: new THREE.Vector3(0.34, 0.82, 0.46).normalize() },
       uCorePower: { value: 0.26 },
@@ -91,25 +91,47 @@ export function createJadeMaterial(): THREE.ShaderMaterial {
         float facing = clamp(dot(N, V), 0.0, 1.0);
 
         // 1+2. 中心透光 → 侧面沉积深玉
-        float body = smoothstep(0.0, 0.92, facing);
+        float body = smoothstep(0.0, 0.62, facing);
         vec3 col = mix(uEdgeColor, uMidColor, body);
         // 中心暖白光核，只在正对处出现，范围收窄，避免整球发白
         float coreGlow = pow(facing, 9.0) * uCorePower;
         col += uCoreColor * coreGlow;
 
+        // 2b. 球面方向光：没有这一项，整颗球在任何角度都是一个平涂圆盘
+        float ndl = max(dot(N, uLightDir), 0.0);
+        col += uMidColor * ndl * 0.34 + uCoreColor * pow(ndl, 3.0) * 0.08;
+
         // 3. 菲涅尔边缘亮环：玉器的水头
         float fres = pow(1.0 - facing, uRimPower);
-        col += uRimColor * fres * 0.55;
+        col += uRimColor * fres * 0.30;
 
         // 4. 上方柔和镜面高光
         vec3 H = normalize(uLightDir + V);
         float spec = pow(max(dot(N, H), 0.0), uSpecPower);
-        col += vec3(1.0, 0.99, 0.95) * spec * 0.5;
+        col += vec3(1.0, 0.99, 0.95) * spec * 0.22;
 
         // 絮状纹理：只在玉肉区可见，不污染光核与边缘
         float cloud = fbm(vPosW * 2.4);
         float vein = smoothstep(0.52, 0.78, cloud) * (1.0 - coreGlow * 1.4) * (1.0 - fres * 0.7);
-        col = mix(col, col * 0.82 + uMidColor * 0.3, vein * 0.35);
+        col = mix(col, col * 0.74 + uMidColor * 0.40, vein * 0.55);
+
+        // 4b. 画出来的内部层次（用户第 1 条）：
+        // 在暖白页面上做真透明，中心会被背景的白色直接冲掉，读成"奶白玻璃球"。
+        // 因此把内部结构画进外壳的着色函数：中央暖白光核、内层玉胎的边界环、竖直玉轴的亮带。
+        // 真实的内珠/玉轴/内层网格仍在场景里，负责旋转时的视差与 /lab 的结构检查。
+        float rho = clamp(length(vPosW.xy), 0.0, 1.0);
+        // 中央暖白光核：范围大、边缘软，是"球心里有光"的主体
+        float core = smoothstep(0.30, 0.0, rho);
+        col = mix(col, uCoreColor, core * 0.17);
+        // 热核：范围更小、接近纯暖白，保证"球心里有一颗灯"读得出来
+        float hot = smoothstep(0.105, 0.0, rho);
+        col = mix(col, vec3(1.0, 0.975, 0.90), hot * 0.50);
+        // 内层玉胎边界：rho≈0.74 处一圈略深的玉肉，形成第二层壁的视觉
+        float innerEdge = smoothstep(0.70, 0.745, rho) * smoothstep(0.80, 0.755, rho);
+        col = mix(col, uEdgeColor * 1.35 + uMidColor * 0.25, innerEdge * 0.42);
+        // 竖直玉轴：x 近似为 0 的一条软亮带
+        float axisBand = smoothstep(0.018, 0.006, abs(vPosW.x)) * smoothstep(0.90, 0.62, abs(vPosW.y));
+        col += vec3(0.78, 0.90, 0.82) * axisBand * 0.05;
 
         // 5. 环境反射：玉器表面必须映出环境，否则永远像塑料。
         // 用等距柱状投影手动采样，自由度比 envMap 更高。
@@ -117,13 +139,16 @@ export function createJadeMaterial(): THREE.ShaderMaterial {
         vec2 euv = vec2(atan(R.z, R.x) * 0.15915494 + 0.5, asin(clamp(R.y, -1.0, 1.0)) * 0.31830989 + 0.5);
         vec3 envCol = texture2D(uEnv, vec2(euv.x, 1.0 - euv.y)).rgb;
         float refl = pow(1.0 - facing, 1.35);
-        col += envCol * (0.10 + refl * 1.35) * uEnvIntensity;
+        col += envCol * (0.01 + refl * 0.42) * uEnvIntensity;
 
         // 极轻的暗角，让球体压住画面重心
-        col *= mix(0.55, 1.0, body);
+        col *= mix(0.45, 1.0, body);
 
         // 厚度感即透明度：中心最薄最透，边缘最厚接近实心
-        float alpha = mix(0.94, 0.55, smoothstep(0.08, 0.96, facing));
+        // 用户第 1 条要求"恢复内部层次"：中心必须真的能透过去看到内珠与玉轴，
+        // alpha 中心 0.26、边缘 0.90，玻璃壁的"厚"只保留在轮廓上。
+        // 近不透明：暖白页面上做真透明会把球心冲成背景白，玉肉必须自己撑住颜色
+        float alpha = mix(0.88, 0.985, smoothstep(0.15, 0.95, facing));
         gl_FragColor = vec4(col, alpha);
         #include <colorspace_fragment>
       }

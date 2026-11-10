@@ -2,12 +2,18 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 
 import { buildJadeModel, type JadeParts } from './build-jade';
+import { LOOP_SECONDS } from './pose';
 
 export interface JadeViewerHandle {
   dispose: () => void;
   exportGLB: () => Promise<ArrayBuffer>;
   setQuality: (q: 'high' | 'low') => void;
   orbitTo: (view: 'front' | 'side' | 'back') => void;
+  setPaused: (paused: boolean) => void;
+  isPaused: () => boolean;
+  /** 按指定时间求值姿态，用于逐帧导出与离线渲染对齐 */
+  poseAt: (time: number) => void;
+  loopSeconds: number;
 }
 
 const VIEWS: Record<string, number> = { front: 0, side: Math.PI / 2, back: Math.PI };
@@ -82,7 +88,9 @@ export function mountJadeViewer(root: HTMLElement): JadeViewerHandle | null {
   const scene = new THREE.Scene();
   const camera = new THREE.PerspectiveCamera(34, 1, 0.1, 100);
   camera.position.set(0, 0.25, 8.6);
-  const FIT_RADIUS = 1.82;
+  // 1.82 只框住玉球本体，衔尾蛇环（R 1.14 + 管径 0.11）与铜环在 /lab 里被切出画面。
+  // 用户第 1 条要求旋转查看整体，因此取景半径必须覆盖整个装配。
+  const FIT_RADIUS = 2.20;
   const FIT_CENTER_Y = -0.06;
 
   /** 依据视口宽高比计算能完整容纳模型的相机距离，避免窄屏或宽屏裁切。 */
@@ -175,6 +183,9 @@ export function mountJadeViewer(root: HTMLElement): JadeViewerHandle | null {
   scene.add(core);
 
   const parts: JadeParts = buildJadeModel({ quality: 'high' });
+  // 开发期自检钩子：/lab 控制台可直接查看各部件世界坐标与材质，便于定位"部件消失"这类问题。
+  (window as unknown as { __jadeParts?: unknown; __jadeCamera?: unknown }).__jadeParts = parts;
+  (window as unknown as { __jadeCamera?: unknown }).__jadeCamera = camera;
   // 球壳需要环境倒影，把影棚环境图直接交给玉质着色器
   const shellShader = parts.shell.material as THREE.ShaderMaterial;
   if (shellShader.uniforms?.uEnv) shellShader.uniforms.uEnv.value = envEquirect;
@@ -194,10 +205,15 @@ export function mountJadeViewer(root: HTMLElement): JadeViewerHandle | null {
   controls.autoRotateSpeed = 0.55;
 
   let running = true;
+  let paused = false;
+  let motionClock = 0;
   let dprCap = 1.75;
   const reduced = window.matchMedia('(prefers-reduced-motion: reduce)');
   if (reduced.matches) {
+    // 系统要求减少动态效果：不自动旋转，并停在循环起点姿态上静态展示
     controls.autoRotate = false;
+    paused = true;
+    parts.updatePose(0);
     running = false;
   }
 
@@ -247,10 +263,12 @@ export function mountJadeViewer(root: HTMLElement): JadeViewerHandle | null {
     }
     if (!running) return;
     const t = now / 1000;
-    parts.root.position.y = Math.sin(t * 0.6) * 0.035;
-    parts.serpent.rotation.z = Math.sin(t * 0.22) * 0.06;
-    parts.stars.rotation.y = t * 0.06;
-    parts.kernel.scale.setScalar(1 + Math.sin(t * 1.1) * 0.02);
+    if (!paused) {
+      // 全部运动部件由 pose.ts 的同一套公式驱动；网页、GLB 与 Blender 共用这个时间基准
+      parts.updatePose(t);
+      parts.stars.rotation.y = t * 0.045;
+      motionClock = t;
+    }
     controls.update();
     renderer.render(scene, camera);
   }
@@ -259,6 +277,18 @@ export function mountJadeViewer(root: HTMLElement): JadeViewerHandle | null {
   function setRunning(next: boolean) {
     running = next;
     if (!next) controls.autoRotate = false;
+  }
+
+  /** 暂停/继续动作。暂停时定格在当前姿态，仍可拖动旋转查看结构。 */
+  function setPaused(next: boolean) {
+    paused = next;
+    if (next) {
+      controls.autoRotate = false;
+    }
+  }
+
+  function isPaused() {
+    return paused;
   }
 
   function onVisibility() {
@@ -343,5 +373,5 @@ export function mountJadeViewer(root: HTMLElement): JadeViewerHandle | null {
   }
 
   root.dataset.renderer = 'ready';
-  return { dispose, exportGLB, setQuality, orbitTo };
+  return { dispose, exportGLB, setQuality, orbitTo, setPaused, isPaused, poseAt: (time: number) => parts.updatePose(time), loopSeconds: LOOP_SECONDS };
 }

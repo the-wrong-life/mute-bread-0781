@@ -75,26 +75,29 @@ def rep(name, base, rough, metal, trans=0.0, ior=1.45, coat=0.0, emit=None, emit
 
 # 参考图是暖白纸底上的青玉：玉必须浅、透、有内部散射，不能是深墨绿
 # 实心浅青玉：透射只留一点点做边缘水头，主体靠次表面散射表现"玉肉"，这样球心不会再透出背景的白。
-rep("mat-jade-shell", (0.17, 0.47, 0.34), 0.10, 0.0, trans=0.36, ior=1.55, coat=0.55, sss=0.52, sss_rad=(0.30,0.62,0.44), sss_scale=0.14)
+# 玉肉加深：参考图的球体是中深青玉，不是浅薄荷绿。
+# 教训（WebGL 侧同步验证过）：浅色玉肉在暖白纸底上会被背景冲成"奶白玻璃球"。
+rep("mat-jade-shell", (0.09, 0.34, 0.24), 0.10, 0.0, trans=0.36, ior=1.55, coat=0.55, sss=0.52, sss_rad=(0.30,0.62,0.44), sss_scale=0.14)
 # 内核只作柔光核：强度过高时透过球壳形成边界生硬的中央白斑（本轮诊断已确认）
 rep("mat-kernel", (1.0, 0.96, 0.88), 0.62, 0.0, emit=(1.0, 0.88, 0.66), emit_str=7.0)
-rep("mat-serpent", (0.06, 0.20, 0.14), 0.28, 0.34, coat=0.30)
+# 衔尾蛇回到参考图的「金铜底 + 青玉甲片」：深绿蛇压在深绿球上在首页尺寸下完全读不出来。
+rep("mat-serpent", (0.66, 0.48, 0.19), 0.30, 0.85, coat=0.30)
 def serpent_plates():
     m = bpy.data.materials.get("mat-serpent")
     nt = m.node_tree
     bs = [n for n in nt.nodes if n.type == 'BSDF_PRINCIPLED'][0]
     out = [n for n in nt.nodes if n.type == 'OUTPUT_MATERIAL'][0]
     brick = nt.nodes.new('ShaderNodeTexBrick')
-    brick.inputs['Scale'].default_value = 3.4
-    brick.inputs['Mortar Size'].default_value = 0.055
+    brick.inputs['Scale'].default_value = 6.5
+    brick.inputs['Mortar Size'].default_value = 0.018
     brick.inputs['Mortar Smooth'].default_value = 0.2
     brick.inputs['Bias'].default_value = 0.0
     brick.inputs['Brick Width'].default_value = 0.5
     brick.inputs['Row Height'].default_value = 0.5
     # 甲片取深青玉，砖缝取金铜：远看是金铜蛇裹青玉甲，近看有鳞片分界
-    brick.inputs['Color1'].default_value = (0.055, 0.19, 0.13, 1)
-    brick.inputs['Color2'].default_value = (0.035, 0.13, 0.09, 1)
-    brick.inputs['Mortar'].default_value = (0.11, 0.26, 0.18, 1)
+    brick.inputs['Color1'].default_value = (0.20, 0.44, 0.31, 1)
+    brick.inputs['Color2'].default_value = (0.15, 0.36, 0.25, 1)
+    brick.inputs['Mortar'].default_value = (0.10, 0.27, 0.19, 1)
     uvc = nt.nodes.new('ShaderNodeTexCoord')
     # 砖格旋转 45° 成菱形：横竖方砖读起来是"砖墙"，菱形才是覆瓦甲片
     mp = nt.nodes.new('ShaderNodeMapping')
@@ -266,27 +269,32 @@ bpy.context.scene.camera = cam
 
 def add_light(name, loc, energy, size, color):
     d = bpy.data.lights.new(name, type='AREA'); d.energy = energy; d.size = size; d.color = color
+    d.shape = 'DISK'  # 方形面光会在玉壳上反射出两块矩形白斑，改用圆盘光
     o = bpy.data.objects.new(name, d); o.location = loc
     bpy.context.scene.collection.objects.link(o)
     v = mathutils.Vector((0,0,0.1)) - mathutils.Vector(loc)
     o.rotation_euler = v.to_track_quat('-Z','Y').to_euler()
 
-add_light("key", (5.2, -7.0, 6.4), 1050, 7.0, (1.0, 0.97, 0.90))
-add_light("rim", (-6.8, 2.2, 3.6), 900, 6.0, (0.92, 0.98, 1.0))
-add_light("back", (0.2, 5.2, 2.0), 700, 5.0, (1.0, 0.98, 0.92))
-add_light("fill", (-3.4, -7.6, 0.8), 320, 6.0, (1.0, 1.0, 1.0))
+add_light("key", (5.2, -7.0, 6.4), 1050, 12.0, (1.0, 0.97, 0.90))
+add_light("rim", (-6.8, 2.2, 3.6), 900, 10.0, (0.92, 0.98, 1.0))
+add_light("back", (0.2, 5.2, 2.0), 700, 9.0, (1.0, 0.98, 0.92))
+add_light("fill", (-3.4, -7.6, 0.8), 320, 10.0, (1.0, 1.0, 1.0))
 
 scene.render.engine = 'CYCLES'
 scene.cycles.device = 'CPU'
 scene.cycles.samples = 96
 scene.cycles.use_denoising = True
-scene.render.resolution_x = 900
-scene.render.resolution_y = 900
+_res = int(os.environ.get("NOVA_RES", "900"))
+scene.render.resolution_x = _res
+scene.render.resolution_y = _res
 scene.render.film_transparent = True
 scene.view_settings.view_transform = 'AgX'
 scene.view_settings.look = 'AgX - Medium High Contrast'
 
 VIEWS = {"web": (0.0, -10.0, 0.35), "side": (-9.6, -2.6, 0.35), "quarter": (-6.6, -7.4, 2.6)}
+_only = os.environ.get("NOVA_VIEW")
+if _only:
+    VIEWS = {k: v for k, v in VIEWS.items() if k == _only}
 # 头部局部：Three (0.891,0.860,0) → Blender (0.891, 0, 0.860)；吻端朝 (-0.70,-0.20,0.68)
 LOOK = {"closeup-front": ((0.72, -2.55, 1.02), (0.86, 0.0, 0.94), 108),
         "closeup-side": ((2.52, 0.0, 2.60), (0.86, 0.0, 0.90), 108),

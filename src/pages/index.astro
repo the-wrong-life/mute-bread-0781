@@ -36,7 +36,9 @@ const journals = [
         <p class="english" lang="en">Engineering Ideas Into Reality</p>
       </div>
       <div class="core-stage">
-        <YuhengArt alt="玉衡：青玉球体、金铜衔尾蛇环与倾斜的铜金测量环" />
+        <div class="core-breath">
+          <YuhengArt alt="玉衡：青玉球体、金铜衔尾蛇环与倾斜的铜金测量环" />
+        </div>
       </div>
       <p class="hero-lede">以工程方法探索想法，让每一次创造都有迹可循。</p>
       <a class="button primary" href="/projects">进入实验室 <span aria-hidden="true">→</span></a>
@@ -127,6 +129,14 @@ const journals = [
   .hero .button { grid-area: cta; justify-self: start; align-self: start; margin-top: 26px; min-width: 220px; }
   .core-stage { grid-area: core; display: flex; flex-direction: column; align-items: center; justify-content: center; min-width: 0; width: 100%; }
   .core-stage :global(.nova-shell) { max-width: 100%; }
+  /* 静态主视觉的轻量呼吸：只做极小的位移与亮度起伏，
+     不伪造三维运动；真正的旋转与蛇环动作在 /lab 实时视图里。 */
+  .core-breath { width: 100%; animation: core-breath 9s ease-in-out infinite; will-change: transform; }
+  @keyframes core-breath {
+    0%, 100% { transform: translateY(0) scale(1); filter: brightness(1); }
+    50% { transform: translateY(-6px) scale(1.008); filter: brightness(1.025); }
+  }
+  @media (prefers-reduced-motion: reduce) { .core-breath { animation: none; } }
   .core-stage :global(.hero-core) { aspect-ratio: 1 / 1; }
 
 
