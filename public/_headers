@@ -1,0 +1,8 @@
+# 静态站安全响应头。若托管平台不支持该文件，浏览器侧不会报错，但也不会有任何效果，
+# 因此必须用线上响应头核实，不能凭"文件已提交"认为已生效。
+/*
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  X-Frame-Options: SAMEORIGIN
+  Permissions-Policy: geolocation=(), microphone=(), camera=()
+  Strict-Transport-Security: max-age=31536000

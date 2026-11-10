@@ -243,8 +243,12 @@ def lights():
     # 珍珠高光：珠心是一颗小玻璃珠，只有"正前方一个小光源"才能在珠面打出一个明确高光点。
     # 大灯盘只会把它糊成一团白光，所以单独给一盏小灯，默认关闭（0 = 不出灯）。
     pl = float(os.environ.get("NOVA_PEARL_LIGHT", "0"))
+    # 光斑大小也要能调：高光点的大小正比于灯盘张角，1.1 单位在 5.4 单位距离上仍偏大，
+    # 珠面读成一片柔光而不是"点"——这是"珠心像光团不像玻璃珠"的直接原因之一。
+    ps = float(os.environ.get("NOVA_PEARL_SIZE", "1.1"))
+    pp = tuple(float(v) for v in os.environ.get("NOVA_PEARL_POS", "1.4,-5.2,1.6").split(","))
     if pl > 0:
-        add("pearl-spec", (1.4, -5.2, 1.6), pl, 1.1, (1.0, 0.96, 0.86))
+        add("pearl-spec", (pp[0], pp[1], pp[2]), pl, ps, (1.0, 0.96, 0.86))
 
 def world():
     w = bpy.data.worlds.new("w"); bpy.context.scene.world = w
