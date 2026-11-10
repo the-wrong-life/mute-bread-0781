@@ -55,10 +55,14 @@ def rep(name, base, rough, metal, trans=0.0, ior=1.45, coat=0.0, emit=None, emit
         nr = nt.nodes.new('ShaderNodeValToRGB')
         # 色阶两端别拉太开：0.10→0.44 的对比在球面上渲成一团团大云斑，
         # 参考图的玉絮是细的、贴着实心玉肉走的。
+        # 玉壳底色由这段噪声色阶决定，SHELL_BASE 对 mat-jade-shell 实际不生效（诊断结论）。
+        # 因此"整体发青"的根因在这里：旧值两端都是青绿，暖色调吸收/暖灯都压不过它。
+        vc = os.environ.get("NOVA_VEIN_COLORS", "0.16,0.42,0.31|0.30,0.62,0.47").split("|")
+        c0 = tuple(float(v) for v in vc[0].split(",")); c1 = tuple(float(v) for v in vc[1].split(","))
         nr.color_ramp.elements[0].position = 0.40
-        nr.color_ramp.elements[0].color = (0.16, 0.42, 0.31, 1)
+        nr.color_ramp.elements[0].color = (c0[0], c0[1], c0[2], 1)
         nr.color_ramp.elements[1].position = 0.62
-        nr.color_ramp.elements[1].color = (0.30, 0.62, 0.47, 1)
+        nr.color_ramp.elements[1].color = (c1[0], c1[1], c1[2], 1)
         nt.links.new(noise.outputs['Fac'], nr.inputs['Fac'])
         nt.links.new(nr.outputs['Color'], bs.inputs['Base Color'])
     if tex_img is not None:
@@ -236,10 +240,13 @@ def lights():
     # 能量单独可调：参考图的高光是很小很亮的点/条（p90 亮度 233），
     # 我们的旧参数是"大而软的灯盘"，高光糊成一片，p90 只有 181。收缩灯盘并提亮才有硬高光。
     le = float(os.environ.get("NOVA_LIGHT_ENERGY", "1.0"))
-    add("key", (5.2, -7.0, 6.4), 900 * le, 3.5 * k, (1.0, 0.97, 0.90))
-    add("rim", (-6.8, 2.2, 3.6), 700 * le, 4.5 * k, (0.92, 0.98, 1.0))
-    add("back", (0.2, 5.2, 2.0), 520 * le, 4.0 * k, (1.0, 0.98, 0.92))
-    add("fill", (-3.4, -7.6, 0.8), 260 * le, 3.5 * k, (1.0, 1.0, 1.0))
+    # 灯色可覆盖：诊断"整体发青"到底来自材质还是冷色轮廓光（rim 原值为偏蓝的 0.92,0.98,1.0）
+    def lc(name, default):
+        return tuple(float(v) for v in os.environ.get(name, default).split(","))
+    add("key", (5.2, -7.0, 6.4), 900 * le, 3.5 * k, lc("NOVA_KEY_COLOR", "1.0,0.97,0.90"))
+    add("rim", (-6.8, 2.2, 3.6), 700 * le, 4.5 * k, lc("NOVA_RIM_COLOR", "0.92,0.98,1.0"))
+    add("back", (0.2, 5.2, 2.0), 520 * le, 4.0 * k, lc("NOVA_BACK_COLOR", "1.0,0.98,0.92"))
+    add("fill", (-3.4, -7.6, 0.8), 260 * le, 3.5 * k, lc("NOVA_FILL_COLOR", "1.0,1.0,1.0"))
     # 珍珠高光：珠心是一颗小玻璃珠，只有"正前方一个小光源"才能在珠面打出一个明确高光点。
     # 大灯盘只会把它糊成一团白光，所以单独给一盏小灯，默认关闭（0 = 不出灯）。
     pl = float(os.environ.get("NOVA_PEARL_LIGHT", "0"))
