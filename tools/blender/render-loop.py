@@ -240,6 +240,11 @@ def lights():
     add("rim", (-6.8, 2.2, 3.6), 700 * le, 4.5 * k, (0.92, 0.98, 1.0))
     add("back", (0.2, 5.2, 2.0), 520 * le, 4.0 * k, (1.0, 0.98, 0.92))
     add("fill", (-3.4, -7.6, 0.8), 260 * le, 3.5 * k, (1.0, 1.0, 1.0))
+    # 珍珠高光：珠心是一颗小玻璃珠，只有"正前方一个小光源"才能在珠面打出一个明确高光点。
+    # 大灯盘只会把它糊成一团白光，所以单独给一盏小灯，默认关闭（0 = 不出灯）。
+    pl = float(os.environ.get("NOVA_PEARL_LIGHT", "0"))
+    if pl > 0:
+        add("pearl-spec", (1.4, -5.2, 1.6), pl, 1.1, (1.0, 0.96, 0.86))
 
 def world():
     w = bpy.data.worlds.new("w"); bpy.context.scene.world = w
