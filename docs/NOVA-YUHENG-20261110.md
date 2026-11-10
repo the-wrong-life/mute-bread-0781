@@ -278,3 +278,23 @@ Blender 与 WebGL 两侧共 8 组对照（chk1–chk8）得到同一条结论：
 - GLB 导出：3543456 字节，magic `glTF`，`serpent-scales` 节点与 `mat-serpent-scale` 材质名均保留。
 - Blender 900²/40 samples 单帧（默认渲染管线）：**几何甲片读成细密的环向肋纹，像波纹管**，比砖格贴图"好一点"，但还没到"蛇鳞"。
 - 结论：**首页主视觉不替换**（继续用已上线资产）。下一轮要把片数降到 40–48 行、片宽提高，让每片在正常观看尺寸下占 6–8 像素以上，才可能读出独立鳞片；单纯堆片数只会退化成肋纹。
+
+## 十四、2026-11-11 首屏三段式（批次 8，已上线）
+
+问题：上一版首屏在 1440 下只有两列，"船舶电气/机械设计/AI 工程/工程工具"四个入口掉到首屏下方 y≈1252，与参考图右侧极简入口不符。
+
+做法：
+- 删除独立的 .domains-section，把 nav.domains 放进 hero-grid 内的 .hero-side。
+- ≥1200px 三列：minmax(240px,.78fr) / minmax(0,1.3fr) / minmax(172px,.40fr)，areas 为 "intro core side" × 3 行；中列加宽让玉衡直径占屏宽约 43%（1440 下 619px），接近参考图比例。
+- 行高由 1fr auto auto 改为 auto auto auto + align-content:center —— 原写法里 1fr 吃掉剩余高度，intro 的 align-self:end 会把整块文案压到首屏下半（h1 y≈431、CTA y≈722）。
+- 701–1199px 保持两列，side 用 "side side" 占整行排在 CTA 下方；≤700px 单列追加 "side"，入口回到内容流末尾。
+
+实测（本机 Chrome，候选 4344 / 线上）：
+- 1920/1585/1440/1280：四个入口全部在首屏内（navInFold 4/4）。
+- 1024/768：入口整行在 CTA 下方，首屏内可见 0–4 条不等，需滚动。
+- 390/320：首屏内 1/4，其余在下方内容流。
+- 全部视口 innerWidth==scrollWidth，pageerror 0；线上 1440 gridTemplateAreas 已为 "intro core side"，art 623²、side [1178,513,190,306]、mode=anim。
+
+发布：3dbfaf6，回滚点 9929dee（标签 rollback-before-home8-20261111 / published-home8-20261111）。
+
+注意：发布 worktree 里本地 main 是旧引用，git push origin main 会被拒（non-fast-forward），必须 git push origin HEAD:main。
