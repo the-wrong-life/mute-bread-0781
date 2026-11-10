@@ -26,7 +26,7 @@ node node_modules/astro/bin/astro.mjs build    # 产出 dist/
 
 以下由 `dist/` 实际产物枚举（`Get-ChildItem dist -Recurse -Filter index.html`），不是手工维护的列表。
 
-开发分支 `nova/v1-foundation`（17 条）：
+开发分支 `nova/v1-foundation`（19 条）：
 
 ```
 /                                       /projects
@@ -35,12 +35,13 @@ node node_modules/astro/bin/astro.mjs build    # 产出 dist/
 /blog                                   /projects/project-nova
 /docs                                   /projects/yuheng-core
 /docs/calculation-record                 /tools
-/docs/reusable-archives                  /lab            （开发预览，不发布）
-/docs/static-site-deployment             /lab-material   （开发预览，不发布）
-/docs/unit-conversion
+/docs/reusable-archives                  /marine        （领域页：船舶电气）
+/docs/static-site-deployment             /mechanical    （领域页：机械设计）
+/docs/unit-conversion                    /lab           （开发预览，不发布）
+                                         /lab-material  （开发预览，不发布）
 ```
 
-生产分支（15 条，不含 `/lab`、`/lab-material`）：同上减去最后两条。
+生产分支（15 条，不含 `/lab`、`/lab-material`、`/marine`、`/mechanical`）：以 origin/main 的构建产物为准。
 
 ## 玉衡三维模型：结论的适用范围
 
