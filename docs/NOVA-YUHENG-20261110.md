@@ -98,6 +98,15 @@ GLB 由 node _work/nova-export-glb.mjs 从 /lab 页面导出。
 - 星点半径 0.017→0.010，武曲浮雕盘半径 0.155→0.108。
 - 首页主视觉 WebP 重出：111782 字节（1040²）+ 44202 字节（520²），比上一版 115768/48034 更小。
 
+### 本轮验收记录（2026-11-10 20:24–21:05，本机 Chrome，预览 http://127.0.0.1:4340）
+
+- `astro check`：0 errors / 0 warnings / 21 hints（31 文件）；`astro build`：17 页。
+- 全路由审计：17 条路由 × 4 视口（1440/768/390/320）= **68 组**，全部 200、innerWidth==scrollWidth、h1 存在、pageerror 0、requestfailed 0，`ISSUES []`。
+- 首页几何：1585×992 art 600×600 @ (771,140)、h1 493×182 @ (145,207)、CTA 220×48 @ (145,509)；1440×900 art 600×600 @ (696,140)；390×844 art 343×343 @ (23,237)、CTA 350×48 @ (20,622)，三档 iw==sw。
+- 点击回归：首页主按钮 → /projects（h1「把想法，变成可验证的工作。」）；领域入口 ["/projects","/projects","/ai","/tools"]（船舶电气与机械设计共用 /projects，尚无独立页）；项目详情 4 条 + 返回 /projects；文档 4 篇 + 标题；工具页 3 个输入框。
+- 手机菜单：闭合时只显示 4 条领域入口，summary 73×44（≥44px 触控），展开后显示 6 条导航，再点收起。
+- 改前/改后证据：`nova-after-evidence/compare-home.png`（桌面 1585×992 与手机 390×844）、`compare-model.png`（模型正面与侧视）；改前图取自 0bb111c 的 WebP。
+
 ### 工具链教训
 
 用 PowerShell 的 `git show <rev>:<file> > out.bin` 取二进制文件会把内容按文本编码重写，WebP 直接损坏（页面只剩 alt 文本）。正确做法是 `git checkout <rev> -- <path>` 落到工作区再复制，或用 `git cat-file blob` 配合 `[IO.File]::WriteAllBytes`。
