@@ -74,7 +74,7 @@ def rep(name, base, rough, metal, trans=0.0, ior=1.45, coat=0.0, emit=None, emit
 
 # 参考图是暖白纸底上的青玉：玉必须浅、透、有内部散射，不能是深墨绿
 # 实心浅青玉：透射只留一点点做边缘水头，主体靠次表面散射表现"玉肉"，这样球心不会再透出背景的白。
-rep("mat-jade-shell", (0.30, 0.62, 0.48), 0.10, 0.0, trans=0.12, ior=1.55, coat=0.5, sss=0.9, sss_rad=(0.42,0.80,0.58), sss_scale=0.5)
+rep("mat-jade-shell", (0.30, 0.62, 0.48), 0.15, 0.0, trans=0.12, ior=1.55, coat=0.28, sss=0.9, sss_rad=(0.42,0.80,0.58), sss_scale=0.5)
 # 内核只作柔光核：强度过高时透过球壳形成边界生硬的中央白斑（本轮诊断已确认）
 rep("mat-kernel", (1.0, 0.95, 0.86), 0.62, 0.0, emit=(1.0, 0.88, 0.66), emit_str=2.8)
 rep("mat-serpent", (0.72, 0.54, 0.24), 0.20, 0.75, coat=0.35)
@@ -85,7 +85,7 @@ def serpent_plates():
     out = [n for n in nt.nodes if n.type == 'OUTPUT_MATERIAL'][0]
     brick = nt.nodes.new('ShaderNodeTexBrick')
     brick.inputs['Scale'].default_value = 1.6
-    brick.inputs['Mortar Size'].default_value = 0.014
+    brick.inputs['Mortar Size'].default_value = 0.008
     brick.inputs['Mortar Smooth'].default_value = 0.2
     brick.inputs['Bias'].default_value = 0.0
     brick.inputs['Brick Width'].default_value = 0.5
@@ -93,7 +93,7 @@ def serpent_plates():
     # 甲片取深青玉，砖缝取金铜：远看是金铜蛇裹青玉甲，近看有鳞片分界
     brick.inputs['Color1'].default_value = (0.10, 0.30, 0.23, 1)
     brick.inputs['Color2'].default_value = (0.07, 0.22, 0.17, 1)
-    brick.inputs['Mortar'].default_value = (0.66, 0.48, 0.20, 1)
+    brick.inputs['Mortar'].default_value = (0.40, 0.30, 0.14, 1)
     uvc = nt.nodes.new('ShaderNodeTexCoord')
     # 砖格旋转 45° 成菱形：横竖方砖读起来是"砖墙"，菱形才是覆瓦甲片
     mp = nt.nodes.new('ShaderNodeMapping')
