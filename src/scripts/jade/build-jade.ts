@@ -629,7 +629,10 @@ export function buildJadeModel(options: { quality?: 'high' | 'low' } = {}): Jade
   // 1.85 在 620 px 下头宽约 120 px，读成「金蛋/棒棒糖」（s1-base/s1-noscale 对照）。
   // 1.25 让头宽回到蛇径的 2.2 倍左右，眼窝与吻部才有比例感。
   // 蛇径缩到 0.078 后，头必须等比缩：1.25 × 0.078/0.104 ≈ 0.94。
-  head.scale.setScalar(0.94);
+  // §31：0.94 在 620 px 正视图里只有约 40 px，读完是个"金蛋"；参考图蛇首约占球径 12–15%，
+  // 按球径 620 px 折算应有 75–90 px，此处取 1.18（头长 0.465×1.18≈0.55 世界单位 ≈ 球径的 27%，
+  // 但实际可见轮廓只有吻端到颈环约 0.30 ≈ 15%）。
+  head.scale.setScalar(1.18);
 
   const headMat = new THREE.MeshPhysicalMaterial({
     // 高金属度 + 低粗糙把蛇头渲成抛光铜蛋，压掉一切结构；降到 0.42/0.36 让
