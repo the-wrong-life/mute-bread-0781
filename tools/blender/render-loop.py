@@ -204,15 +204,30 @@ def materials():
     # 教训（第 9 轮）：外壳调到 trans=0.95/dens=0.06 仍是奶白球，说明"奶"不来自外壳。
     # 这两层才是：kernel-glass 罩在内珠外、透射 0.5 又带 0.35 自发光；jade-core 底色是青玉绿。
     core_rgb = tuple(float(v) for v in os.environ.get("NOVA_CORE_COLOR", "0.30,0.62,0.48").split(","))
-    rep("mat-kernel-glass", (1.0, 0.985, 0.94), 0.05, 0.0, trans=float(os.environ.get("NOVA_GLASS_TRANS", "0.50")), ior=1.47, coat=1.0, emit=(1.0, 0.94, 0.80), emit_str=float(os.environ.get("NOVA_GLASS_EMIT", "0.35")))
+    # 第 13 轮：底色写死 (1.0,0.985,0.94) 会把 GLB 里的暖白珠重新漂白，
+    # 无论 build-jade.ts 怎么调都读成"硬边白盘"。底色与自发光改成可覆盖的暖白。
+    glass_rgb = tuple(float(v) for v in os.environ.get("NOVA_GLASS_COLOR", "0.98,0.93,0.80").split(","))
+    rep("mat-kernel-glass", glass_rgb, 0.05, 0.0, trans=float(os.environ.get("NOVA_GLASS_TRANS", "0.50")), ior=1.47, coat=1.0, emit=glass_rgb, emit_str=float(os.environ.get("NOVA_GLASS_EMIT", "0.16")))
     # 诊断（第 10 轮）：GLB 里 jade-inner-core 直径 1.48，占外壳半径 74%，底色调青绿、透射仅 0.30、
     # SSS 0.4 —— 它才是"调外壳参数毫无反应"的原因：肉眼看到的那颗球就是它，不是外壳。
     rep("mat-jade-core", core_rgb, 0.16, 0.0, trans=float(os.environ.get("NOVA_CORE_TRANS", "0.30")), ior=1.5, sss=float(os.environ.get("NOVA_CORE_SSS", "0.4")), sss_rad=(0.25,0.5,0.4), sss_scale=0.2)
-    rep("mat-jade-strut", (0.86, 0.90, 0.78), 0.16, 0.0, trans=0.45, ior=1.5, coat=0.45, emit=(0.80, 0.88, 0.72), emit_str=0.10)
-    rep("mat-jade-axis", (0.78, 0.94, 0.86), 0.14, 0.0, trans=0.30, ior=1.5, coat=0.3, emit=(0.86, 0.98, 0.90), emit_str=AXIS_EMIT)
-    rep("mat-copper-ring", (0.78, 0.60, 0.30), 0.26, 0.92)
-    rep("mat-copper-tick", (0.90, 0.74, 0.42), 0.22, 0.95)
-    rep("mat-gold", (0.80, 0.62, 0.30), 0.26, 0.92)
+    # 第 13 轮：骨架在玻璃里读成"荧光白线"，因为发光 0.10 + 高 coat 把边缘打亮；
+    # 参考图的梁是实玉色，靠体积而非发光发亮。
+    rep("mat-jade-strut",
+        tuple(float(v) for v in os.environ.get("NOVA_STRUT_COLOR", "0.30,0.46,0.30").split(",")),
+        float(os.environ.get("NOVA_STRUT_ROUGH", "0.26")), 0.0,
+        trans=float(os.environ.get("NOVA_STRUT_TRANS", "0.18")), ior=1.5, coat=float(os.environ.get("NOVA_STRUT_COAT", "0.18")),
+        emit=(0.70, 0.80, 0.64), emit_str=float(os.environ.get("NOVA_STRUT_EMIT", "0.02")))
+    # 玉轴原来写死淡薄荷 (0.78,0.94,0.86)，在玻璃里也读成白棒；改成青玉本体色。
+    axis_rgb = tuple(float(v) for v in os.environ.get("NOVA_AXIS_COLOR", "0.44,0.64,0.46").split(","))
+    rep("mat-jade-axis", axis_rgb, 0.16, 0.0, trans=float(os.environ.get("NOVA_AXIS_TRANS", "0.22")), ior=1.5, coat=0.25, emit=axis_rgb, emit_str=float(os.environ.get("NOVA_AXIS_EMIT", str(AXIS_EMIT))))
+    # 环色必须可调：mat-copper-ring 长期写死 (0.78,0.60,0.30)，build-jade.ts 里怎么改
+    # metalness/颜色都会被这里覆盖（第 25 轮踩过的坑）。参考图的古铜金更暗更黄。
+    ring_rgb = tuple(float(v) for v in os.environ.get("NOVA_RING_COLOR", "0.70,0.50,0.20").split(","))
+    ring_rough = float(os.environ.get("NOVA_RING_ROUGH", "0.30"))
+    rep("mat-copper-ring", ring_rgb, ring_rough, float(os.environ.get("NOVA_RING_METAL", "0.92")))
+    rep("mat-copper-tick", tuple(min(1.0, c * 1.15) for c in ring_rgb), 0.22, 0.95)
+    rep("mat-gold", ring_rgb, ring_rough, 0.92)
     # 玉牌必须是青玉，不能是白色平板（2026-11-10 渲染诊断：白板读成占位贴纸）
     rep("mat-tablet", (0.12, 0.36, 0.26), 0.20, 0.0, trans=0.10, ior=1.55, coat=0.3, keep_tex=True)
     rep("mat-star", (0.92, 0.82, 0.52), 0.30, 0.6, emit=(0.85, 0.68, 0.32), emit_str=0.8)
