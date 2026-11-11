@@ -6,6 +6,7 @@ import { fileURLToPath } from 'node:url';
 import { dirname, join, resolve } from 'node:path';
 import {
   convertUnit, dcVoltageDrop, upsRuntime, bendAllowance, supplyCurrent, cabinetThermal,
+  acCableDrop,
 } from '../../src/scripts/tools/logic.ts';
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -24,6 +25,7 @@ function run(tool, args) {
     case 'bendAllowance': return bendAllowance({ thickness: args[0], radius: args[1], angle: args[2], k: args[3], legA: num(args[4]) === undefined ? undefined : args[4], legB: num(args[5]) === undefined ? undefined : args[5] });
     case 'supplyCurrent': return supplyCurrent({ phase: args[0], input: args[1], value: args[2], voltage: args[3], pf: args[4] });
     case 'cabinetThermal': return cabinetThermal({ loss: args[0], area: args[1], ambient: args[2], inside: args[3], k: args[4], safety: args[5] });
+    case 'acCableDrop': return acCableDrop({ system: args[0], voltage: args[1], current: args[2], length: args[3], area: args[4], rho: args[5], pf: args[6], x: args[7], limit: args[8] });
     default: throw new Error('未知工具 ' + tool);
   }
 }

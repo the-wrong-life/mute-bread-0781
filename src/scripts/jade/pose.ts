@@ -16,8 +16,9 @@ export const LOOP_SECONDS = 8;
 /** 咬合缺口（弧度）。只留出吻部宽度。 */
 export const GAP = 0.16;
 
-/** 蛇环基准半径：球半径 1.0，蛇外沿几乎与球沿齐平。 */
-export const BASE_RADIUS = 1.16;
+/** 蛇环基准半径：球半径 1.0。1.10 时蛇身与球赤道几乎共面，正面读成"套在球外的呼啦圈"；
+ * 抬到 1.17 让蛇身内沿（1.17−0.078=1.092）仍浮在球面之外，前后关系才读得出来（§31 倾角扫描）。 */
+export const BASE_RADIUS = 1.17;
 
 const END_ANGLE = Math.PI * 0.25;
 const SWEEP = Math.PI * 2 - GAP;
@@ -31,7 +32,11 @@ const SQUASH_Y = 0.965;
  */
 export function snakeRadius(u: number): number {
   const t = Math.min(Math.max(u, 0), 1);
-  return 0.024 + 0.104 * Math.pow(t, 0.55);
+  // 第 26 轮按参考图量测重定：球径 494 px、蛇身直径 34 px，占球径 6.9% → 半径 0.069 R。
+  // 旧值 0.024→0.128（颈部 0.128）粗了近一倍，这正是"金属软管/呼啦圈"观感的来源之一。
+  // §31：620 px 下 0.078 颈部在球径 2.0 上只有 24 px，鳞片与头身过渡全糊；提到 0.092（占球径 4.6%，
+  // 球径 494 px 对应 23 px 粗 ≈ 参考图量测 34 px 的 0.68 倍），仍保留尾尖 0.020 的收细。
+  return 0.020 + 0.072 * Math.pow(t, 0.5);
 }
 
 /** 时间相位：把秒换成 0–1 的循环相位。 */
@@ -192,8 +197,11 @@ export function snakeCurveAt(time: number, steps = 320): THREE.CatmullRomCurve3 
  * Blender 导入端不保证支持，导出后鳞片会整批消失。这里用固定拓扑的合并网格原地重算，
  * 顶点数与片数在建模阶段就固定，导出即普通 BufferGeometry。
  */
-export const SCALE_ROWS = 40;
-export const SCALE_COLS = 18;
+// 第 26 轮：40×18 在 620 px 下每片约 15×31 px，整条蛇读成「竹节管」（对照 s1-base）。
+// 参照真蛇的可见鳞列数（正视约 6–9 列、沿身长每 8–10 px 一片），行数提到 110、
+// 列数 22，屏幕上一片约 6×7 px，才读得出「细鳞」而不是「分节」。
+export const SCALE_ROWS = 110;
+export const SCALE_COLS = 22;
 export const SCALE_SEG_A = 3;
 export const SCALE_SEG_B = 3;
 const SCALE_VERTS = (SCALE_SEG_A + 1) * (SCALE_SEG_B + 1);
@@ -263,10 +271,12 @@ export function updateSnakeScales(positions: Float32Array, normals: Float32Array
     const rowStep = bodyArc / SCALE_ROWS;
     const arcStep = (2 * Math.PI * r) / SCALE_COLS;
     // 片长必须大于行距，后缘才能压住下一行；片宽同理要大于环向步距，两侧才不留缝
-    const plateLen = rowStep * (2.05 - 0.3 * (1 - u));
+    // 覆瓦系数不能大：2.05 让每片后缘抬起近半个行距，叠成竹节台阶（s1-base 实测）。
+    // 1.35 仍保证后缘压住下一行，但台阶高度只剩行距的 35%。
+    const plateLen = rowStep * (1.35 - 0.15 * (1 - u));
 
-    const plateWid = arcStep * 1.75;
-    const amp = r * 0.09;
+    const plateWid = arcStep * 1.45;
+    const amp = r * 0.05;
     for (let j = 0; j < SCALE_COLS; j += 1) {
       const stagger = (i % 2) * 0.5;
       const ang = ((j + stagger) / SCALE_COLS) * Math.PI * 2;

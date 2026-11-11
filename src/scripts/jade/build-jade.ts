@@ -200,7 +200,15 @@ export function buildJadeModel(options: { quality?: 'high' | 'low' } = {}): Jade
     clearcoatRoughness: 0.26,
   });
   opalMat.name = 'mat-opal';
-  const opal = new THREE.Mesh(new THREE.SphereGeometry(0.84, hi ? 128 : 64, hi ? 88 : 44), opalMat);
+  // 第 26 轮：内球不再做整球。s4–s7 实测（对象编号图 idmap3 + Alpha 混合渲染）证明
+  // 画面里那颗"奶白实心球"就是它——整球玉肉把中心珍珠、玉轴、骨架梁全部包住，
+  // 所以怎么调珍珠参数都没反应。参考图里玉色只沉积在球的后壁与下缘，前方是透的，
+  // 因此改成开口朝上的下半球壳（theta 0.46π–π），上半留出空腔让珍珠与内层结构可见。
+  opalMat.side = THREE.DoubleSide;
+  const opal = new THREE.Mesh(
+    new THREE.SphereGeometry(0.84, hi ? 128 : 64, hi ? 88 : 44, 0, Math.PI * 2, Math.PI * 0.46, Math.PI * 0.54),
+    opalMat,
+  );
   opal.name = 'inner-globe';
   opal.castShadow = true;
   opal.receiveShadow = true;
@@ -273,14 +281,17 @@ export function buildJadeModel(options: { quality?: 'high' | 'low' } = {}): Jade
   strutMat.name = 'mat-jade-strut';
   // 0.90 的旧值在"瓷胎"加进来之后把整组梁埋进了胎体里（瓷胎半径 0.988）：参考图的梁是
   // 贴在球面上的浮雕，所以半径要抬到与瓷胎齐平，让梁有一半露在外面。
-  const STRUT_R = 0.806;
+  // 第 26 轮：壳改成 Alpha 薄壁（NOVA_SHELL_ALPHA）之后，0.806 的梁深埋在内层玉胎里，
+  // 从外面只剩几根淡线；抬到 0.90 让它贴住玻璃壳内侧，才是参考图"梁在壳内"的层次。
+  const STRUT_R = 0.90;
   // 参考图球内是 6 道成组的宽弧梁（不是 4 道细线）：数量与截面都要按"梁"的尺度给。
   const STRUT_MERIDIANS = 6;
   // 0.020 在 560² 下只有 2–3 px，和玻璃壳的高光抢亮度时整片读成白色网格；
   // 加到 0.030（≈4–5 px）才有"梁"的厚度感。
   // 参考图的球面是"细缝状分瓣"（玻璃灯笼的瓣缝），不是 5 px 宽的白梁；
   // 0.034 在我们的灯位下被打成白线，读成线框笼子。收到 0.011 并压暗底色才对。
-  const STRUT_TUBE = hi ? 0.011 : 0.012;
+  // 0.011 在 alpha 半透壳下几乎看不见，读成"空壳"；0.016 才像梁又不至于变成笼子。
+  const STRUT_TUBE = hi ? 0.016 : 0.018;
   for (let i = 0; i < STRUT_MERIDIANS; i += 1) {
     const meridian = new THREE.Mesh(
       new THREE.TorusGeometry(STRUT_R, STRUT_TUBE, hi ? 10 : 6, hi ? 120 : 64),
@@ -593,12 +604,12 @@ export function buildJadeModel(options: { quality?: 'high' | 'low' } = {}): Jade
   const fwd = snakeTangent(1, 0);
 
   // 颈套筒：沿蛇身切向反向延伸的短管，盖住 taperedTube 的端面，消除头身之间的直角台阶
-  const neckGeo = new THREE.CylinderGeometry(0.113, 0.104, 0.20, 28, 1, false);
+  const neckGeo = new THREE.CylinderGeometry(0.085, 0.078, 0.15, 28, 1, false);
   neckGeo.rotateX(Math.PI / 2);
   const neck = new THREE.Mesh(neckGeo, bodyMat);
   neck.name = 'serpent-neck';
   neck.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), fwd.clone().negate());
-  neck.position.copy(tip).addScaledVector(fwd, -0.06);
+  neck.position.copy(tip).addScaledVector(fwd, -0.045);
   // 必须挂在 serpent 组下：颈部坐标是在蛇环局部空间算的，挂到 root 就少了 tilt 变换，
   // 会以"漂浮的小金筒"的形式留在未旋转的环平面上（§30 用 glb-pos.mjs 求世界坐标才定位到）。
   serpent.add(neck);
@@ -610,17 +621,25 @@ export function buildJadeModel(options: { quality?: 'high' | 'low' } = {}): Jade
   const sideV = new THREE.Vector3().crossVectors(fwd, upV).normalize();
   // 吻端在局部 x=0.23×0.82=0.189，尾尖距头原点 0.196，差 0.025 → 只是"相接"。
   // 前移 0.025 让吻端越过尾尖 0.018，视觉上才是"衔住"而不是"碰到"。
-  head.position.copy(tip).addScaledVector(fwd, 0.025);
+  head.position.copy(tip).addScaledVector(fwd, 0.019);
   head.quaternion.setFromRotationMatrix(new THREE.Matrix4().makeBasis(fwd, upV, sideV));
   // 头部整体缩到与收细后的蛇身匹配（原建模按蛇身半径 0.134 设计，现为 0.05）
   // 1.06 → 1.22：首页尺寸下 1.06 的蛇头只有 ~28 px，读不出"蛇首"（用户第 4 项）。
   // 520 px 显示尺寸下 1.35 的蛇头仍读成"金筒端帽"（§30 复查）；放大到 1.85 让吻部/眉骨可辨。
-  head.scale.setScalar(1.85);
+  // 1.85 在 620 px 下头宽约 120 px，读成「金蛋/棒棒糖」（s1-base/s1-noscale 对照）。
+  // 1.25 让头宽回到蛇径的 2.2 倍左右，眼窝与吻部才有比例感。
+  // 蛇径缩到 0.078 后，头必须等比缩：1.25 × 0.078/0.104 ≈ 0.94。
+  // §31：0.94 在 620 px 正视图里只有约 40 px，读完是个"金蛋"；参考图蛇首约占球径 12–15%，
+  // 按球径 620 px 折算应有 75–90 px，此处取 1.18（头长 0.465×1.18≈0.55 世界单位 ≈ 球径的 27%，
+  // 但实际可见轮廓只有吻端到颈环约 0.30 ≈ 15%）。
+  head.scale.setScalar(1.18);
 
   const headMat = new THREE.MeshPhysicalMaterial({
-    color: new THREE.Color('#8f6a37'),
-    roughness: 0.28,
-    metalness: 0.62,
+    // 高金属度 + 低粗糙把蛇头渲成抛光铜蛋，压掉一切结构；降到 0.42/0.36 让
+    // 吻部与眉骨的高低差靠明暗读出来（s1-base 的「金筒端帽」即此因）。
+    color: new THREE.Color('#7c5a30'),
+    roughness: 0.36,
+    metalness: 0.42,
     clearcoat: 0.45,
     clearcoatRoughness: 0.2,
     envMapIntensity: 2.4,
@@ -1157,12 +1176,12 @@ export function buildJadeModel(options: { quality?: 'high' | 'low' } = {}): Jade
     snakePoint(1, time, pTip);
     snakeTangent(1, time, pFwd);
     neck.quaternion.setFromUnitVectors(AXIS_Z, pFwd.clone().negate());
-    neck.position.copy(pTip).addScaledVector(pFwd, -0.06);
+    neck.position.copy(pTip).addScaledVector(pFwd, -0.045);
 
     pUp.copy(pTip).normalize();
     pUpV.copy(pUp).sub(pFwd.clone().multiplyScalar(pUp.dot(pFwd))).normalize();
     pSideV.crossVectors(pFwd, pUpV).normalize();
-    head.position.copy(pTip).addScaledVector(pFwd, 0.025);
+    head.position.copy(pTip).addScaledVector(pFwd, 0.019);
     head.quaternion.setFromRotationMatrix(basis.makeBasis(pFwd, pUpV, pSideV));
     // 头颈轻微摆动：绕本地上轴小角度转头，幅度 0.10 rad，不破坏衔尾
     head.rotateY(headYaw(time));
