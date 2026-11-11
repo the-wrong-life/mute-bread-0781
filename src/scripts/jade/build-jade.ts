@@ -479,6 +479,10 @@ const STRUT_TUBE = hi ? 0.028 : 0.030;
   serpent.scale.setScalar(qnum('srad', 1.0));
   serpent.rotation.set(SERPENT_TILT, qnum('spin', 0.0), 0.0);
   serpent.position.set(0, qnum('shift', 0.0), qnum('depth', 0.0));
+
+  // §39：参考图的主体是纵向玉瓶（高:宽 ≈ 1.2:1）。正球无论怎么调材质都读成"西方天文仪"；
+  // 纵向拉伸会把金环、蛇轨、内梁一起变成椭圆，器物比例才对。
+  root.scale.set(1, qnum('ys', 1.20), 1);
   const curve = snakeCurveAt(0);
   // t=0 是尾端（收细到 0.022 以便入口），t=1 是颈端（0.108，与头部颈径衔接）。
   // 管体用固定拓扑 + 每帧原地重算顶点：Frenet 帧在曲率近零处会翻转，
@@ -666,24 +670,57 @@ const STRUT_TUBE = hi ? 0.028 : 0.030;
   // 头长 0.47（x −0.24…0.23）、最大宽 0.296、最大高 0.232 → 长宽比 1.6:1，接近真实蛇首；
   // 上一版长 0.83、宽 0.344，长宽比 2.4:1 且 z 向远宽于 y 向，放大后读成"扁楔/勺子"。
   // 颈部截面 0.208 × 0.180 略细于蛇身直径 0.216，让头部从蛇身里自然长出来。
+  // §36：旧截面 0.152 × 0.118（宽高比 1.29）放样出来是一个"药丸/枕头"——
+  // 单一闭合椭球体在 620 px 下没有任何可指认的蛇首特征。参考图的辨识度来自
+  // "扁上颌 + 张开的下颌"这一对真实结构，因此这里把上颌压扁（h 减到 0.082）
+  // 并单独造一块向下张开的下颌，让吻部之间留出真正的开口。
   const headSections: HeadSection[] = [
-    { x: -0.24, w: 0.104, h: 0.090, cy: 0.004 },
-    { x: -0.18, w: 0.128, h: 0.100, cy: 0.006 },
-    { x: -0.10, w: 0.150, h: 0.114, cy: 0.010 },
-    { x: -0.02, w: 0.152, h: 0.118, cy: 0.012 },
-    { x: 0.05, w: 0.142, h: 0.112, cy: 0.008 },
-    { x: 0.11, w: 0.124, h: 0.100, cy: 0.002 },
-    { x: 0.16, w: 0.104, h: 0.088, cy: -0.002 },
-    { x: 0.20, w: 0.082, h: 0.070, cy: -0.004 },
-    { x: 0.225, w: 0.062, h: 0.054, cy: -0.006 },
+    // §37：把吻部再拉长、宽度再收窄，使长宽比从 3.1:1 提到 4.6:1。
+    // §36 的 0.150 × 0.082 加上下颌与颈部后，轮廓仍读成"鹅卵石"。
+    // §38：4.6:1 的扁片从顶面看就是一片"金叶子"——扁头只在侧面轮廓里成立。
+    // 恢复高度到宽度的 ~0.78，保留拉长的吻部，让侧面读成楔形、顶面读成药丸而非薄片。
+    { x: -0.30, w: 0.078, h: 0.062, cy: 0.020 },
+    { x: -0.22, w: 0.100, h: 0.078, cy: 0.022 },
+    { x: -0.13, w: 0.116, h: 0.090, cy: 0.025 },
+    { x: -0.04, w: 0.118, h: 0.094, cy: 0.026 },
+    { x: 0.05, w: 0.110, h: 0.086, cy: 0.024 },
+    { x: 0.13, w: 0.096, h: 0.074, cy: 0.020 },
+    { x: 0.20, w: 0.078, h: 0.060, cy: 0.016 },
+    { x: 0.255, w: 0.058, h: 0.046, cy: 0.012 },
+    { x: 0.285, w: 0.038, h: 0.030, cy: 0.008 },
+  ];
+  // 下颌：比上颌更薄更短，铰点在 x=-0.05，向下张开 JAW_GAPE 弧度。
+  const jawSections: HeadSection[] = [
+    { x: -0.18, w: 0.074, h: 0.026, cy: -0.022 },
+    { x: -0.08, w: 0.100, h: 0.030, cy: -0.026 },
+    { x: 0.02, w: 0.100, h: 0.030, cy: -0.026 },
+    { x: 0.11, w: 0.082, h: 0.024, cy: -0.023 },
+    { x: 0.20, w: 0.060, h: 0.018, cy: -0.019 },
+    { x: 0.26, w: 0.038, h: 0.012, cy: -0.016 },
   ];
   // 嘴缝：cos(a) = −0.30 对应截面下三分之一处，band 0.22 给出一道窄槽。
   const upperJaw = new THREE.Mesh(
-    loftHead(headSections, hi ? 44 : 22, { cosY: -0.30, band: 0.26, depth: 0.030 }),
+    // §35：depth 0.030 相对头高 0.118 只有 25%，620 px 下约 3 px，被 clearcoat 高光完全吃掉，
+    // 正视读不出嘴线。加深到 0.052、band 放到 0.32，让凹槽的自体阴影能在小尺寸留下暗线。
+    // §36：上下颌已分离，伪嘴缝只留一道很浅的凹，避免在上颌面中间切开一条深沟。
+    loftHead(headSections, hi ? 44 : 22, { cosY: -0.62, band: 0.18, depth: 0.014 }),
     headMat,
   );
   upperJaw.name = 'serpent-upper-jaw';
   head.add(upperJaw);
+
+  // 张口：下颌绕铰点向下转 JAW_GAPE。开口必须是几何实体，否则正面只有一条暗线，
+  // 小尺寸下仍读成药丸（§35 的 m1/m2/m3 三图即此）。
+  const JAW_GAPE = qnum('gape', 0.34);
+  const jawPivot = new THREE.Group();
+  jawPivot.name = 'serpent-jaw-pivot';
+  jawPivot.position.set(-0.05, 0, 0);
+  const lowerJaw = new THREE.Mesh(loftHead(jawSections, hi ? 34 : 20), headMat);
+  lowerJaw.name = 'serpent-lower-jaw';
+  lowerJaw.position.set(0.06, 0.006, 0);
+  jawPivot.add(lowerJaw);
+  jawPivot.rotation.x = JAW_GAPE;
+  head.add(jawPivot);
 
   const seamMat = new THREE.MeshStandardMaterial({
     color: new THREE.Color('#2a1a10'),
@@ -1196,7 +1233,11 @@ const STRUT_TUBE = hi ? 0.028 : 0.030;
     head.position.copy(pTip).addScaledVector(pFwd, 0.019);
     head.quaternion.setFromRotationMatrix(basis.makeBasis(pFwd, pUpV, pSideV));
     // 头颈轻微摆动：绕本地上轴小角度转头，幅度 0.10 rad，不破坏衔尾
-    head.rotateY(headYaw(time));
+    // §35 修复：这一行原先直接覆盖了 build 阶段用 URL 设的 heady/headz —— 因为 updatePose(0)
+    // 在建模末尾无条件调用，用户传 ?heady=1.57 也会被重置回 0，三张对照图因此几乎像素相同
+    // （k1/k2/k3 差异实测 0.09–0.12%）。转角必须在这里叠加，而不是只在建模时设置一次。
+    head.rotateY(headYaw(time) + qnum('heady', 0));
+    head.rotateZ(qnum('headz', 0));
 
     // 3) 铜环缓慢摆转（幅度小，始终可辨认是环）
     const swing = ringSwing(time);

@@ -1,864 +1,1014 @@
 {
- "spec": "用例由 tools/verify/oracle.py 独立实现生成期望值；verify-tools.mjs 只做比对，不参与推导。约定：未填边 A/B 时展开长记 0；电弧/载流量等现场条件不在本工具范围。",
- "cases": [
-  {
-   "id": "u1",
-   "tool": "convertUnit",
-   "args": [
-    "25.4",
-    "length",
-    "mm",
-    "in"
-   ],
-   "note": "25.4 mm = 1 in（国际英寸定义值）"
-  },
-  {
-   "id": "u2",
-   "tool": "convertUnit",
-   "args": [
-    "-40",
-    "temperature",
-    "°C",
-    "°F"
-   ],
-   "note": "-40 °C = -40 °F（交叉点）"
-  },
-  {
-   "id": "u3",
-   "tool": "convertUnit",
-   "args": [
-    "0",
-    "temperature",
-    "K",
-    "°C"
-   ],
-   "note": "0 K = -273.15 °C（绝对零度）"
-  },
-  {
-   "id": "u4",
-   "tool": "convertUnit",
-   "args": [
-    "1",
-    "pressure",
-    "bar",
-    "psi"
-   ],
-   "note": "1 bar = 100000 Pa ÷ 6894.757…"
-  },
-  {
-   "id": "u5",
-   "tool": "convertUnit",
-   "args": [
-    "1",
-    "flow",
-    "m³/h",
-    "L/min"
-   ],
-   "note": "1 m³/h = 1000/60 L/min"
-  },
-  {
-   "id": "u6",
-   "tool": "convertUnit",
-   "args": [
-    "100",
-    "torque",
-    "lbf·ft",
-    "N·m"
-   ],
-   "note": "1 lbf = 4.4482216152605 N，1 ft = 0.3048 m"
-  },
-  {
-   "id": "u7",
-   "tool": "convertUnit",
-   "args": [
-    "1",
-    "mass",
-    "lb",
-    "kg"
-   ],
-   "note": "国际磅定义值"
-  },
-  {
-   "id": "u8",
-   "tool": "convertUnit",
-   "args": [
-    "10",
-    "power",
-    "hp",
-    "kW"
-   ],
-   "note": "机械马力 550 ft·lbf/s"
-  },
-  {
-   "id": "u9",
-   "tool": "convertUnit",
-   "args": [
-    "1",
-    "pressure",
-    "kgf/cm²",
-    "MPa"
-   ],
-   "note": "98066.5 Pa"
-  },
-  {
-   "id": "u10",
-   "tool": "convertUnit",
-   "args": [
-    "5",
-    "flow",
-    "gpm(US)",
-    "L/min"
-   ],
-   "note": "美制加仑 3.785411784 L"
-  },
-  {
-   "id": "u11",
-   "tool": "convertUnit",
-   "args": [
-    "-273.15",
-    "temperature",
-    "°C",
-    "K"
-   ],
-   "note": "绝对零点精确值"
-  },
-  {
-   "id": "u12",
-   "tool": "convertUnit",
-   "args": [
-    "32",
-    "temperature",
-    "°F",
-    "K"
-   ],
-   "note": "冰点 32 °F = 273.15 K"
-  },
-  {
-   "id": "d1",
-   "tool": "dcVoltageDrop",
-   "args": [
-    "24",
-    "5",
-    "10",
-    "2.5",
-    "0.0175",
-    "dc2"
-   ],
-   "note": "两线制 20 m 回路"
-  },
-  {
-   "id": "d2",
-   "tool": "dcVoltageDrop",
-   "args": [
-    "24",
-    "5",
-    "10",
-    "2.5",
-    "0.0175",
-    "dc1"
-   ],
-   "note": "单线回路，压降为 d1 一半"
-  },
-  {
-   "id": "d3",
-   "tool": "dcVoltageDrop",
-   "args": [
-    "48",
-    "20",
-    "25",
-    "6",
-    "0.01724",
-    "dc2"
-   ],
-   "note": "退火铜、6 mm²、50 m 回路"
-  },
-  {
-   "id": "d4",
-   "tool": "dcVoltageDrop",
-   "args": [
-    "12",
-    "3.5",
-    "3.5",
-    "1",
-    "0.0175",
-    "dc2"
-   ],
-   "note": "12 V 小负载"
-  },
-  {
-   "id": "d5",
-   "tool": "dcVoltageDrop",
-   "args": [
-    "12",
-    "0",
-    "5",
-    "1",
-    "0.0175",
-    "dc2"
-   ],
-   "note": "零电流应得 0 压降"
-  },
-  {
-   "id": "p1",
-   "tool": "upsRuntime",
-   "args": [
-    "100",
-    "24",
-    "80",
-    "90",
-    "150"
-   ],
-   "note": "100 Ah × 24 V × 80% × 90% ÷ 150 W"
-  },
-  {
-   "id": "p2",
-   "tool": "upsRuntime",
-   "args": [
-    "200",
-    "48",
-    "70",
-    "92",
-    "1200"
-   ],
-   "note": "48 V 组、1.2 kW 负载"
-  },
-  {
-   "id": "p3",
-   "tool": "upsRuntime",
-   "args": [
-    "7",
-    "12",
-    "50",
-    "85",
-    "30"
-   ],
-   "note": "小容量 7 Ah"
-  },
-  {
-   "id": "b1",
-   "tool": "bendAllowance",
-   "args": [
-    "2",
-    "2",
-    "90",
-    "0.44",
-    "50",
-    "30"
-   ],
-   "note": "常见 90° 折弯，A=50 B=30"
-  },
-  {
-   "id": "b2",
-   "tool": "bendAllowance",
-   "args": [
-    "3",
-    "1.5",
-    "90",
-    "0.5",
-    null,
-    null
-   ],
-   "note": "只算扣除，不给边长"
-  },
-  {
-   "id": "b3",
-   "tool": "bendAllowance",
-   "args": [
-    "1.5",
-    "3",
-    "120",
-    "0.42",
-    null,
-    null
-   ],
-   "note": "钝角折弯 θ=120°"
-  },
-  {
-   "id": "b4",
-   "tool": "bendAllowance",
-   "args": [
-    "1",
-    "1",
-    "45",
-    "0.4",
-    null,
-    null
-   ],
-   "note": "锐角折弯 θ=45°"
-  },
-  {
-   "id": "b5",
-   "tool": "bendAllowance",
-   "args": [
-    "2",
-    "2",
-    "90",
-    "0.44",
-    "100",
-    "100"
-   ],
-   "note": "同 b1 参数、边长 100/100"
-  },
-  {
-   "id": "b6",
-   "tool": "bendAllowance",
-   "args": [
-    "2",
-    "0",
-    "90",
-    "0.33",
-    "40",
-    "20"
-   ],
-   "note": "R=0（尖角模具近似）"
-  },
-  {
-   "id": "b7",
-   "tool": "bendAllowance",
-   "args": [
-    "20",
-    "60",
-    "90",
-    "0.44",
-    null,
-    null
-   ],
-   "note": "图解算例：T=20 R=60 θ=90 K=0.44（与 /docs/bend-allowance 截面图同参数）"
-  },
-  {
-   "id": "s1",
-   "tool": "supplyCurrent",
-   "args": [
-    "three",
-    "kw",
-    "15",
-    "380",
-    "0.85"
-   ],
-   "note": "三相 15 kW、380 V、cosφ0.85"
-  },
-  {
-   "id": "s2",
-   "tool": "supplyCurrent",
-   "args": [
-    "single",
-    "kw",
-    "3",
-    "220",
-    "0.9"
-   ],
-   "note": "单相 3 kW"
-  },
-  {
-   "id": "s3",
-   "tool": "supplyCurrent",
-   "args": [
-    "three",
-    "kva",
-    "50",
-    "400",
-    "0.8"
-   ],
-   "note": "直接给定视在功率"
-  },
-  {
-   "id": "s4",
-   "tool": "supplyCurrent",
-   "args": [
-    "single",
-    "kva",
-    "10",
-    "230",
-    "1"
-   ],
-   "note": "cosφ=1，无功为 0"
-  },
-  {
-   "id": "c1",
-   "tool": "cabinetThermal",
-   "args": [
-    "500",
-    "3.2",
-    "35",
-    "45",
-    "5.5",
-    "1.25"
-   ],
-   "note": "自然散热不足、需强制通风"
-  },
-  {
-   "id": "c2",
-   "tool": "cabinetThermal",
-   "args": [
-    "1200",
-    "4",
-    "30",
-    "45",
-    "5.5",
-    "1.25"
-   ],
-   "note": "ΔT=15 K、1.2 kW"
-  },
-  {
-   "id": "c3",
-   "tool": "cabinetThermal",
-   "args": [
-    "300",
-    "5",
-    "25",
-    "35",
-    "5.5",
-    "1.25"
-   ],
-   "note": "接近自然散热临界"
-  },
-  {
-   "id": "c4",
-   "tool": "cabinetThermal",
-   "args": [
-    "200",
-    "6",
-    "20",
-    "32",
-    "5.5",
-    "1.25"
-   ],
-   "note": "自然散热足够"
-  },
-  {
-   "id": "a1",
-   "tool": "acCableDrop",
-   "args": [
-    "ac3",
-    "400",
-    "100",
-    "50",
-    "25",
-    "0.0175",
-    "0.85",
-    "0.08",
-    "5"
-   ],
-   "note": "三相 400 V / 100 A / 50 m / 25 mm² 铜，cosφ 0.85——教学算例"
-  },
-  {
-   "id": "a2",
-   "tool": "acCableDrop",
-   "args": [
-    "ac1",
-    "230",
-    "32",
-    "30",
-    "6",
-    "0.0175",
-    "0.9",
-    "0.08",
-    "5"
-   ],
-   "note": "单相 230 V / 32 A / 30 m / 6 mm² 铜，k=2 计入回程"
-  },
-  {
-   "id": "a3",
-   "tool": "acCableDrop",
-   "args": [
-    "ac3",
-    "400",
-    "200",
-    "120",
-    "70",
-    "0.0282",
-    "0.8",
-    "0.08",
-    "5"
-   ],
-   "note": "铝导体长距离：70 mm²、120 m、200 A"
-  },
-  {
-   "id": "a4",
-   "tool": "acCableDrop",
-   "args": [
-    "ac3",
-    "380",
-    "0",
-    "80",
-    "16",
-    "0.0175",
-    "0.9",
-    "0.08",
-    "3"
-   ],
-   "note": "空载边界：电流 0 时压降为 0 且判定通过"
-  },
-  {
-   "id": "a5",
-   "tool": "acCableDrop",
-   "args": [
-    "ac1",
-    "220",
-    "16",
-    "10",
-    "1.5",
-    "0.0175",
-    "1",
-    "0",
-    "3"
-   ],
-   "note": "cosφ=1、X′=0 的纯电阻边界，sinφ 应为 0"
+  "spec": "用例由 tools/verify/oracle.py 独立实现生成期望值；verify-tools.mjs 只做比对，不参与推导。约定：未填边 A/B 时展开长记 0；电弧/载流量等现场条件不在本工具范围。",
+  "cases": [
+    {
+      "id": "u1",
+      "tool": "convertUnit",
+      "args": [
+        "25.4",
+        "length",
+        "mm",
+        "in"
+      ],
+      "note": "25.4 mm = 1 in（国际英寸定义值）"
+    },
+    {
+      "id": "u2",
+      "tool": "convertUnit",
+      "args": [
+        "-40",
+        "temperature",
+        "°C",
+        "°F"
+      ],
+      "note": "-40 °C = -40 °F（交叉点）"
+    },
+    {
+      "id": "u3",
+      "tool": "convertUnit",
+      "args": [
+        "0",
+        "temperature",
+        "K",
+        "°C"
+      ],
+      "note": "0 K = -273.15 °C（绝对零度）"
+    },
+    {
+      "id": "u4",
+      "tool": "convertUnit",
+      "args": [
+        "1",
+        "pressure",
+        "bar",
+        "psi"
+      ],
+      "note": "1 bar = 100000 Pa ÷ 6894.757…"
+    },
+    {
+      "id": "u5",
+      "tool": "convertUnit",
+      "args": [
+        "1",
+        "flow",
+        "m³/h",
+        "L/min"
+      ],
+      "note": "1 m³/h = 1000/60 L/min"
+    },
+    {
+      "id": "u6",
+      "tool": "convertUnit",
+      "args": [
+        "100",
+        "torque",
+        "lbf·ft",
+        "N·m"
+      ],
+      "note": "1 lbf = 4.4482216152605 N，1 ft = 0.3048 m"
+    },
+    {
+      "id": "u7",
+      "tool": "convertUnit",
+      "args": [
+        "1",
+        "mass",
+        "lb",
+        "kg"
+      ],
+      "note": "国际磅定义值"
+    },
+    {
+      "id": "u8",
+      "tool": "convertUnit",
+      "args": [
+        "10",
+        "power",
+        "hp",
+        "kW"
+      ],
+      "note": "机械马力 550 ft·lbf/s"
+    },
+    {
+      "id": "u9",
+      "tool": "convertUnit",
+      "args": [
+        "1",
+        "pressure",
+        "kgf/cm²",
+        "MPa"
+      ],
+      "note": "98066.5 Pa"
+    },
+    {
+      "id": "u10",
+      "tool": "convertUnit",
+      "args": [
+        "5",
+        "flow",
+        "gpm(US)",
+        "L/min"
+      ],
+      "note": "美制加仑 3.785411784 L"
+    },
+    {
+      "id": "u11",
+      "tool": "convertUnit",
+      "args": [
+        "-273.15",
+        "temperature",
+        "°C",
+        "K"
+      ],
+      "note": "绝对零点精确值"
+    },
+    {
+      "id": "u12",
+      "tool": "convertUnit",
+      "args": [
+        "32",
+        "temperature",
+        "°F",
+        "K"
+      ],
+      "note": "冰点 32 °F = 273.15 K"
+    },
+    {
+      "id": "d1",
+      "tool": "dcVoltageDrop",
+      "args": [
+        "24",
+        "5",
+        "10",
+        "2.5",
+        "0.0175",
+        "dc2"
+      ],
+      "note": "两线制 20 m 回路"
+    },
+    {
+      "id": "d2",
+      "tool": "dcVoltageDrop",
+      "args": [
+        "24",
+        "5",
+        "10",
+        "2.5",
+        "0.0175",
+        "dc1"
+      ],
+      "note": "单线回路，压降为 d1 一半"
+    },
+    {
+      "id": "d3",
+      "tool": "dcVoltageDrop",
+      "args": [
+        "48",
+        "20",
+        "25",
+        "6",
+        "0.01724",
+        "dc2"
+      ],
+      "note": "退火铜、6 mm²、50 m 回路"
+    },
+    {
+      "id": "d4",
+      "tool": "dcVoltageDrop",
+      "args": [
+        "12",
+        "3.5",
+        "3.5",
+        "1",
+        "0.0175",
+        "dc2"
+      ],
+      "note": "12 V 小负载"
+    },
+    {
+      "id": "d5",
+      "tool": "dcVoltageDrop",
+      "args": [
+        "12",
+        "0",
+        "5",
+        "1",
+        "0.0175",
+        "dc2"
+      ],
+      "note": "零电流应得 0 压降"
+    },
+    {
+      "id": "p1",
+      "tool": "upsRuntime",
+      "args": [
+        "100",
+        "24",
+        "80",
+        "90",
+        "150"
+      ],
+      "note": "100 Ah × 24 V × 80% × 90% ÷ 150 W"
+    },
+    {
+      "id": "p2",
+      "tool": "upsRuntime",
+      "args": [
+        "200",
+        "48",
+        "70",
+        "92",
+        "1200"
+      ],
+      "note": "48 V 组、1.2 kW 负载"
+    },
+    {
+      "id": "p3",
+      "tool": "upsRuntime",
+      "args": [
+        "7",
+        "12",
+        "50",
+        "85",
+        "30"
+      ],
+      "note": "小容量 7 Ah"
+    },
+    {
+      "id": "b1",
+      "tool": "bendAllowance",
+      "args": [
+        "2",
+        "2",
+        "90",
+        "0.44",
+        "50",
+        "30"
+      ],
+      "note": "常见 90° 折弯，A=50 B=30"
+    },
+    {
+      "id": "b2",
+      "tool": "bendAllowance",
+      "args": [
+        "3",
+        "1.5",
+        "90",
+        "0.5",
+        null,
+        null
+      ],
+      "note": "只算扣除，不给边长"
+    },
+    {
+      "id": "b3",
+      "tool": "bendAllowance",
+      "args": [
+        "1.5",
+        "3",
+        "120",
+        "0.42",
+        null,
+        null
+      ],
+      "note": "钝角折弯 θ=120°"
+    },
+    {
+      "id": "b4",
+      "tool": "bendAllowance",
+      "args": [
+        "1",
+        "1",
+        "45",
+        "0.4",
+        null,
+        null
+      ],
+      "note": "锐角折弯 θ=45°"
+    },
+    {
+      "id": "b5",
+      "tool": "bendAllowance",
+      "args": [
+        "2",
+        "2",
+        "90",
+        "0.44",
+        "100",
+        "100"
+      ],
+      "note": "同 b1 参数、边长 100/100"
+    },
+    {
+      "id": "b6",
+      "tool": "bendAllowance",
+      "args": [
+        "2",
+        "0",
+        "90",
+        "0.33",
+        "40",
+        "20"
+      ],
+      "note": "R=0（尖角模具近似）"
+    },
+    {
+      "id": "b7",
+      "tool": "bendAllowance",
+      "args": [
+        "20",
+        "60",
+        "90",
+        "0.44",
+        null,
+        null
+      ],
+      "note": "图解算例：T=20 R=60 θ=90 K=0.44（与 /docs/bend-allowance 截面图同参数）"
+    },
+    {
+      "id": "s1",
+      "tool": "supplyCurrent",
+      "args": [
+        "three",
+        "kw",
+        "15",
+        "380",
+        "0.85"
+      ],
+      "note": "三相 15 kW、380 V、cosφ0.85"
+    },
+    {
+      "id": "s2",
+      "tool": "supplyCurrent",
+      "args": [
+        "single",
+        "kw",
+        "3",
+        "220",
+        "0.9"
+      ],
+      "note": "单相 3 kW"
+    },
+    {
+      "id": "s3",
+      "tool": "supplyCurrent",
+      "args": [
+        "three",
+        "kva",
+        "50",
+        "400",
+        "0.8"
+      ],
+      "note": "直接给定视在功率"
+    },
+    {
+      "id": "s4",
+      "tool": "supplyCurrent",
+      "args": [
+        "single",
+        "kva",
+        "10",
+        "230",
+        "1"
+      ],
+      "note": "cosφ=1，无功为 0"
+    },
+    {
+      "id": "c1",
+      "tool": "cabinetThermal",
+      "args": [
+        "500",
+        "3.2",
+        "35",
+        "45",
+        "5.5",
+        "1.25"
+      ],
+      "note": "自然散热不足、需强制通风"
+    },
+    {
+      "id": "c2",
+      "tool": "cabinetThermal",
+      "args": [
+        "1200",
+        "4",
+        "30",
+        "45",
+        "5.5",
+        "1.25"
+      ],
+      "note": "ΔT=15 K、1.2 kW"
+    },
+    {
+      "id": "c3",
+      "tool": "cabinetThermal",
+      "args": [
+        "300",
+        "5",
+        "25",
+        "35",
+        "5.5",
+        "1.25"
+      ],
+      "note": "接近自然散热临界"
+    },
+    {
+      "id": "c4",
+      "tool": "cabinetThermal",
+      "args": [
+        "200",
+        "6",
+        "20",
+        "32",
+        "5.5",
+        "1.25"
+      ],
+      "note": "自然散热足够"
+    },
+    {
+      "id": "a1",
+      "tool": "acCableDrop",
+      "args": [
+        "ac3",
+        "400",
+        "100",
+        "50",
+        "25",
+        "0.0175",
+        "0.85",
+        "0.08",
+        "5"
+      ],
+      "note": "三相 400 V / 100 A / 50 m / 25 mm² 铜，cosφ 0.85——教学算例"
+    },
+    {
+      "id": "a2",
+      "tool": "acCableDrop",
+      "args": [
+        "ac1",
+        "230",
+        "32",
+        "30",
+        "6",
+        "0.0175",
+        "0.9",
+        "0.08",
+        "5"
+      ],
+      "note": "单相 230 V / 32 A / 30 m / 6 mm² 铜，k=2 计入回程"
+    },
+    {
+      "id": "a3",
+      "tool": "acCableDrop",
+      "args": [
+        "ac3",
+        "400",
+        "200",
+        "120",
+        "70",
+        "0.0282",
+        "0.8",
+        "0.08",
+        "5"
+      ],
+      "note": "铝导体长距离：70 mm²、120 m、200 A"
+    },
+    {
+      "id": "a4",
+      "tool": "acCableDrop",
+      "args": [
+        "ac3",
+        "380",
+        "0",
+        "80",
+        "16",
+        "0.0175",
+        "0.9",
+        "0.08",
+        "3"
+      ],
+      "note": "空载边界：电流 0 时压降为 0 且判定通过"
+    },
+    {
+      "id": "a5",
+      "tool": "acCableDrop",
+      "args": [
+        "ac1",
+        "220",
+        "16",
+        "10",
+        "1.5",
+        "0.0175",
+        "1",
+        "0",
+        "3"
+      ],
+      "note": "cosφ=1、X′=0 的纯电阻边界，sinφ 应为 0"
+    },
+    {
+      "id": "z1",
+      "tool": "acCableSize",
+      "args": [
+        "ac3",
+        "400",
+        "100",
+        "50",
+        "0.0175",
+        "0.85",
+        "0.08",
+        "5"
+      ],
+      "note": "与 a1 同条件反算：应得需 6.56 mm²、选 10 mm²"
+    },
+    {
+      "id": "z2",
+      "tool": "acCableSize",
+      "args": [
+        "ac1",
+        "230",
+        "32",
+        "30",
+        "0.0175",
+        "0.9",
+        "0.08",
+        "3"
+      ],
+      "note": "单相，与 a2 同回路条件反算，应选 6 mm²"
+    },
+    {
+      "id": "z3",
+      "tool": "acCableSize",
+      "args": [
+        "ac3",
+        "400",
+        "200",
+        "120",
+        "0.0282",
+        "0.8",
+        "0.08",
+        "5"
+      ],
+      "note": "铝导体长线大电流，与 a3 同条件，应选 70 mm²"
+    },
+    {
+      "id": "z4",
+      "tool": "acCableSize",
+      "args": [
+        "ac3",
+        "380",
+        "0",
+        "80",
+        "0.0175",
+        "0.9",
+        "0.08",
+        "3"
+      ],
+      "note": "空载边界：所需截面 0，取最小档 1.5 mm²，压降 0"
+    },
+    {
+      "id": "z5",
+      "tool": "acCableSize",
+      "args": [
+        "ac1",
+        "220",
+        "16",
+        "10",
+        "0.0175",
+        "1",
+        "0",
+        "3"
+      ],
+      "note": "cosφ=1、X′=0 纯电阻边界，与 a5 应得同一压降 3.7333 V"
+    }
+  ],
+  "errors": [
+    {
+      "id": "e1",
+      "tool": "convertUnit",
+      "args": [
+        "",
+        "length",
+        "mm",
+        "in"
+      ],
+      "match": "请输入数值"
+    },
+    {
+      "id": "e2",
+      "tool": "convertUnit",
+      "args": [
+        "abc",
+        "length",
+        "mm",
+        "in"
+      ],
+      "match": "十进制数字"
+    },
+    {
+      "id": "e3",
+      "tool": "convertUnit",
+      "args": [
+        "-300",
+        "temperature",
+        "°C",
+        "K"
+      ],
+      "match": "绝对零度"
+    },
+    {
+      "id": "e4",
+      "tool": "convertUnit",
+      "args": [
+        "-460",
+        "temperature",
+        "°F",
+        "K"
+      ],
+      "match": "绝对零度"
+    },
+    {
+      "id": "e5",
+      "tool": "convertUnit",
+      "args": [
+        "1e20",
+        "length",
+        "mm",
+        "in"
+      ],
+      "match": "绝对值"
+    },
+    {
+      "id": "e6",
+      "tool": "convertUnit",
+      "args": [
+        "1",
+        "bogus",
+        "mm",
+        "in"
+      ],
+      "match": "有效的单位"
+    },
+    {
+      "id": "e7",
+      "tool": "dcVoltageDrop",
+      "args": [
+        "24",
+        "5",
+        "200000",
+        "2.5",
+        "0.0175",
+        "dc2"
+      ],
+      "match": "100 km"
+    },
+    {
+      "id": "e8",
+      "tool": "dcVoltageDrop",
+      "args": [
+        "24",
+        "5",
+        "10",
+        "2000",
+        "0.0175",
+        "dc2"
+      ],
+      "match": "mm²"
+    },
+    {
+      "id": "e9",
+      "tool": "dcVoltageDrop",
+      "args": [
+        "1",
+        "100",
+        "10",
+        "0.5",
+        "0.0175",
+        "dc2"
+      ],
+      "match": "超过电源电压"
+    },
+    {
+      "id": "e10",
+      "tool": "dcVoltageDrop",
+      "args": [
+        "24",
+        "-1",
+        "10",
+        "2.5",
+        "0.0175",
+        "dc2"
+      ],
+      "match": "不能为负数"
+    },
+    {
+      "id": "e11",
+      "tool": "upsRuntime",
+      "args": [
+        "100",
+        "24",
+        "120",
+        "90",
+        "150"
+      ],
+      "match": "放电深度"
+    },
+    {
+      "id": "e12",
+      "tool": "upsRuntime",
+      "args": [
+        "100",
+        "24",
+        "80",
+        "90",
+        "0"
+      ],
+      "match": "功率"
+    },
+    {
+      "id": "e13",
+      "tool": "upsRuntime",
+      "args": [
+        "20000",
+        "24",
+        "80",
+        "90",
+        "150"
+      ],
+      "match": "10000 Ah"
+    },
+    {
+      "id": "e14",
+      "tool": "bendAllowance",
+      "args": [
+        "2",
+        "2",
+        "180",
+        "0.44",
+        null,
+        null
+      ],
+      "match": "小于 180"
+    },
+    {
+      "id": "e15",
+      "tool": "bendAllowance",
+      "args": [
+        "2",
+        "2",
+        "90",
+        "0.6",
+        null,
+        null
+      ],
+      "match": "0–0.5"
+    },
+    {
+      "id": "e16",
+      "tool": "bendAllowance",
+      "args": [
+        "2",
+        "2",
+        "90",
+        "0.44",
+        "50",
+        null
+      ],
+      "match": "同时填写"
+    },
+    {
+      "id": "e17",
+      "tool": "bendAllowance",
+      "args": [
+        "2",
+        "2",
+        "90",
+        "0.44",
+        "1",
+        "1"
+      ],
+      "match": "展开长度为负"
+    },
+    {
+      "id": "e18",
+      "tool": "supplyCurrent",
+      "args": [
+        "three",
+        "kw",
+        "15",
+        "380",
+        "1.2"
+      ],
+      "match": "不能大于 1"
+    },
+    {
+      "id": "e19",
+      "tool": "supplyCurrent",
+      "args": [
+        "three",
+        "kw",
+        "15",
+        "5",
+        "0.85"
+      ],
+      "match": "12 V"
+    },
+    {
+      "id": "e20",
+      "tool": "cabinetThermal",
+      "args": [
+        "500",
+        "3.2",
+        "45",
+        "45",
+        "5.5",
+        "1.25"
+      ],
+      "match": "必须高于环境温度"
+    },
+    {
+      "id": "e21",
+      "tool": "cabinetThermal",
+      "args": [
+        "500",
+        "3.2",
+        "35",
+        "45",
+        "0.5",
+        "1.25"
+      ],
+      "match": "换热系数"
+    },
+    {
+      "id": "e22",
+      "tool": "cabinetThermal",
+      "args": [
+        "500",
+        "3.2",
+        "35",
+        "45",
+        "5.5",
+        "4"
+      ],
+      "match": "安全系数"
+    },
+    {
+      "id": "ea1",
+      "tool": "acCableDrop",
+      "args": [
+        "ac3",
+        "1200",
+        "100",
+        "50",
+        "25",
+        "0.0175",
+        "0.85",
+        "0.08",
+        "5"
+      ],
+      "match": "低压系统"
+    },
+    {
+      "id": "ea2",
+      "tool": "acCableDrop",
+      "args": [
+        "ac3",
+        "400",
+        "100",
+        "50",
+        "25",
+        "0.0175",
+        "1.2",
+        "0.08",
+        "5"
+      ],
+      "match": "功率因数"
+    },
+    {
+      "id": "ea3",
+      "tool": "acCableDrop",
+      "args": [
+        "ac3",
+        "400",
+        "100",
+        "50",
+        "2000",
+        "0.0175",
+        "0.85",
+        "0.08",
+        "5"
+      ],
+      "match": "截面积"
+    },
+    {
+      "id": "ea4",
+      "tool": "acCableDrop",
+      "args": [
+        "ac3",
+        "400",
+        "100",
+        "50",
+        "25",
+        "0.0175",
+        "0.85",
+        "0.08",
+        "120"
+      ],
+      "match": "允许压降"
+    },
+    {
+      "id": "ea5",
+      "tool": "acCableDrop",
+      "args": [
+        "ac3",
+        "400",
+        "100",
+        "50",
+        "25",
+        "0.0175",
+        "0.85",
+        "0.9",
+        "5"
+      ],
+      "match": "电抗"
+    },
+    {
+      "id": "ez1",
+      "tool": "acCableSize",
+      "args": [
+        "ac3",
+        "1100",
+        "100",
+        "50",
+        "0.0175",
+        "0.85",
+        "0.08",
+        "5"
+      ],
+      "match": "低压系统"
+    },
+    {
+      "id": "ez2",
+      "tool": "acCableSize",
+      "args": [
+        "ac3",
+        "400",
+        "100",
+        "50",
+        "0.0175",
+        "1.2",
+        "0.08",
+        "5"
+      ],
+      "match": "功率因数"
+    },
+    {
+      "id": "ez3",
+      "tool": "acCableSize",
+      "args": [
+        "ac3",
+        "400",
+        "100",
+        "50",
+        "0.0175",
+        "0.85",
+        "0.9",
+        "5"
+      ],
+      "match": "电抗"
+    },
+    {
+      "id": "ez4",
+      "tool": "acCableSize",
+      "args": [
+        "ac3",
+        "400",
+        "100",
+        "50",
+        "0.0175",
+        "0.85",
+        "0.08",
+        "120"
+      ],
+      "match": "允许压降"
+    },
+    {
+      "id": "ez5",
+      "tool": "acCableSize",
+      "args": [
+        "ac3",
+        "400",
+        "100",
+        "200000",
+        "0.0175",
+        "0.85",
+        "0.08",
+        "5"
+      ],
+      "match": "线长"
+    }
+  ],
+  "tolerance": {
+    "rel": 1e-9,
+    "abs": 1e-12
   }
- ],
- "errors": [
-  {
-   "id": "e1",
-   "tool": "convertUnit",
-   "args": [
-    "",
-    "length",
-    "mm",
-    "in"
-   ],
-   "match": "请输入数值"
-  },
-  {
-   "id": "e2",
-   "tool": "convertUnit",
-   "args": [
-    "abc",
-    "length",
-    "mm",
-    "in"
-   ],
-   "match": "十进制数字"
-  },
-  {
-   "id": "e3",
-   "tool": "convertUnit",
-   "args": [
-    "-300",
-    "temperature",
-    "°C",
-    "K"
-   ],
-   "match": "绝对零度"
-  },
-  {
-   "id": "e4",
-   "tool": "convertUnit",
-   "args": [
-    "-460",
-    "temperature",
-    "°F",
-    "K"
-   ],
-   "match": "绝对零度"
-  },
-  {
-   "id": "e5",
-   "tool": "convertUnit",
-   "args": [
-    "1e20",
-    "length",
-    "mm",
-    "in"
-   ],
-   "match": "绝对值"
-  },
-  {
-   "id": "e6",
-   "tool": "convertUnit",
-   "args": [
-    "1",
-    "bogus",
-    "mm",
-    "in"
-   ],
-   "match": "有效的单位"
-  },
-  {
-   "id": "e7",
-   "tool": "dcVoltageDrop",
-   "args": [
-    "24",
-    "5",
-    "200000",
-    "2.5",
-    "0.0175",
-    "dc2"
-   ],
-   "match": "100 km"
-  },
-  {
-   "id": "e8",
-   "tool": "dcVoltageDrop",
-   "args": [
-    "24",
-    "5",
-    "10",
-    "2000",
-    "0.0175",
-    "dc2"
-   ],
-   "match": "mm²"
-  },
-  {
-   "id": "e9",
-   "tool": "dcVoltageDrop",
-   "args": [
-    "1",
-    "100",
-    "10",
-    "0.5",
-    "0.0175",
-    "dc2"
-   ],
-   "match": "超过电源电压"
-  },
-  {
-   "id": "e10",
-   "tool": "dcVoltageDrop",
-   "args": [
-    "24",
-    "-1",
-    "10",
-    "2.5",
-    "0.0175",
-    "dc2"
-   ],
-   "match": "不能为负数"
-  },
-  {
-   "id": "e11",
-   "tool": "upsRuntime",
-   "args": [
-    "100",
-    "24",
-    "120",
-    "90",
-    "150"
-   ],
-   "match": "放电深度"
-  },
-  {
-   "id": "e12",
-   "tool": "upsRuntime",
-   "args": [
-    "100",
-    "24",
-    "80",
-    "90",
-    "0"
-   ],
-   "match": "功率"
-  },
-  {
-   "id": "e13",
-   "tool": "upsRuntime",
-   "args": [
-    "20000",
-    "24",
-    "80",
-    "90",
-    "150"
-   ],
-   "match": "10000 Ah"
-  },
-  {
-   "id": "e14",
-   "tool": "bendAllowance",
-   "args": [
-    "2",
-    "2",
-    "180",
-    "0.44",
-    null,
-    null
-   ],
-   "match": "小于 180"
-  },
-  {
-   "id": "e15",
-   "tool": "bendAllowance",
-   "args": [
-    "2",
-    "2",
-    "90",
-    "0.6",
-    null,
-    null
-   ],
-   "match": "0–0.5"
-  },
-  {
-   "id": "e16",
-   "tool": "bendAllowance",
-   "args": [
-    "2",
-    "2",
-    "90",
-    "0.44",
-    "50",
-    null
-   ],
-   "match": "同时填写"
-  },
-  {
-   "id": "e17",
-   "tool": "bendAllowance",
-   "args": [
-    "2",
-    "2",
-    "90",
-    "0.44",
-    "1",
-    "1"
-   ],
-   "match": "展开长度为负"
-  },
-  {
-   "id": "e18",
-   "tool": "supplyCurrent",
-   "args": [
-    "three",
-    "kw",
-    "15",
-    "380",
-    "1.2"
-   ],
-   "match": "不能大于 1"
-  },
-  {
-   "id": "e19",
-   "tool": "supplyCurrent",
-   "args": [
-    "three",
-    "kw",
-    "15",
-    "5",
-    "0.85"
-   ],
-   "match": "12 V"
-  },
-  {
-   "id": "e20",
-   "tool": "cabinetThermal",
-   "args": [
-    "500",
-    "3.2",
-    "45",
-    "45",
-    "5.5",
-    "1.25"
-   ],
-   "match": "必须高于环境温度"
-  },
-  {
-   "id": "e21",
-   "tool": "cabinetThermal",
-   "args": [
-    "500",
-    "3.2",
-    "35",
-    "45",
-    "0.5",
-    "1.25"
-   ],
-   "match": "换热系数"
-  },
-  {
-   "id": "e22",
-   "tool": "cabinetThermal",
-   "args": [
-    "500",
-    "3.2",
-    "35",
-    "45",
-    "5.5",
-    "4"
-   ],
-   "match": "安全系数"
-  },
-  {
-   "id": "ea1",
-   "tool": "acCableDrop",
-   "args": [
-    "ac3",
-    "1200",
-    "100",
-    "50",
-    "25",
-    "0.0175",
-    "0.85",
-    "0.08",
-    "5"
-   ],
-   "match": "低压系统"
-  },
-  {
-   "id": "ea2",
-   "tool": "acCableDrop",
-   "args": [
-    "ac3",
-    "400",
-    "100",
-    "50",
-    "25",
-    "0.0175",
-    "1.2",
-    "0.08",
-    "5"
-   ],
-   "match": "功率因数"
-  },
-  {
-   "id": "ea3",
-   "tool": "acCableDrop",
-   "args": [
-    "ac3",
-    "400",
-    "100",
-    "50",
-    "2000",
-    "0.0175",
-    "0.85",
-    "0.08",
-    "5"
-   ],
-   "match": "截面积"
-  },
-  {
-   "id": "ea4",
-   "tool": "acCableDrop",
-   "args": [
-    "ac3",
-    "400",
-    "100",
-    "50",
-    "25",
-    "0.0175",
-    "0.85",
-    "0.08",
-    "120"
-   ],
-   "match": "允许压降"
-  },
-  {
-   "id": "ea5",
-   "tool": "acCableDrop",
-   "args": [
-    "ac3",
-    "400",
-    "100",
-    "50",
-    "25",
-    "0.0175",
-    "0.85",
-    "0.9",
-    "5"
-   ],
-   "match": "电抗"
-  }
- ],
- "tolerance": {
-  "rel": 1e-9,
-  "abs": 1e-12
- }
 }

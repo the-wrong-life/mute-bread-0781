@@ -286,8 +286,16 @@ def materials():
         float(os.environ.get("NOVA_SCALE_METAL", "0.42")))
     # 蛇头材质名是 mat-serpent-head（build-jade.ts 里 headMat），之前误按旧名
     # mat-serpent-upper-jaw 覆写，导致头部保持 GLB 里的铜色、与绿色蛇身断开。
+    # §35：写死 (0.52,0.36,0.14)/metal 0.82 = 抛光铜蛋，高金属度把吻部与眉骨的明暗差全部压平。
+    # 改为暗青铜 + 低金属度（金属感交给环），结构才靠明暗读出来。
+    head_rgb = tuple(float(v) for v in os.environ.get("NOVA_HEAD_COLOR", "0.30,0.21,0.11").split(","))
     for n in ("mat-serpent-head", "mat-serpent-brow-l", "mat-serpent-brow-r"):
-        rep(n, (0.52, 0.36, 0.14), 0.26, 0.82, coat=0.25)
+        rep(n, head_rgb,
+            float(os.environ.get("NOVA_HEAD_ROUGH", "0.44")),
+            float(os.environ.get("NOVA_HEAD_METAL", "0.35")),
+            # §37：coat 0.20 的高光面积占掉头面一半，520 px 下把所有结构糊平；
+            # 玉/铜器本身也不该有车漆层，降到 0.03 让形体交给粗糙度交代。
+            coat=float(os.environ.get("NOVA_HEAD_COAT", "0.03")))
     rep("mat-serpent-mouth", (0.12, 0.07, 0.04), 0.55, 0.0)
     rep("mat-eye", (0.20, 0.72, 0.48), 0.12, 0.0, emit=(0.14, 0.55, 0.34), emit_str=1.2, coat=1.0)
     rep("mat-kernel-glow", (1.0, 0.94, 0.80), 0.9, 0.0)
