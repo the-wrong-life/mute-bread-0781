@@ -291,7 +291,9 @@ export function buildJadeModel(options: { quality?: 'high' | 'low' } = {}): Jade
   // 参考图的球面是"细缝状分瓣"（玻璃灯笼的瓣缝），不是 5 px 宽的白梁；
   // 0.034 在我们的灯位下被打成白线，读成线框笼子。收到 0.011 并压暗底色才对。
   // 0.011 在 alpha 半透壳下几乎看不见，读成"空壳"；0.016 才像梁又不至于变成笼子。
-  const STRUT_TUBE = hi ? 0.016 : 0.018;
+  // §32：0.016 在 520 px 下只有 2 px 宽，整组"浑天仪梁"读成划过球面的细丝，
+// 与参考图里成组的宽弧梁差得远。0.028 让梁在球径 494 px 时约 7 px，才看得出是结构件。
+const STRUT_TUBE = hi ? 0.028 : 0.030;
   for (let i = 0; i < STRUT_MERIDIANS; i += 1) {
     const meridian = new THREE.Mesh(
       new THREE.TorusGeometry(STRUT_R, STRUT_TUBE, hi ? 10 : 6, hi ? 120 : 64),
@@ -471,6 +473,10 @@ export function buildJadeModel(options: { quality?: 'high' | 'low' } = {}): Jade
     return qs.has(k) && Number.isFinite(n) ? n : d;
   };
   const SERPENT_TILT = qnum('tilt', 0.55);
+  // §34：蛇环整体半径此前写死在 pose.ts 的 BASE_RADIUS=1.17。1.17R 在 tilt≈1（近水平环）时
+  // 会离开球面变成"提梁/把手"（v-a/v-b/v-c 对照），参考图是贴着上半球盘绕。
+  // 这里给一个只作用于蛇组的等比缩放，用于把环压回贴球面；头部随组缩放，故用 heads 单独回补。
+  serpent.scale.setScalar(qnum('srad', 1.0));
   serpent.rotation.set(SERPENT_TILT, qnum('spin', 0.0), 0.0);
   serpent.position.set(0, qnum('shift', 0.0), qnum('depth', 0.0));
   const curve = snakeCurveAt(0);
@@ -632,7 +638,13 @@ export function buildJadeModel(options: { quality?: 'high' | 'low' } = {}): Jade
   // §31：0.94 在 620 px 正视图里只有约 40 px，读完是个"金蛋"；参考图蛇首约占球径 12–15%，
   // 按球径 620 px 折算应有 75–90 px，此处取 1.18（头长 0.465×1.18≈0.55 世界单位 ≈ 球径的 27%，
   // 但实际可见轮廓只有吻端到颈环约 0.30 ≈ 15%）。
-  head.scale.setScalar(1.18);
+  // §34：尺度与转角全部走 URL，便于一次构建后扫多组姿态（不必反复改文件）。
+  head.scale.setScalar(qnum('heads', 1.18));
+  // §33：正视图里蛇头沿环切线平放，只能看到头背与眉骨，读成"金蛋/棒状端帽"。
+  // 加两个可用 URL 覆盖的转角：heady 绕局部"上"轴转脸、headz 抬/压吻部。
+  // 目的不是改造型，而是让吻部、双眼与嘴线在正面视角里同时可见。
+  head.rotateY(qnum('heady', 0));
+  head.rotateZ(qnum('headz', 0));
 
   const headMat = new THREE.MeshPhysicalMaterial({
     // 高金属度 + 低粗糙把蛇头渲成抛光铜蛋，压掉一切结构；降到 0.42/0.36 让

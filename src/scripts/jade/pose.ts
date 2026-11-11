@@ -59,7 +59,9 @@ export function snakePoint(u: number, time: number, out = new THREE.Vector3()): 
   const s = (a - (END_ANGLE - SWEEP)) / SWEEP; // 0 尾 → 1 颈
 
   // 半径呼吸：两倍频，幅度小，避免轮廓抖动
-  const breath = 0.026 * Math.sin(Math.PI * 4 * s - Math.PI * 2 * ph + 0.7);
+  // §32：0.026 在 620 px 下几乎看不出来，正视图仍是一个正圆。加到 0.045 让外轮廓
+  // 出现可辨的起伏，同时保持两倍频（首尾 s=0/1 处相位相同，循环不断开）。
+  const breath = 0.045 * Math.sin(Math.PI * 4 * s - Math.PI * 2 * ph + 0.7);
   const r = BASE_RADIUS + breath;
 
   // 环面内的角度偏移：让蛇身在环上"缓慢游动"
@@ -67,9 +69,11 @@ export function snakePoint(u: number, time: number, out = new THREE.Vector3()): 
   const ang = a + drift;
 
   // 纵向行波：沿身体传播的起伏，振幅 0.05，两倍频
-  const wave = 0.05 * Math.sin(Math.PI * 2 * (2 * s - ph));
+  const wave = 0.075 * Math.sin(Math.PI * 2 * (2 * s - ph));
   // 基础深度：两端在缺口处回到 0，衔尾贴合；再加一层时间项做前后错动
-  const depth = Math.sin(s * Math.PI * 2) * 0.10 + 0.022 * Math.sin(Math.PI * 2 * (s + ph));
+  // §32：0.10 的深度在正视图里几乎不产生透视差，环读成平面手镯。
+  // 加到 0.20，让蛇身一半绕到球后、一半绕到球前，轮廓才有盘绕的立体感。
+  const depth = Math.sin(s * Math.PI * 2) * 0.20 + 0.030 * Math.sin(Math.PI * 2 * (s + ph));
 
   const x = Math.cos(ang) * r;
   const y = Math.sin(ang) * r * SQUASH_Y + wave;

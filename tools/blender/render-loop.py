@@ -230,6 +230,25 @@ def shell_fresnel():
     nt.links.new(pw.outputs[0], mix.inputs["Fac"])
     nt.links.new(mix.outputs["Color"], bsdf.inputs["Base Color"])
     bsdf.inputs["Roughness"].default_value = float(os.environ.get("NOVA_SHELL_ROUGH", "0.10"))
+    # Alpha 也交给 Fresnel：中心透、边缘实（§33）。
+    # 常量 alpha 只有两种结果：整球均匀透（发灰、结构看不清）或整球雾白（盖住内部）。
+    # 参考图是"轮廓处沉积成玉肉、正对镜头的中心透明"，因此把同一层 Fac 拿去插值不透明度。
+    # 用法：NOVA_SHELL_ALPHA_FACE=0.10、NOVA_SHELL_ALPHA_EDGE=1.0（两者都给了才启用）。
+    _af = os.environ.get("NOVA_SHELL_ALPHA_FACE")
+    if _af:
+        a_face = float(_af)
+        a_edge = float(os.environ.get("NOVA_SHELL_ALPHA_EDGE", "1.0"))
+        sub = nt.nodes.new("ShaderNodeMath"); sub.operation = "SUBTRACT"
+        sub.inputs[0].default_value = a_edge; sub.inputs[1].default_value = a_face
+        mul = nt.nodes.new("ShaderNodeMath"); mul.operation = "MULTIPLY"
+        add = nt.nodes.new("ShaderNodeMath"); add.operation = "ADD"
+        add.inputs[1].default_value = a_face
+        nt.links.new(pw.outputs[0], mul.inputs[0])
+        nt.links.new(sub.outputs[0], mul.inputs[1])
+        nt.links.new(mul.outputs[0], add.inputs[0])
+        nt.links.new(add.outputs[0], bsdf.inputs["Alpha"])
+        m.blend_method = 'BLEND'
+        print("SHELL-ALPHA-GRAD face=%s edge=%s" % (a_face, a_edge))
     print("SHELL-FRESNEL ok core=%s edge=%s" % (core, edge))
 
 def materials():
@@ -399,6 +418,7 @@ os.makedirs(OUT, exist_ok=True)
 print("FRAMES", len(files))
 
 HIDE = [s.strip() for s in os.environ.get("NOVA_HIDE", "").split(",") if s.strip()]
+ONLY = [s.strip() for s in os.environ.get("NOVA_ONLY", "").split(",") if s.strip()]
 
 def hide_objects():
     if not HIDE: return
@@ -407,11 +427,20 @@ def hide_objects():
         bpy.data.objects.remove(o, do_unlink=True)
     print("HIDDEN", len(kill), [o for o in HIDE])
 
+def keep_only():
+    # 白名单：只保留名字含任一关键字的网格，用于单独检查某个部件的造型
+    if not ONLY: return
+    kill = [o for o in bpy.data.objects if o.type == 'MESH' and not any(k in o.name for k in ONLY)]
+    for o in kill:
+        bpy.data.objects.remove(o, do_unlink=True)
+    print("ONLY", len(ONLY), [o for o in ONLY], "killed", len(kill))
+
 i = 0
 for f in files:
     reset()
     bpy.ops.import_scene.gltf(filepath=f)
     hide_objects()
+    keep_only()
     materials(); camera(); lights(); world(); ground_shadow(); render_settings()
     name = os.path.basename(f).replace(".glb", ".png")
     bpy.context.scene.render.filepath = os.path.join(OUT, name)
