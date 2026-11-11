@@ -268,7 +268,7 @@ export const posts: Post[] = [
     category: '平台与安全',
     summary: '控制台持续出现 Fetch 被拒。来源不是本站脚本，而是托管平台注入的统计脚本；处理方式是把上报域加入白名单，而不是放宽整条策略。',
     tags: ['CSP', 'ESA Pages', '控制台错误', '响应头'],
-    status: '已实测：注入域名加入 connect-src 后，三个主要路由各两次加载的 console error 归零；HSTS 与 X-Frame-Options 需平台控制台权限，仍待处理。',
+    status: '已实测：只放行单个上报域名时，下一轮核验又出现新域名；改为按最左标签通配后需重新核验。HSTS 与 X-Frame-Options 需平台控制台权限，仍待处理。',
     sections: [
       {
         heading: '现象',
@@ -280,10 +280,11 @@ export const posts: Post[] = [
       {
         heading: '处理原则',
         paragraphs: [
-          '正确做法不是删掉 CSP，也不是加通配符，而是只把被注入脚本实际上报的那个域加进 connect-src，其余保持收紧。',
-          '注入脚本的加载域与上报域往往是两个不同域名，只放行加载域仍然会报错。因此要看实际被拒的请求地址，而不是脚本标签里的地址。'
+          '第一步不是删掉 CSP，而是只把被注入脚本实际用到的域加进 connect-src，其余保持收紧。注入脚本的加载域与上报域通常是两个不同域名，只放行加载域仍然会报错；要看实际被拒的请求地址，而不是脚本标签里的地址。',
+          '但逐个域名放行会反复失败：同一次核验里又出现了另两组域名，说明平台的统计端点按区域轮换。最终改为按最左标签通配，只放行这两个 CDN 域的子域，其余指令保持收紧。',
+          '放宽的代价要写清楚：任何能在这两个 CDN 域下取得内容的第三方都可能成为数据外发目标。当前接受这一风险，是因为注入脚本由托管平台强制插入，且连接方向只涉及统计上报。'
         ],
-        code: "meta http-equiv=\"Content-Security-Policy\"\n  content=\"... connect-src 'self' https://<上报域名>; ...\""
+        code: "meta http-equiv=\"Content-Security-Policy\"\n  content=\"default-src 'self';\n           script-src 'self' 'unsafe-inline' https://*.myalicdn.com;\n           connect-src 'self' https://*.myalicdn.com https://*.ialicdn.com; ...\""
       },
       {
         heading: '验证方式',
