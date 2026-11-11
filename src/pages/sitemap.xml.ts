@@ -2,6 +2,7 @@
 // 本机 astro check 无法解析该包的 type 声明（ts(2307)），构建不受影响。
 import { docs } from '../data/docs';
 import { projects } from '../data/projects';
+import { posts } from '../data/posts';
 
 // 站点地图在构建期生成：路由清单来自与页面完全相同的数据源，
 // 因此新增文档或项目后不需要再手工维护 sitemap。
@@ -25,6 +26,7 @@ export const GET = (): Response => {
   const entries: Entry[] = [...staticRoutes];
   for (const doc of docs) entries.push({ path: `/docs/${doc.slug}/`, lastmod: doc.updated });
   for (const project of projects) entries.push({ path: `/projects/${project.slug}/`, lastmod: project.updated });
+  for (const post of posts) entries.push({ path: `/blog/${post.slug}/`, lastmod: post.updated });
 
   const xml = [
     '<?xml version="1.0" encoding="UTF-8"?>',

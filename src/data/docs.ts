@@ -147,12 +147,12 @@ export const docs: Doc[] = [
     sections: [
       { heading: '收录不是“提交一次就完事”', paragraphs: ['静态站没有后台，但同样会产生重复 URL：带不带结尾斜杠、带不带 www、带不带查询参数，都可能被当成不同页面。canonical 的作用是把这些变体收敛到一个规范地址；站点地图的作用是告诉爬虫有哪些页面、哪些最近改过。两者都不是排名手段，写错反而拉低收录质量。'] },
       { heading: 'canonical 由 site 配置派生', paragraphs: ['在 astro.config.mjs 里把 site 设为 https://www.token-xxo.cn（含 www，与线上主机名一致），布局里用当前路径拼出绝对地址。这样同一个布局同时服务首页、文档列表、文档详情与项目详情时，不会出现“所有页面 canonical 都指向首页”这种常见错误。', '同时补上 og:type、og:site_name、og:locale 与 twitter:card：分享卡片依赖这些字段，缺了会退化成只有标题。'], code: "const canonical = new URL(Astro.url.pathname, Astro.site ?? 'https://www.token-xxo.cn').href;" },
-      { heading: '站点地图在构建期生成', paragraphs: ['新增静态端点 src/pages/sitemap.xml.ts，直接从 src/data/docs.ts 与 src/data/projects.ts 展开 URL 清单：9 条固定路由、12 篇文档、4 个项目，共 25 条；文档与项目的 lastmod 取记录里的 updated 字段。', '关键是“同一数据源”：页面路由与站点地图都由同一份数据展开，新增文档后不需要维护第二份清单，也不会出现地图指向不存在页面。'], code: "for (const doc of docs) entries.push({ path: `/docs/${doc.slug}/`, lastmod: doc.updated });" },
+      { heading: '站点地图在构建期生成', paragraphs: ['新增静态端点 src/pages/sitemap.xml.ts，直接从 src/data/docs.ts、src/data/projects.ts 与 src/data/posts.ts 展开 URL 清单：9 条固定路由、12 篇文档、4 个项目、5 篇札记，共 30 条；文档、项目与札记的 lastmod 取记录里的 updated 字段。', '关键是“同一数据源”：页面路由与站点地图都由同一份数据展开，新增文档后不需要维护第二份清单，也不会出现地图指向不存在页面。'], code: "for (const doc of docs) entries.push({ path: `/docs/${doc.slug}/`, lastmod: doc.updated });\nfor (const post of posts) entries.push({ path: `/blog/${post.slug}/`, lastmod: post.updated });" },
       { heading: 'robots.txt 只做两件事', paragraphs: ['public/robots.txt 里只有 Allow: / 与 Sitemap: https://www.token-xxo.cn/sitemap.xml。没有 Disallow 规则，因为本站没有需要隐藏的路径；也没写 Crawl-delay——那是爬虫侧的自愿约定，写了不保证被遵守。'] },
       { heading: '怎么验证', paragraphs: ['构建后解析 dist/sitemap.xml，确认 loc 数量与路由数一致；用浏览器打开页面读 link[rel="canonical"] 与 meta[property="og:url"]，确认是绝对地址且逐页不同；用原始请求取 /sitemap.xml 与 /robots.txt，确认返回 200。这些检查都在发布前的门禁里，不是发布后再看。'] },
       { heading: '边界', paragraphs: ['没有向搜索引擎后台提交站点地图，收录速度不由本站决定；canonical 不能替代 301 重定向，也不解决 HTTP 与 HTTPS 并存的问题（那该由平台侧强制跳转）；站点地图的 lastmod 是“记录整理日期”，表达内容新鲜度而非部署时间。'] }
     ],
-    sources: [{ label: '实现位置', note: '站点配置 astro.config.mjs；布局 src/layouts/NovaShell.astro；站点地图端点 src/pages/sitemap.xml.ts；public/robots.txt。' }, { label: '验证记录', note: '构建产物解析出 25 条 URL；首页、文档列表、文档详情、项目详情的 canonical 与 og:url 均为绝对地址且逐页不同；/sitemap.xml 与 /robots.txt 均返回 200。' }],
+    sources: [{ label: '实现位置', note: '站点配置 astro.config.mjs；布局 src/layouts/NovaShell.astro；站点地图端点 src/pages/sitemap.xml.ts；public/robots.txt。' }, { label: '验证记录', note: '构建产物解析出 30 条 URL；首页、文档列表、文档详情、项目详情与札记详情的 canonical 与 og:url 均为绝对地址且逐页不同；/sitemap.xml 与 /robots.txt 均返回 200。' }],
     related: [{ label: '静态站点部署实践', href: '/docs/static-site-deployment' }, { label: '性能指标的现场读数口径', href: '/docs/perf-field-readings' }]
   },
   {

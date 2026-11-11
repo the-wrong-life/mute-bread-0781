@@ -1,0 +1,39 @@
+---
+import NovaShell from '../../layouts/NovaShell.astro';
+import { posts } from '../../data/posts';
+export function getStaticPaths() {
+  return posts.map((post) => ({ params: { slug: post.slug }, props: { post } }));
+}
+const { post } = Astro.props;
+const related = posts.filter((item) => item.slug !== post.slug && item.category === post.category).slice(0, 2);
+---
+<NovaShell title={post.title} description={post.summary} active="/blog">
+  <article class="article">
+    <a class="back" href="/blog/">← 返回札记列表</a>
+    <header>
+      <p class="eyebrow">札记 / {post.category}</p>
+      <h1>{post.title}</h1>
+      <p class="lead">{post.summary}</p>
+      <p class="meta"><time datetime={post.date}>{post.date}</time>{post.updated !== post.date && <span>修订于 {post.updated}</span>}<span>{post.tags.join(' · ')}</span></p>
+      <p class="status">{post.status}</p>
+    </header>
+    <nav class="toc" aria-label="本文目录"><h2>本文目录</h2><ol>{post.sections.map((section, i) => <li><a href={`#section-${i + 1}`}>{section.heading}</a></li>)}</ol></nav>
+    <div class="content">
+      {post.sections.map((section, i) => (
+        <section id={`section-${i + 1}`}>
+          <h2>{section.heading}</h2>
+          {section.paragraphs.map((text) => <p>{text}</p>)}
+          {section.list && <ul>{section.list.map((item) => <li>{item}</li>)}</ul>}
+          {section.table && <div class="table-wrap"><table><thead><tr>{section.table.headers.map((cell) => <th scope="col">{cell}</th>)}</tr></thead><tbody>{section.table.rows.map((row) => <tr>{row.map((cell) => <td>{cell}</td>)}</tr>)}</tbody></table></div>}
+          {section.code && <pre><code>{section.code}</code></pre>}
+        </section>
+      ))}
+      <section class="sources"><h2>依据与记录</h2><ul>{post.sources.map((source) => <li><strong>{source.label}：</strong>{source.note.startsWith('https://') ? <a href={source.note}>{source.note}</a> : source.note}</li>)}</ul></section>
+      {related.length > 0 && <section class="related"><h2>同类札记</h2><ul>{related.map((item) => <li><a href={`/blog/${item.slug}/`}>{item.title} →</a></li>)}</ul></section>}
+      <section class="related"><h2>继续</h2><ul><li><a href="/docs">工程知识库 →</a></li><li><a href="/projects">项目档案 →</a></li></ul></section>
+    </div>
+  </article>
+</NovaShell>
+<style>
+  .article{max-width:calc(68ch + 40px);margin:auto;padding:clamp(50px,8vw,90px) 20px;color:#202923;min-width:0;overflow-wrap:anywhere}.back{display:inline-flex;align-items:center;min-height:44px;color:#3f604c;text-decoration:none}.back:hover,.content a:hover,.toc a:hover{text-decoration-line:underline;text-decoration-color:#a74432}.back:focus-visible,.article a:focus-visible{outline:2px solid #a74432;outline-offset:3px}header{padding:36px 0 30px}.eyebrow,.meta{font:12px/1.6 ui-monospace,monospace;color:#52735e;letter-spacing:.04em}.meta{display:flex;flex-wrap:wrap;gap:14px;margin:14px 0 0}.status{margin:18px 0 0;padding:14px 16px;border-left:2px solid #b78b57;background:#ece8dc;font-size:15px;line-height:1.75;color:#3f604c}h1,h2{font-family:"Songti SC","Noto Serif CJK SC",SimSun,serif;color:#202923}h1{font-size:clamp(34px,5.6vw,52px);line-height:1.25;margin:16px 0 20px}.lead{font-size:18px;line-height:1.8;color:#3f604c}.toc{padding:20px 24px;border-left:2px solid #a74432;background:#ece8dc}.toc h2{font-size:18px;margin:0}.toc ol{padding-left:1.4em;margin:8px 0 0}.toc li{line-height:1.5}.toc a{display:inline-flex;align-items:center;min-height:44px;color:#3f604c}.content{line-height:1.8;font-size:16px}.content section{padding-top:38px;scroll-margin-top:24px}.content h2{font-size:26px;line-height:1.4;margin:0 0 16px}.content p{margin:0 0 1em}.content ul{padding-left:1.5em}.content li{margin:.4em 0}.content a{color:#3f604c;overflow-wrap:anywhere}.table-wrap{overflow-x:auto;max-width:100%;margin:20px 0}table{border-collapse:collapse;width:100%;min-width:430px;text-align:left}th,td{padding:10px 12px;border:1px solid #b78b57;vertical-align:top}th{color:#3f604c;background:#ece8dc}pre{white-space:pre-wrap;overflow-wrap:anywhere;background:#ece8dc;border-left:2px solid #b78b57;padding:16px;line-height:1.7}code{font-family:ui-monospace,monospace;font-size:.9em}.related a{display:inline-flex;align-items:center;min-height:44px}.sources a{display:inline-block;min-height:44px;padding:10px 0}@media(max-width:600px){.article{padding-left:20px;padding-right:20px}.toc{padding:16px}.content h2{font-size:23px}}
+</style>
