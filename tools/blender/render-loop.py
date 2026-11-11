@@ -293,7 +293,9 @@ def materials():
         rep(n, head_rgb,
             float(os.environ.get("NOVA_HEAD_ROUGH", "0.44")),
             float(os.environ.get("NOVA_HEAD_METAL", "0.35")),
-            coat=0.20)
+            # §37：coat 0.20 的高光面积占掉头面一半，520 px 下把所有结构糊平；
+            # 玉/铜器本身也不该有车漆层，降到 0.03 让形体交给粗糙度交代。
+            coat=float(os.environ.get("NOVA_HEAD_COAT", "0.03")))
     rep("mat-serpent-mouth", (0.12, 0.07, 0.04), 0.55, 0.0)
     rep("mat-eye", (0.20, 0.72, 0.48), 0.12, 0.0, emit=(0.14, 0.55, 0.34), emit_str=1.2, coat=1.0)
     rep("mat-kernel-glow", (1.0, 0.94, 0.80), 0.9, 0.0)
