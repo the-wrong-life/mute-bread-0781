@@ -679,7 +679,9 @@ const STRUT_TUBE = hi ? 0.028 : 0.030;
   ];
   // 嘴缝：cos(a) = −0.30 对应截面下三分之一处，band 0.22 给出一道窄槽。
   const upperJaw = new THREE.Mesh(
-    loftHead(headSections, hi ? 44 : 22, { cosY: -0.30, band: 0.26, depth: 0.030 }),
+    // §35：depth 0.030 相对头高 0.118 只有 25%，620 px 下约 3 px，被 clearcoat 高光完全吃掉，
+    // 正视读不出嘴线。加深到 0.052、band 放到 0.32，让凹槽的自体阴影能在小尺寸留下暗线。
+    loftHead(headSections, hi ? 44 : 22, { cosY: -0.30, band: 0.32, depth: 0.052 }),
     headMat,
   );
   upperJaw.name = 'serpent-upper-jaw';
@@ -1196,7 +1198,11 @@ const STRUT_TUBE = hi ? 0.028 : 0.030;
     head.position.copy(pTip).addScaledVector(pFwd, 0.019);
     head.quaternion.setFromRotationMatrix(basis.makeBasis(pFwd, pUpV, pSideV));
     // 头颈轻微摆动：绕本地上轴小角度转头，幅度 0.10 rad，不破坏衔尾
-    head.rotateY(headYaw(time));
+    // §35 修复：这一行原先直接覆盖了 build 阶段用 URL 设的 heady/headz —— 因为 updatePose(0)
+    // 在建模末尾无条件调用，用户传 ?heady=1.57 也会被重置回 0，三张对照图因此几乎像素相同
+    // （k1/k2/k3 差异实测 0.09–0.12%）。转角必须在这里叠加，而不是只在建模时设置一次。
+    head.rotateY(headYaw(time) + qnum('heady', 0));
+    head.rotateZ(qnum('headz', 0));
 
     // 3) 铜环缓慢摆转（幅度小，始终可辨认是环）
     const swing = ringSwing(time);
