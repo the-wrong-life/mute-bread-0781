@@ -334,17 +334,17 @@ export const posts: Post[] = [
       {
         heading: '实测读数',
         paragraphs: [
-          '五篇文档各加一条到两条公式，逐页在 Chrome 下检查：整页横向溢出为 0，公式容器自身也未溢出，无页面异常与控制台错误。',
-          '体积上，卷绕后的标记很小：bend-allowance 页面 HTML 共 14,756 字节，其中两条公式的 MathML 合计 412 字节。这个量级不需要为首屏缓存做任何额外设计。'
+          '五篇文档各加一条到两条公式，逐页在 Chrome 下检查（1440 与 390 两视口，公式字号 20.8 px）：整页横向溢出为 0，公式容器自身也未溢出，无页面异常与控制台错误。高度是容器盒高，含上下内边距，因此大于单个公式的字号。',
+          '体积上，卷绕后的标记很小：bend-allowance 页面 HTML 共 16,499 字节（含内联示意图），其中两条公式的 MathML 合计 412 字节。这个量级不需要为首屏缓存做任何额外设计。'
         ],
         table: {
           headers: ['页面', '公式', '渲染高度', '整页横向溢出'],
           rows: [
-            ['/docs/calculation-record/', 'U = 2·I·L·ρ / A', '约 33 px', '0'],
-            ['/docs/supply-current/', 'I = S / (√3·U)', '约 37 px', '0'],
-            ['/docs/bend-allowance/', 'BA 与 OSSB 两式', '约 31 / 41 px', '0'],
-            ['/docs/unit-conversion/', 'T/K = t/°C + 273.15', '约 45 px', '0'],
-            ['/docs/ups-runtime/', 't = C·U·DoD·η / P', '约 33 px', '0']
+            ['/docs/calculation-record/', 'U = 2·I·L·ρ / A', '72 px', '0'],
+            ['/docs/supply-current/', 'I = S / (√3·U)', '77 px', '0'],
+            ['/docs/bend-allowance/', 'BA 与 OSSB 两式', '133 px', '0'],
+            ['/docs/unit-conversion/', 'T/K = t/°C + 273.15', '72 px', '0'],
+            ['/docs/ups-runtime/', 't = C·U·DoD·η / P', '72 px', '0']
           ]
         }
       },
@@ -361,6 +361,83 @@ export const posts: Post[] = [
       { label: '实现位置', note: 'src/data/docs.ts 的 math 字段与 src/pages/docs/[slug].astro 的渲染分支' },
       { label: '规范', note: 'https://www.w3.org/TR/mathml-core/' },
       { label: '浏览器支持参考', note: 'https://developer.mozilla.org/docs/Web/MathML' }
+    ]
+  },
+  {
+    slug: 'scoped-css-and-injected-svg',
+    title: '注入的 SVG 不吃作用域样式：一次 612 像素的排查',
+    date: '2026-11-11',
+    updated: '2026-11-11',
+    category: '视觉与渲染',
+    summary: '文档里要放工程示意图，用内联 SVG 实现。样式写了 max-width:480px，实测却是 612px：原因是 set:html 注入的节点不带 Astro 的作用域属性。',
+    tags: ['Astro', 'SVG', 'CSS 作用域', '调试'],
+    status: '已实测：Chrome 1440 与 390 两视口。修复前后宽度与公式字号均有 getComputedStyle 读数对照。读屏器朗读未实测。',
+    sections: [
+      {
+        heading: '示意图不引图表库',
+        paragraphs: [
+          '文档需要一张折弯截面图：内半径 R、料厚 T、折弯角 θ、外侧退让 OSSB 与中性层弧长 BA 的几何关系。这类图用内联 SVG 画最划算——矢量、可随主题改色、无脚本、无第三方运行时，构建后就是一段静态标记。',
+          '图放在文档数据类型的新字段里（svg 与 svgCaption），由详情页用 set:html 注入。这样内容与排版分离，图表跟着正文一起进静态 HTML。'
+        ]
+      },
+      {
+        heading: '现象：样式写了 480，实际是 612',
+        paragraphs: [
+          '第一版图能画出来，但明显过大。用 getComputedStyle 读 SVG 的真实盒模型：maxWidth 是 none、宽度 612.015625 px、高 538.578125 px，而容器 figure 的宽度是 638.03125 px。也就是说 SVG 撑满了正文栏，max-width:480px 完全没生效。',
+          '同时发现构建产物里确实有这条规则。把页面 HTML 取出来看，样式块中是 .figure-canvas[data-astro-cid-wyaoh547] svg[data-astro-cid-wyaoh547]{max-width:480px;...}。规则在，元素也在，但计算值是 none——说明选择器没匹配上。'
+        ]
+      },
+      {
+        heading: '根因：注入的节点没有作用域属性',
+        paragraphs: [
+          'Astro 的 scoped CSS 会把组件里的 class 选择器编译成带属性选择器的形式，并且给选择器里每个复合部分都追加 [data-astro-cid-*]。模板中直接写的标签会自动带上这个属性，于是选择器成立。',
+          'set:html 注入的节点是运行时字符串，不经过模板编译，因此没有 data-astro-cid-* 属性。选择器要求 svg 自身也带该属性，匹配失败，规则被静默忽略：既不报错，也不进控制台。',
+          '同一个原因让另一条规则也失效了：.math math{font-size:1.3em} 同样没命中，此前公式一直用浏览器默认字号。修好之后才读到 20.8px（16×1.3），因此公式容器的实测高度也跟着变了——之前记录的 33–49 px 是默认字号下的读数，已按新读数更正。'
+        ],
+        code: '/* 会失效：Astro 给 svg 也补上 [data-astro-cid-*] */\n.figure-canvas svg { max-width: 480px }\n.math math { font-size: 1.3em }\n\n/* 生效：注入内容用 :global() 跳出作用域 */\n.figure-canvas :global(svg) { max-width: 480px }\n.math :global(math) { font-size: 1.3em }'
+      },
+      {
+        heading: '修复读数对照',
+        paragraphs: [
+          '改成 :global() 后，同一段探测脚本读到的 maxWidth 从 none 变成 480px，SVG 宽度 612 → 480 px，高度 539 → 422 px；公式字号 16 → 20.8 px。两视口整页横向溢出仍为 0，无控制台报错。'
+        ],
+        table: {
+          headers: ['读数', '修复前', '修复后'],
+          rows: [
+            ['SVG max-width 计算值', 'none', '480px'],
+            ['SVG 实际宽度', '612.02 px', '480.00 px'],
+            ['SVG 实际高度', '538.58 px', '422.39 px'],
+            ['公式 font-size', '16 px（默认）', '20.8 px'],
+            ['整页横向溢出 1440 / 390', '0 / 0', '0 / 0']
+          ]
+        }
+      },
+      {
+        heading: '图本身也要对得上公式',
+        paragraphs: [
+          '示意图画错比不画更糟。这张图按 1:1 的毫米比例画：水平边与垂直边各宽 20（料厚 T），内侧圆弧半径 60（内半径 R），外侧圆弧半径 80（R+T），中性层半径 68.8（K=0.44）。',
+          'OSSB 的标注最容易画错。它量的是“虚拟尖角到切点”的距离，尖角取外侧两条边的延长线交点。本例 R=60、T=20、θ=90°，代入 (R+T)·tan(θ/2)=80·tan45°=80，图上那段水平尺寸线正是 80。若照内壁切线去量会得到 60，那是 R 而不是 OSSB。',
+          '折弯角 θ 标在凸角一侧（两条边延长线之间），而不是标在材料内部的凹侧，避免读者把内夹角当成折弯角。'
+        ],
+        list: [
+          '图宽高比按内容确定：viewBox 取 24 16 300 264，裁掉多余留白，避免缩放到 480 px 后出现大片空白',
+          '所有线条与标注用同一组色值（描边 #3f604c、中性层 #a74432），与站点配色一致，不引入新的视觉语言',
+          'role="img" 加 aria-labelledby 指向 title，SVG 在无障碍树中是一个有名称的图形而不是一堆路径',
+          '容器带 overflow-x:auto，窄屏下 SVG 可独立横向滚动，不撑破整页'
+        ]
+      },
+      {
+        heading: '代价与还没验证的部分',
+        paragraphs: [
+          '代价是必须手工核对几何。SVG 只是标记，没有约束求解：标注位置、半径、角度都要按公式算过再落笔，改一个数字可能要连带改多处坐标。图多到一定数量时，应该换成由数据生成 SVG 的函数，而不是继续手写字符串。',
+          '没验证的部分：读屏器对 role="img" 与 aria-labelledby 的实际朗读未实测；Safari 与 Firefox 下 MathML 与 SVG 的排版差异未实测。这些留在检查点的待验证清单里，不写成已完成。'
+        ]
+      }
+    ],
+    sources: [
+      { label: '图所在文档', note: '/docs/bend-allowance' },
+      { label: '实现位置', note: 'src/data/docs.ts 的 svg 字段与 src/pages/docs/[slug].astro 的 figure 分支' },
+      { label: 'Astro 样式作用域', note: 'https://docs.astro.build/en/guides/styling/#global-styles' }
     ]
   }
 ];
