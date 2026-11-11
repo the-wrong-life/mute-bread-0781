@@ -401,6 +401,86 @@
     "pass": true,
     "factor": 2.0
    }
+  },
+  {
+   "id": "z1",
+   "tool": "acCableSize",
+   "expected": {
+    "required": 6.56078706992131,
+    "selected": 10.0,
+    "drop": 13.247093633111419,
+    "percent": 3.3117734082778543,
+    "limitVolts": 20.0,
+    "limitPercent": 5.0,
+    "reactiveDrop": 0.36496575181789326,
+    "rKm": 1.75,
+    "reactiveLimited": false,
+    "factor": 1.7320508075688772
+   }
+  },
+  {
+   "id": "z2",
+   "tool": "acCableSize",
+   "expected": {
+    "required": 4.425551092832014,
+    "selected": 6.0,
+    "drop": 5.106952687772785,
+    "percent": 2.220414212075124,
+    "limitVolts": 6.9,
+    "limitPercent": 3.0,
+    "reactiveDrop": 0.06695268777278474,
+    "rKm": 2.9166666666666665,
+    "reactiveLimited": false,
+    "factor": 2.0
+   }
+  },
+  {
+   "id": "z3",
+   "tool": "acCableSize",
+   "expected": {
+    "required": 52.086553109841766,
+    "selected": 70.0,
+    "drop": 15.392488091034958,
+    "percent": 3.84812202275874,
+    "limitVolts": 20.0,
+    "limitPercent": 5.0,
+    "reactiveDrop": 1.995322530319346,
+    "rKm": 0.40285714285714286,
+    "reactiveLimited": false,
+    "factor": 1.7320508075688772
+   }
+  },
+  {
+   "id": "z4",
+   "tool": "acCableSize",
+   "expected": {
+    "required": 0.0,
+    "selected": 1.5,
+    "drop": 0.0,
+    "percent": 0.0,
+    "limitVolts": 11.4,
+    "limitPercent": 3.0,
+    "reactiveDrop": 0.0,
+    "rKm": 11.666666666666666,
+    "reactiveLimited": false,
+    "factor": 1.7320508075688772
+   }
+  },
+  {
+   "id": "z5",
+   "tool": "acCableSize",
+   "expected": {
+    "required": 0.8484848484848486,
+    "selected": 1.5,
+    "drop": 3.7333333333333334,
+    "percent": 1.6969696969696972,
+    "limitVolts": 6.6,
+    "limitPercent": 3.0,
+    "reactiveDrop": 0.0,
+    "rKm": 11.666666666666666,
+    "reactiveLimited": false,
+    "factor": 2.0
+   }
   }
  ],
  "spec": "用例由 tools/verify/oracle.py 独立实现生成期望值；verify-tools.mjs 只做比对，不参与推导。约定：未填边 A/B 时展开长记 0；电弧/载流量等现场条件不在本工具范围。"

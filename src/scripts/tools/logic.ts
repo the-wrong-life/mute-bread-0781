@@ -360,3 +360,88 @@ export function acCableDrop(p: {
   return { drop, percent, endVoltage: voltage - drop, rKm, xKm, sinPhi, limitPercent, pass: percent <= limitPercent, factor };
 }
 
+
+
+/** 低压电缆常用标准截面序列（mm²，GB/T 3956 第 1/2 种铜导体常用档位，铝导体基本一致）。 */
+export const AC_STANDARD_SECTIONS = [1.5, 2.5, 4, 6, 10, 16, 25, 35, 50, 70, 95, 120, 150, 185, 240, 300, 400, 500, 630];
+
+export interface AcSizeResult {
+  /** 达到允许压降所需的最小理论截面（mm²） */
+  required: number;
+  /** 在标准序列中向上取一档后的截面（mm²）；序列上限仍不满足时为 null */
+  selected: number | null;
+  /** 选用截面的实际压降（V）；无解时为 0 */
+  drop: number;
+  /** 选用截面的压降百分比；无解时为 0 */
+  percent: number;
+  /** 允许压降限值（V） */
+  limitVolts: number;
+  /** 允许压降限值（%） */
+  limitPercent: number;
+  /** 纯电抗分量单独造成的压降（V） */
+  reactiveDrop: number;
+  /** 选用截面的导体电阻（Ω/km）；无解时为 0 */
+  rKm: number;
+  /** 电抗分量本身已超过允许压降，加粗导体无法解决 */
+  reactiveLimited: boolean;
+  /** 回路系数 k：三相 √3、单相 2 */
+  factor: number;
+}
+
+/**
+ * 按允许压降反算最小导体截面（低压、集中负载）。
+ *
+ * 由 ΔU = k·I·(R′·cosφ + X′·sinφ)·L/1000 反解，其中 R′ = ρ·1000/A：
+ *   电阻分量允许值 = ΔU_limit − 电抗分量
+ *   A_required = k·I·ρ·cosφ·L / 电阻分量允许值
+ *
+ * 边界与 acCableDrop 一致，另有两条与反算有关的说明：
+ * - 电抗分量 k·I·X′·sinφ·L/1000 与截面无关。若它本身已超过允许压降，
+ *   无论截面加到多大都无解（reactiveLimited），只能降低电流、缩短线路或提高电压；
+ * - 反算只保证压降达标，**不保证载流量与保护配合**：选出的截面仍须按
+ *   IEC 60364-5-52 校验持续载流量、按短路电流校验热稳定与保护整定。
+ */
+export function acCableSize(p: {
+  system: AcSystem; voltage: string; current: string; length: string;
+  rho: string; pf: string; x: string; limit: string;
+}): AcSizeResult {
+  const voltage = parsePositive(p.voltage, '线电压');
+  const current = parsePositive(p.current, '负载电流', true);
+  const length = parsePositive(p.length, '单程线长');
+  const rho = parsePositive(p.rho, '电阻率');
+  const pf = parsePositive(p.pf, '功率因数');
+  const xKm = parsePositive(p.x, '单位电抗', true);
+  const limitPercent = parsePositive(p.limit, '允许压降');
+  if (voltage > 1000) throw new Error('线电压超过 1000 V，本工具只适用于低压系统。');
+  if (length > 100000) throw new Error('单程线长超过 100 km，请确认单位是否为 m。');
+  if (pf > 1) throw new Error('功率因数必须在 0 到 1 之间。');
+  if (xKm > 0.5) throw new Error('单位电抗应在 0–0.5 Ω/km 之间，低压电缆常用 0.08。');
+  if (limitPercent > 100) throw new Error('允许压降不能超过 100%。');
+  const sinPhi = Math.sqrt(Math.max(0, 1 - pf * pf));
+  const factor = p.system === 'ac3' ? Math.sqrt(3) : 2;
+  const limitVolts = (voltage * limitPercent) / 100;
+  if (limitVolts <= 0) throw new Error('允许压降为 0，无法反算截面。');
+  const reactiveDrop = factor * current * (xKm * sinPhi) * (length / 1000);
+  const target = limitVolts - reactiveDrop;
+  if (target <= 0) {
+    return {
+      required: Infinity, selected: null, drop: 0, percent: 0,
+      limitVolts, limitPercent, reactiveDrop, rKm: 0, reactiveLimited: true, factor,
+    };
+  }
+  const required = current > 0 ? (factor * current * rho * pf * length) / target : 0;
+  if (!Number.isFinite(required)) throw new Error('计算结果溢出，请检查输入范围。');
+  // 向上取一档：所需截面小于最小档位时按最小档位给值，便于直接下单
+  const selected: number | null = AC_STANDARD_SECTIONS.find((s) => s >= required) ?? null;
+  if (selected === null) {
+    return {
+      required, selected: null, drop: 0, percent: 0,
+      limitVolts, limitPercent, reactiveDrop, rKm: 0, reactiveLimited: false, factor,
+    };
+  }
+  const rKm = (rho * 1000) / selected;
+  const drop = factor * current * (rKm * pf + xKm * sinPhi) * (length / 1000);
+  const percent = (drop / voltage) * 100;
+  if (!Number.isFinite(drop) || !Number.isFinite(percent)) throw new Error('计算结果溢出，请检查输入范围。');
+  return { required, selected, drop, percent, limitVolts, limitPercent, reactiveDrop, rKm, reactiveLimited: false, factor };
+}

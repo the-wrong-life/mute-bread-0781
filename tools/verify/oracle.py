@@ -133,6 +133,39 @@ def ac_drop(system, voltage, current, length, area, rho, pf, x_km, limit):
             'limitPercent': limit, 'pass': percent <= limit, 'factor': factor}
 
 
+SECTIONS_MM2 = [1.5, 2.5, 4.0, 6.0, 10.0, 16.0, 25.0, 35.0, 50.0, 70.0,
+                95.0, 120.0, 150.0, 185.0, 240.0, 300.0, 400.0, 500.0, 630.0]
+
+
+def ac_size(system, voltage, current, length, rho, pf, x_km, limit):
+    """按允许压降反算截面：先把与截面无关的电抗分量从预算里扣掉，再反解 A。
+
+    与实现独立的推导：电阻分量压降 = k·I·(ρ·1000/A)·cosφ·(L/1000)
+    = k·I·ρ·cosφ·L/A，故 A = k·I·ρ·cosφ·L / 剩余预算。
+    """
+    sin_phi = math.sqrt(max(0.0, 1.0 - pf * pf))
+    factor = math.sqrt(3.0) if system == 'ac3' else 2.0
+    limit_volts = voltage * limit / 100.0
+    reactive = factor * current * x_km * sin_phi * (length / 1000.0)
+    budget = limit_volts - reactive
+    if budget <= 0.0:
+        raise ValueError('电抗分量已单独超过允许压降，无解')
+    required = 0.0 if current == 0.0 else factor * current * rho * pf * length / budget
+    chosen = None
+    for s in SECTIONS_MM2:
+        if s >= required:
+            chosen = s
+            break
+    if chosen is None:
+        raise ValueError('所需截面超出常用序列上限')
+    r_km = rho * 1000.0 / chosen
+    drop = factor * current * (r_km * pf + x_km * sin_phi) * (length / 1000.0)
+    return {'required': required, 'selected': chosen, 'drop': drop,
+            'percent': drop / voltage * 100.0, 'limitVolts': limit_volts,
+            'limitPercent': limit, 'reactiveDrop': reactive, 'rKm': r_km,
+            'reactiveLimited': False, 'factor': factor}
+
+
 def evaluate(case):
     a = case['args']
     tool = case['tool']
@@ -151,6 +184,8 @@ def evaluate(case):
         return cabinet(*(float(x) for x in a))
     if tool == 'acCableDrop':
         return ac_drop(a[0], *(float(x) for x in a[1:]))
+    if tool == 'acCableSize':
+        return ac_size(a[0], *(float(x) for x in a[1:]))
     raise ValueError('未知工具：' + tool)
 
 
