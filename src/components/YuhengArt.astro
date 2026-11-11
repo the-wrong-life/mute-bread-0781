@@ -54,9 +54,13 @@ const {
     if (!img || !btn || !staticSrc || !animSrc) continue;
 
     const reduce = window.matchMedia('(prefers-reduced-motion: reduce)');
-    const conn = (navigator as unknown as { connection?: { saveData?: boolean; effectiveType?: string } }).connection;
+    const conn = (navigator as unknown as { connection?: { saveData?: boolean; effectiveType?: string; downlink?: number } }).connection;
     // 动画素材约 528 KiB（20 帧带接触阴影），1.6 Mbps 的 3G 也要 3 秒以上，按"省流量"处理不自动播放
     const lightNet = conn?.saveData === true || /(^|-)2g$|(^|-)3g$/.test(conn?.effectiveType || '');
+    // 原生实测：ESA 边缘到客户端约 40 KB/s 时，396 KB 动图要 10 s 以上才换得上来，
+    // 因此把"下行 < 2 Mbps"也视为弱网，只留静态图，等用户主动点"播放动作"。
+    const slowLink = typeof conn?.downlink === 'number' && conn.downlink < 1;
+    const weakNet = lightNet || slowLink;
     let stored = (() => {
       try { return window.localStorage.getItem('yuheng-motion'); } catch { return null; }
     })();
@@ -80,15 +84,17 @@ const {
       fig.dataset.anim = 'on';
     };
 
-    const allowed = () => !reduce.matches && !lightNet && stored !== 'paused';
+    const allowed = () => !reduce.matches && !weakNet && stored !== 'paused';
 
     // 上次手动暂停过：直接以静态态呈现，按钮文案与状态必须一致，不能只留默认文案
     if (stored === 'paused') showStatic();
+    // 弱网/省流量时不自动播放，也要把按钮文案同步成"播放动作"
+    else if (weakNet || reduce.matches) showStatic();
 
     // 动画素材约 448 KB：在窄屏与弱网下不自动播放，避免把 LCP 拖到 4 秒以上（本机实测 390 视口 1.6 Mbps 下 LCP 7.6 s）。
     // 宽屏下立即开始取，让动画图尽早成为 LCP 候选，而不是等 idle 之后才发起请求。
     const wide = window.matchMedia('(min-width: 900px)');
-    if (!reduce.matches && !lightNet) {
+    if (!reduce.matches && !weakNet) {
       btn.hidden = false;
       if (wide.matches) {
         const pre = new Image();
