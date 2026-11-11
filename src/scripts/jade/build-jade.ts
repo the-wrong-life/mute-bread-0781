@@ -18,6 +18,16 @@ import {
   type SnakeTubeTargets,
 } from './pose';
 
+// URL 调参读在模块顶层：buildJade 内部多处要读（壳层纵向缩放、蛇环姿态、头部转角），
+// 而 qnum 是 const 箭头函数——若定义在使用点之后，会触发 TDZ（第 40 轮踩过：
+// shell.scale.y = qnum('ysh',1) 抛 ReferenceError，导致 /lab/ 的 jadeViewer 根本没挂载，
+// 导出脚本报 "jadeViewer missing"）。
+const qs = new URLSearchParams(typeof location === 'undefined' ? '' : location.search);
+const qnum = (k: string, d: number) => {
+  const n = Number(qs.get(k));
+  return qs.has(k) && Number.isFinite(n) ? n : d;
+};
+
 export interface JadeParts {
   root: THREE.Group;
   shell: THREE.Mesh;
@@ -182,6 +192,10 @@ export function buildJadeModel(options: { quality?: 'high' | 'low' } = {}): Jade
   shell.name = 'jade-shell';
   shell.castShadow = true;
   shell.renderOrder = 6;
+  // 第 40 轮：参考图主体是纵向"玉瓶"（高:宽约 1.2:1），正球永远读成西方天文仪。
+  // 但整组/整图纵向缩放会把金环、蛇环、底座一起拉成椭圆（第 39 轮 ys 与图像拉伸均已验证），
+  // 所以只缩放玉壳本身，环、珍珠、蛇保持正圆。?ysh= 单独调壳层，默认 1 不改变原状。
+  shell.scale.y = qnum('ysh', 1);
   root.add(shell);
 
   // 1a. 内层玉球（结构按参考图实测比例：内球直径约为外球 0.84，球心一颗亮珠）：
@@ -210,6 +224,7 @@ export function buildJadeModel(options: { quality?: 'high' | 'low' } = {}): Jade
     opalMat,
   );
   opal.name = 'inner-globe';
+  opal.scale.y = qnum('yin', 1);
   opal.castShadow = true;
   opal.receiveShadow = true;
   root.add(opal);
@@ -467,11 +482,7 @@ const STRUT_TUBE = hi ? 0.028 : 0.030;
   // 参考图里的环是斜跨球面（近端压在球前面、远端绕到球后）。TILT 把整圈绕 X 轴抬起来。
   // 第 13 轮起支持 URL 调参（?tilt=&spin=&shift=&depth=），便于用同一台渲染机位
   // 快速扫描"环在前/环在后"的构图，而不必每次改源码重导 GLB。
-  const qs = new URLSearchParams(typeof location === 'undefined' ? '' : location.search);
-  const qnum = (k: string, d: number) => {
-    const n = Number(qs.get(k));
-    return qs.has(k) && Number.isFinite(n) ? n : d;
-  };
+  // qs / qnum 已上移到模块顶部（TDZ 原因见文件头注释），这里直接用。
   const SERPENT_TILT = qnum('tilt', 0.55);
   // §34：蛇环整体半径此前写死在 pose.ts 的 BASE_RADIUS=1.17。1.17R 在 tilt≈1（近水平环）时
   // 会离开球面变成"提梁/把手"（v-a/v-b/v-c 对照），参考图是贴着上半球盘绕。
