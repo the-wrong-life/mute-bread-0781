@@ -234,6 +234,16 @@
    }
   },
   {
+   "id": "b7",
+   "tool": "bendAllowance",
+   "expected": {
+    "allowance": 108.07078728348888,
+    "setback": 79.99999999999999,
+    "deduction": 51.92921271651109,
+    "flat": 0.0
+   }
+  },
+  {
    "id": "s1",
    "tool": "supplyCurrent",
    "expected": {

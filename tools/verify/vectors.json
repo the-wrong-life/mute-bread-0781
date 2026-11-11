@@ -313,6 +313,19 @@
    "note": "R=0（尖角模具近似）"
   },
   {
+   "id": "b7",
+   "tool": "bendAllowance",
+   "args": [
+    "20",
+    "60",
+    "90",
+    "0.44",
+    null,
+    null
+   ],
+   "note": "图解算例：T=20 R=60 θ=90 K=0.44（与 /docs/bend-allowance 截面图同参数）"
+  },
+  {
    "id": "s1",
    "tool": "supplyCurrent",
    "args": [
