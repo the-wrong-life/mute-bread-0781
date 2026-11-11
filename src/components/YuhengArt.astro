@@ -39,12 +39,6 @@ const {
 
 <script>
   // 静态图负责 LCP；动画素材在首屏稳定后按需换上，可暂停，尊重 prefers-reduced-motion 与省流量设置。
-  const IDLE = (cb: () => void) => {
-    const ric = (window as unknown as { requestIdleCallback?: (cb: () => void, o?: { timeout: number }) => number }).requestIdleCallback;
-    if (ric) ric(cb, { timeout: 2500 });
-    else window.setTimeout(cb, 1200);
-  };
-
   const figures = Array.from(document.querySelectorAll<HTMLElement>('[data-yuheng]'));
   for (const fig of figures) {
     const img = fig.querySelector<HTMLImageElement>('.yuheng-art');

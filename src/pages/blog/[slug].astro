@@ -1,6 +1,10 @@
 ---
 import NovaShell from '../../layouts/NovaShell.astro';
 import { posts } from '../../data/posts';
+import type { Post } from '../../data/posts';
+interface Props {
+  post: Post;
+}
 export function getStaticPaths() {
   return posts.map((post) => ({ params: { slug: post.slug }, props: { post } }));
 }

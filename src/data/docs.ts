@@ -1,6 +1,8 @@
 export interface DocSection {
   heading: string;
   paragraphs: string[];
+  /** 可选 MathML 标记，浏览器原生排版，无 JS 也能显示。 */
+  math?: string;
   list?: string[];
   table?: { headers: string[]; rows: string[][] };
   code?: string;
@@ -21,7 +23,7 @@ export const docs: Doc[] = [
     summary: '区分量纲、温度与温差，记录换算因子来源，并保留有效数字。',
     sections: [
       { heading: '先确认量与单位', paragraphs: ['换算改变数值和单位，不改变同一物理量。先写出原始数值、单位、待转换单位及条件；量纲不一致时不能直接换算。带表压、绝压、额定工况等条件的数值，不能只靠比例因子完成解释。', '下表用于常见单位之间的数值换算。需要法律计量或合同结算时，应核对适用版本与约定。'], table: { headers: ['原单位', '换算', '说明'], rows: [['1 mm', '0.001 m', '长度'], ['1 kPa', '1 000 Pa', '压力'], ['1 bar', '100 000 Pa', '压力；注意绝压或表压'], ['1 kWh', '3.6 MJ', '能量，不是功率'], ['1 英制机械马力', '约 745.7 W', '不同马力定义不可混用']] } },
-      { heading: '温度与温差不能混算', paragraphs: ['温标转换含偏移：摄氏温度 t 与开尔文温度 T 的关系为 T/K = t/°C + 273.15。温差没有这个偏移：1 °C 的温差等于 1 K 的温差。', '例如 20 °C 对应 293.15 K；温度从 20 °C 升至 30 °C，温差为 10 °C，也为 10 K，不能给温差再加 273.15。'] },
+      { heading: '温度与温差不能混算', math: '<math display="block"><mfrac><mi>T</mi><mi>K</mi></mfrac><mo>=</mo><mfrac><mi>t</mi><mtext>&#x00B0;C</mtext></mfrac><mo>+</mo><mn>273.15</mn></math>', paragraphs: ['温标转换含偏移：摄氏温度 t 与开尔文温度 T 的关系为 T/K = t/°C + 273.15。温差没有这个偏移：1 °C 的温差等于 1 K 的温差。', '例如 20 °C 对应 293.15 K；温度从 20 °C 升至 30 °C，温差为 10 °C，也为 10 K，不能给温差再加 273.15。'] },
       { heading: '有效数字与舍入', paragraphs: ['换算过程中保留足够的中间位数，最后再按测量精度和用途舍入。换算因子的精确性不意味着原始测量值有更多有效数字；给定 2.5 kW（两位有效数字），换算成 2 500 W 后仍不能据此声称测量精确到 1 W。', '正式报告记录原值、因子、计算过程、最终位数及舍入规则；对安全限值和合规判定按相关标准或合同的规则处理。'] },
       { heading: '典型误用与算例', paragraphs: ['马力不是单一定义：机械马力、英制电马力及公制马力的定义不同；铭牌只写 hp 时先核对厂家定义及工况，不能默认互换。表压与绝压、交流功率的功率因数、体积流量的基准温压也应先明确。', '例：5.0 kPa × 1 000 Pa/kPa = 5 000 Pa；原始值为两位有效数字，若需避免歧义，可写作 5.0 × 10³ Pa。'] },
     ], sources: [{ label: '国际单位制手册（SI Brochure，BIPM）', note: 'https://www.bipm.org/en/publications/si-brochure' }, { label: 'NIST SP 811：SI 使用指南', note: 'https://www.nist.gov/pml/special-publication-811' }], related: [{ label: '查看工程工具', href: '/tools' }] },
@@ -39,7 +41,7 @@ export const docs: Doc[] = [
     summary: '用六段式记录输入、公式、单位、假设、结果及复核；附直流线路压降示例。',
     sections: [
       { heading: '六段式结构', paragraphs: ['计算记录的目标不是只留下答案，而是让另一位工程人员能复算并判断边界。'], list: ['输入：记录已知值、来源、日期与精度。', '公式：写出公式及符号定义，标注适用范围。', '单位：统一单位并说明换算。', '假设：列出忽略项、边界条件及数据来源。', '结果：给出结果与合理舍入，不伪造测量精度。', '复核与失败条件：独立复算，明确哪些条件变化时结论失效。'] },
-      { heading: '算例：24 V 直流线路压降', paragraphs: ['假设 24 V 直流负载电流 I = 5 A，电源到负载单程长度 L = 10 m，导体截面积 A = 2.5 mm²，铜电阻率 ρ ≈ 0.0175 Ω·mm²/m。使用 U = 2 × I × L × ρ / A；系数 2 表示去程和回程的相同导体长度。', '代入得 U = 2 × 5 × 10 × 0.0175 / 2.5 = 0.70 V，约为 24 V 的 2.9%；按上述假设，负载端电压约为 23.3 V。此值是示例计算，不代表实际设备测量。'], code: `U = 2 × I × L × ρ / A
+      { heading: '算例：24 V 直流线路压降', math: '<math display="block"><mi>U</mi><mo>=</mo><mfrac><mrow><mn>2</mn><mo>&#x00B7;</mo><mi>I</mi><mo>&#x00B7;</mo><mi>L</mi><mo>&#x00B7;</mo><mi>&#x03C1;</mi></mrow><mi>A</mi></mfrac></math>', paragraphs: ['假设 24 V 直流负载电流 I = 5 A，电源到负载单程长度 L = 10 m，导体截面积 A = 2.5 mm²，铜电阻率 ρ ≈ 0.0175 Ω·mm²/m。使用 U = 2 × I × L × ρ / A；系数 2 表示去程和回程的相同导体长度。', '代入得 U = 2 × 5 × 10 × 0.0175 / 2.5 = 0.70 V，约为 24 V 的 2.9%；按上述假设，负载端电压约为 23.3 V。此值是示例计算，不代表实际设备测量。'], code: `U = 2 × I × L × ρ / A
   = 2 × 5 A × 10 m × 0.0175 Ω·mm²/m ÷ 2.5 mm²
   = 0.70 V` },
       { heading: '适用条件与复核', paragraphs: ['仅适用于直流两线、去回导体相同的简化电阻模型；忽略导体温升、接头电阻及电源内阻。单相交流同样有往返路径，但该例为直流，不能将其直接当作交流线路阻抗计算；交流还需结合电抗及功率因数等条件。', '校验实际电流、线路长度、接头、导体规格、温度和设备最低工作电压。电缆载流量、保护器件、短路与敷设条件应按适用规范另行校核；计算不替代专业设计、现场测量和验收。'] },
@@ -59,7 +61,7 @@ export const docs: Doc[] = [
     slug: 'ups-runtime', title: 'UPS 备用时间的假设边界与误差来源', kind: '计算记录', updated: '2026-11-11',
     summary: '把 t = 容量 × 电压 × 放电深度 × 效率 ÷ 负载 拆成五个假设，逐条说明什么时候会明显偏差。',
     sections: [
-      { heading: '先明确公式在算什么', paragraphs: ['工程工具里的 UPS 备用时间采用简化式 t = C × U × DoD × η ÷ P，其中 C 为额定容量（Ah）、U 为电池组标称电压（V）、DoD 为允许放电深度（0–1）、η 为从电池到负载的综合效率、P 为负载有功功率（W）。它算的是理想恒定功率放电到截止电压的时间，不是厂家数据表上的某一条曲线读数。', '单位必须先统一：Ah 与 V 相乘得到 Wh，再乘以系数再除以功率才得到小时。把 Ah 直接当 Wh 使用、或把 mAh 当成 Ah，是最常见的量级错误。'] },
+      { heading: '先明确公式在算什么', math: '<math display="block"><mi>t</mi><mo>=</mo><mfrac><mrow><mi>C</mi><mo>&#x00B7;</mo><mi>U</mi><mo>&#x00B7;</mo><mi>DoD</mi><mo>&#x00B7;</mo><mi>&#x03B7;</mi></mrow><mi>P</mi></mfrac></math>', paragraphs: ['工程工具里的 UPS 备用时间采用简化式 t = C × U × DoD × η ÷ P，其中 C 为额定容量（Ah）、U 为电池组标称电压（V）、DoD 为允许放电深度（0–1）、η 为从电池到负载的综合效率、P 为负载有功功率（W）。它算的是理想恒定功率放电到截止电压的时间，不是厂家数据表上的某一条曲线读数。', '单位必须先统一：Ah 与 V 相乘得到 Wh，再乘以系数再除以功率才得到小时。把 Ah 直接当 Wh 使用、或把 mAh 当成 Ah，是最常见的量级错误。'] },
       { heading: '假设一：标称容量就是可用容量', paragraphs: ['电池铭牌上的容量通常是特定倍率、特定温度、放电到指定截止电压条件下的值。放电电流越大、温度越低，可用容量越小；铅酸电池的可用容量还会随循环次数下降。工程估算时若没有厂家曲线，至少应按工况做一次折减，并在记录里写明折减值的来源。', '这类折减不能靠工具自动完成——工具只做算术，不判断电池状态。'] },
       { heading: '假设二：放电深度按线性比例折算', paragraphs: ['把放电深度当作线性比例只在粗略估算时成立。深度放电会缩短循环寿命，实际投运常按 50%–80% 限用；不同化学体系（铅酸、锂电）对深度放电的容忍度与电压曲线差异很大，不能套用同一条经验值。', '需要精确到分钟级时，应使用厂家提供的恒功率放电表逐点插值，而不是继续用线性折算。'] },
       { heading: '假设三：效率是一个常数', paragraphs: ['综合效率包含逆变器效率、线路与接头损耗、电池内阻损耗等。逆变器在轻载与满载时效率不同，通常在额定功率的 40%–70% 区间较高，空载还有自耗。把 0.9 当成全工况常数值，会在轻载时高估备用时间。', '记录时应写明这个数字取自哪里：厂家效率曲线、现场实测，还是工程经验值。'] },
@@ -89,7 +91,7 @@ export const docs: Doc[] = [
     slug: 'bend-allowance', title: '钣金折弯展开：K 系数与扣除量的来源', kind: '计算记录', updated: '2026-11-11',
     summary: '中性层弧长、外侧退让与折弯扣除三者的关系，以及 K 系数为什么不能照抄一个数字。',
     sections: [
-      { heading: '三个量，一个几何关系', paragraphs: ['折弯时材料内侧受压、外侧受拉，中间存在一层长度基本不变的纤维，称为中性层。中性层弧长 BA = θ(rad) × (R + K·T)：θ 为折弯角、R 为内侧半径、T 为料厚、K 为中性层位置系数（0–0.5，描述中性层偏向内侧的程度）。', '外侧退让 OSSB = (R + T)·tan(θ/2)，它描述从虚拟尖角到折弯圆角切点的水平距离。两侧各有一个 OSSB，所以折弯扣除 BD = 2·OSSB − BA。展开长度 = A + B − BD，其中 A、B 是到虚拟尖角的边长。', '三个量必须自洽：直接量到圆角切点的边长不能代入这个式子，否则会重复扣除。'] },
+      { heading: '三个量，一个几何关系', math: '<math display="block"><mi>BA</mi><mo>=</mo><mfrac><mi>&#x03C0;</mi><mn>180</mn></mfrac><mo>&#x00B7;</mo><mi>&#x03B8;</mi><mo>&#x00B7;</mo><mo>(</mo><mi>R</mi><mo>+</mo><mi>K</mi><mo>&#x00B7;</mo><mi>T</mi><mo>)</mo></math><math display="block"><mi>OSSB</mi><mo>=</mo><mo>(</mo><mi>R</mi><mo>+</mo><mi>T</mi><mo>)</mo><mo>&#x00B7;</mo><mi>tan</mi><mo>&#x2061;</mo><mfrac><mi>&#x03B8;</mi><mn>2</mn></mfrac></math>', paragraphs: ['折弯时材料内侧受压、外侧受拉，中间存在一层长度基本不变的纤维，称为中性层。中性层弧长 BA = θ(rad) × (R + K·T)：θ 为折弯角、R 为内侧半径、T 为料厚、K 为中性层位置系数（0–0.5，描述中性层偏向内侧的程度）。', '外侧退让 OSSB = (R + T)·tan(θ/2)，它描述从虚拟尖角到折弯圆角切点的水平距离。两侧各有一个 OSSB，所以折弯扣除 BD = 2·OSSB − BA。展开长度 = A + B − BD，其中 A、B 是到虚拟尖角的边长。', '三个量必须自洽：直接量到圆角切点的边长不能代入这个式子，否则会重复扣除。'] },
       { heading: 'K 系数为什么不能照抄', paragraphs: ['K 取决于材料牌号与状态、R/T 比、折弯方式（自由折弯或压底）、模具开口宽度与润滑条件。同一个 K 值在 1 mm 料与 3 mm 料上给出的展开长度差异可达零点几毫米，对精密件已经超差。', '常见工程区间是 0.33–0.5：薄料、大 R/T 比偏小，厚料、压底折弯偏大。这个区间只能作为初值，实际投产应以试折测量或设备厂商提供的展开系数表为准。'] },
       { heading: '算例', paragraphs: ['T = 2 mm、R = 2 mm、θ = 90°、K = 0.44：BA = 1.5708 × (2 + 0.88) = 4.5239 mm；OSSB = 4 × tan45° = 4 mm；BD = 8 − 4.5239 = 3.4761 mm。若两边到虚拟尖角分别为 40 mm 与 30 mm，展开长度 = 70 − 3.4761 = 66.5239 mm。', '对照另一组：T = 1.5 mm、R = 1 mm、θ = 120°、K = 0.4：BA = 2.0944 × (1 + 0.6) = 3.3510 mm；OSSB = 2.5 × tan60° = 4.3301 mm；BD = 8.6603 − 3.3510 = 5.3092 mm。'] },
       { heading: '边界与常见错误', paragraphs: ['角度接近 180° 时 tan(θ/2) 发散，外侧退让没有工程意义，工具会拒绝计算；输入的是折弯角而不是余角，两者互补，混用会让扣除量差一倍以上。', '单边填写边 A 或边 B 时无法确定展开长度，工具要求两边同时填写或同时留空，只输出 BA 与 BD。', '扣除量大于两边之和会得到负的展开长度，说明输入的角度、半径或边长不成立，应回到图纸核对而不是强行使用结果。'] },
@@ -117,7 +119,7 @@ export const docs: Doc[] = [
     summary: '把 P/kVA、单相/三相与线电流的关系拆开算清，并说明为什么算出的电流不能直接当作选线结果。',
     sections: [
       { heading: '先分清三个功率', paragraphs: ['有功功率 P（kW）是做功的部分；视在功率 S（kVA）是电压与电流的乘积；无功功率 Q（kvar）在感性负载中来回交换、不做功但占用导线容量。三者满足 S² = P² + Q²，工程上更常用功率因数 cosφ = P/S 与 sinφ = Q/S 表达。', '铭牌上标 kVA 的设备（变压器、UPS、发电机）按视在功率限制出力；标 kW 的设备（加热器、电机输出轴功率）按有功给值。把两者混用会让电流偏小或偏大。'] },
-      { heading: '单相与三相的电流公式', paragraphs: ['单相：I = S / U，U 为相电压。三相：I = S / (√3 × U)，U 为线电压，且假设三相负载基本对称。同一台 15 kVA 设备，接入 380 V 三相时的线电流约为 22.8 A；拆成三只单相 220 V 负载，每相电流约 22.7 A，此时总电流要看各相分配，不能用一个数字概括。'], code: '三相：I = S × 1000 ÷ (√3 × U)   （U 为线电压）\n单相：I = S × 1000 ÷ U\n例：15 kW、cosφ = 0.85、380 V 三相\n    S = 15 ÷ 0.85 = 17.647 kVA\n    I = 17647 ÷ (1.7320508 × 380) = 26.81 A' },
+      { heading: '单相与三相的电流公式', math: '<math display="block"><mi>I</mi><mo>=</mo><mfrac><mi>S</mi><mrow><msqrt><mn>3</mn></msqrt><mo>&#x00B7;</mo><mi>U</mi></mrow></mfrac></math>', paragraphs: ['单相：I = S / U，U 为相电压。三相：I = S / (√3 × U)，U 为线电压，且假设三相负载基本对称。同一台 15 kVA 设备，接入 380 V 三相时的线电流约为 22.8 A；拆成三只单相 220 V 负载，每相电流约 22.7 A，此时总电流要看各相分配，不能用一个数字概括。'], code: '三相：I = S × 1000 ÷ (√3 × U)   （U 为线电压）\n单相：I = S × 1000 ÷ U\n例：15 kW、cosφ = 0.85、380 V 三相\n    S = 15 ÷ 0.85 = 17.647 kVA\n    I = 17647 ÷ (1.7320508 × 380) = 26.81 A' },
       { heading: '功率因数如何影响结果', paragraphs: ['cosφ 越低，同样有功功率对应的视在功率与电流越大。cosφ = 0.85 时，15 kW 对应 17.65 kVA；cosφ = 0.70 时变成 21.43 kVA，电流从 26.8 A 升到 32.6 A。这就是低压配电要做无功补偿的直接原因：不只是为了"省电费"，而是导线与变压器容量被无功占掉。', '功率因数的取值要有来源：电机铭牌、变频器输入侧实测、或按同类负载的现场记录。直接套 0.85 只能作为前期估算。'] },
       { heading: '算出的电流不是选线结果', paragraphs: ['本工具算的是负载稳态电流。实际选线还要叠加：敷设方式（桥架、穿管、埋地）、环境温度修正、成组敷设降容、谐波导致的集肤与中性线电流、启动冲击与短时过载、以及保护器件的整定值与分断能力。'], list: ['载流量查表：按导体材质、绝缘类型、敷设方式与芯数取基准值。', '修正系数：环境温度、成组根数、桥架层数逐项相乘。', '保护配合：断路器额定值不大于导体载流量，且满足启动与选择性要求。', '校验：末端电压降、短路热稳定、接地故障保护动作电流。'] },
       { heading: '常见错误', paragraphs: ['把三相电流乘以 3 当作总电流、把线电流当相电流用、把 kVA 当 kW 直接代入、用 220 V 算 380 V 系统、以及忽略功率因数把 P 直接当 S——这几类错误在估算里都会让结果偏差 15% 以上。', '另一个常见问题是不区分"设备额定电流"与"实际运行电流"：变频泵在低频运行时电流远低于铭牌值，但选线要按可能的最大工况，不能按最省的一个点。'] },
@@ -147,12 +149,12 @@ export const docs: Doc[] = [
     sections: [
       { heading: '收录不是“提交一次就完事”', paragraphs: ['静态站没有后台，但同样会产生重复 URL：带不带结尾斜杠、带不带 www、带不带查询参数，都可能被当成不同页面。canonical 的作用是把这些变体收敛到一个规范地址；站点地图的作用是告诉爬虫有哪些页面、哪些最近改过。两者都不是排名手段，写错反而拉低收录质量。'] },
       { heading: 'canonical 由 site 配置派生', paragraphs: ['在 astro.config.mjs 里把 site 设为 https://www.token-xxo.cn（含 www，与线上主机名一致），布局里用当前路径拼出绝对地址。这样同一个布局同时服务首页、文档列表、文档详情与项目详情时，不会出现“所有页面 canonical 都指向首页”这种常见错误。', '同时补上 og:type、og:site_name、og:locale 与 twitter:card：分享卡片依赖这些字段，缺了会退化成只有标题。'], code: "const canonical = new URL(Astro.url.pathname, Astro.site ?? 'https://www.token-xxo.cn').href;" },
-      { heading: '站点地图在构建期生成', paragraphs: ['新增静态端点 src/pages/sitemap.xml.ts，直接从 src/data/docs.ts、src/data/projects.ts 与 src/data/posts.ts 展开 URL 清单：9 条固定路由、12 篇文档、4 个项目、5 篇札记，共 30 条；文档、项目与札记的 lastmod 取记录里的 updated 字段。', '关键是“同一数据源”：页面路由与站点地图都由同一份数据展开，新增文档后不需要维护第二份清单，也不会出现地图指向不存在页面。'], code: "for (const doc of docs) entries.push({ path: `/docs/${doc.slug}/`, lastmod: doc.updated });\nfor (const post of posts) entries.push({ path: `/blog/${post.slug}/`, lastmod: post.updated });" },
+      { heading: '站点地图在构建期生成', paragraphs: ['新增静态端点 src/pages/sitemap.xml.ts，直接从 src/data/docs.ts、src/data/projects.ts 与 src/data/posts.ts 展开 URL 清单：9 条固定路由、12 篇文档、4 个项目、6 篇札记，共 31 条；文档、项目与札记的 lastmod 取记录里的 updated 字段。', '关键是“同一数据源”：页面路由与站点地图都由同一份数据展开，新增文档后不需要维护第二份清单，也不会出现地图指向不存在页面。'], code: "for (const doc of docs) entries.push({ path: `/docs/${doc.slug}/`, lastmod: doc.updated });\nfor (const post of posts) entries.push({ path: `/blog/${post.slug}/`, lastmod: post.updated });" },
       { heading: 'robots.txt 只做两件事', paragraphs: ['public/robots.txt 里只有 Allow: / 与 Sitemap: https://www.token-xxo.cn/sitemap.xml。没有 Disallow 规则，因为本站没有需要隐藏的路径；也没写 Crawl-delay——那是爬虫侧的自愿约定，写了不保证被遵守。'] },
       { heading: '怎么验证', paragraphs: ['构建后解析 dist/sitemap.xml，确认 loc 数量与路由数一致；用浏览器打开页面读 link[rel="canonical"] 与 meta[property="og:url"]，确认是绝对地址且逐页不同；用原始请求取 /sitemap.xml 与 /robots.txt，确认返回 200。这些检查都在发布前的门禁里，不是发布后再看。'] },
       { heading: '边界', paragraphs: ['没有向搜索引擎后台提交站点地图，收录速度不由本站决定；canonical 不能替代 301 重定向，也不解决 HTTP 与 HTTPS 并存的问题（那该由平台侧强制跳转）；站点地图的 lastmod 是“记录整理日期”，表达内容新鲜度而非部署时间。'] }
     ],
-    sources: [{ label: '实现位置', note: '站点配置 astro.config.mjs；布局 src/layouts/NovaShell.astro；站点地图端点 src/pages/sitemap.xml.ts；public/robots.txt。' }, { label: '验证记录', note: '构建产物解析出 30 条 URL；首页、文档列表、文档详情、项目详情与札记详情的 canonical 与 og:url 均为绝对地址且逐页不同；/sitemap.xml 与 /robots.txt 均返回 200。' }],
+    sources: [{ label: '实现位置', note: '站点配置 astro.config.mjs；布局 src/layouts/NovaShell.astro；站点地图端点 src/pages/sitemap.xml.ts；public/robots.txt。' }, { label: '验证记录', note: '构建产物解析出 31 条 URL；首页、文档列表、文档详情、项目详情与札记详情的 canonical 与 og:url 均为绝对地址且逐页不同；/sitemap.xml 与 /robots.txt 均返回 200。' }],
     related: [{ label: '静态站点部署实践', href: '/docs/static-site-deployment' }, { label: '性能指标的现场读数口径', href: '/docs/perf-field-readings' }]
   },
   {

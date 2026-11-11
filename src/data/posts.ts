@@ -305,6 +305,63 @@ export const posts: Post[] = [
       { label: '布局组件', note: 'src/layouts/NovaShell.astro' },
       { label: '部署说明', note: '/docs/seo-baseline' }
     ]
+  },
+  {
+    slug: 'mathml-without-js',
+    title: '公式不引脚本：五段文档改用原生 MathML',
+    date: '2026-11-11',
+    updated: '2026-11-11',
+    category: '工程验证',
+    summary: '折弯、压降、电流、温标与 UPS 备用时间的公式改成浏览器原生 MathML：不引第三方运行时，禁用 JavaScript 仍能排版。',
+    tags: ['MathML', '文档', '渐进增强', '体积'],
+    status: '已实测：Chrome 在 1440 与 390 两视口下公式正常排版、页面无横向溢出、无控制台报错；禁用 JavaScript 后公式仍显示。Safari、Firefox 与读屏器朗读未实测。',
+    sections: [
+      {
+        heading: '先问需不需要第三方公式库',
+        paragraphs: [
+          '给文档加公式，常见做法是引 KaTeX 或 MathJax：构建期渲染或运行时排版，效果稳定，但要额外下载运行时代码与数学字体，还要在无 JavaScript 时准备回退。',
+          '本站当前的公式只有五处、结构简单（分式、根式、上下标、函数名），属于浏览器原生 MathML 能直接表达的范围。多引一个第三方运行时的收益，不足以抵消它的加载成本与升级维护面。'
+        ]
+      },
+      {
+        heading: '实现只有两处改动',
+        paragraphs: [
+          '第一处是文档数据类型加一个可选字段，第二处是详情页把它渲染出来。公式标记直接写在数据文件里，构建后就是静态 HTML，没有客户端解析步骤。',
+          '注入的是仓库内的固定字符串，不接受任何用户输入，因此不构成 XSS 面；容器带 overflow-x:auto，窄屏下公式可以单独横向滚动而不撑破整页。'
+        ],
+        code: 'interface DocSection {\n  heading: string;\n  paragraphs: string[];\n  math?: string;   // MathML 标记\n  /* ... */\n}\n\n// src/pages/docs/[slug].astro\n{section.math && <div class="math" set:html={section.math} />}'
+      },
+      {
+        heading: '实测读数',
+        paragraphs: [
+          '五篇文档各加一条到两条公式，逐页在 Chrome 下检查：整页横向溢出为 0，公式容器自身也未溢出，无页面异常与控制台错误。',
+          '体积上，卷绕后的标记很小：bend-allowance 页面 HTML 共 14,756 字节，其中两条公式的 MathML 合计 412 字节。这个量级不需要为首屏缓存做任何额外设计。'
+        ],
+        table: {
+          headers: ['页面', '公式', '渲染高度', '整页横向溢出'],
+          rows: [
+            ['/docs/calculation-record/', 'U = 2·I·L·ρ / A', '约 33 px', '0'],
+            ['/docs/supply-current/', 'I = S / (√3·U)', '约 37 px', '0'],
+            ['/docs/bend-allowance/', 'BA 与 OSSB 两式', '约 31 / 41 px', '0'],
+            ['/docs/unit-conversion/', 'T/K = t/°C + 273.15', '约 45 px', '0'],
+            ['/docs/ups-runtime/', 't = C·U·DoD·η / P', '约 33 px', '0']
+          ]
+        }
+      },
+      {
+        heading: '代价与还没有验证的部分',
+        paragraphs: [
+          '代价是观感由浏览器决定：字形来自各家自带的数学字体，行距与根号的粗细在 Chrome 与 Firefox 下不完全一致。站点没有使用自定义数学字体，因此不追求像素级统一。',
+          '复杂排版能力有限：多行对齐、公式编号、大括号分组需要手工写标记，超过这个复杂度就该换构建期渲染方案。本轮只用到了分式与根式。',
+          '未验证的部分写清楚：Safari 与 Firefox 未实测，读屏器对 MathML 的朗读效果未验证。这两项留在检查点的待验证清单里，不作为已完成的结论。'
+        ]
+      }
+    ],
+    sources: [
+      { label: '实现位置', note: 'src/data/docs.ts 的 math 字段与 src/pages/docs/[slug].astro 的渲染分支' },
+      { label: '规范', note: 'https://www.w3.org/TR/mathml-core/' },
+      { label: '浏览器支持参考', note: 'https://developer.mozilla.org/docs/Web/MathML' }
+    ]
   }
 ];
 
