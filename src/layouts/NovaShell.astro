@@ -26,6 +26,10 @@ const links = [
     <meta property="og:url" content={canonical} />
     <meta name="twitter:card" content="summary" />
     <title>{title} · DIY 工程实验室</title>
+    <!-- 托管平台（阿里云 ESA Pages 免费版）不应用仓库里的 public/_headers，
+         这些头部只能在 HTML 里表达：referrer 与 CSP 用 meta，HSTS/X-Frame-Options 仍需控制台设置。 -->
+    <meta name="referrer" content="strict-origin-when-cross-origin" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'" />
   </head>
   <body>
     <a class="skip-link" href="#main-content">跳到主要内容</a>
