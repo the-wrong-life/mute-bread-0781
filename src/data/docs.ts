@@ -59,7 +59,28 @@ export const docs: Doc[] = [
       { heading: '分支与部署关系', paragraphs: ['将待发布改动提交到约定分支，确认生产环境绑定的分支、构建命令、运行时 Node 版本及部署目标；本仓库 esa.jsonc 未声明生产分支，平台实际绑定情况待核实。', '静态构建适用于无需运行时服务器的页面。新增加动态接口或私密数据前，重新评估平台能力、服务端边界和访问控制；不要把凭证放进静态文件。'] },
       { heading: '发布前检查', paragraphs: ['在隔离的验证环境检查，不把构建通过等同于线上验收。'], list: ['确认锁文件、Node 版本、构建命令与目标分支。', '运行检查与构建，检查 dist 目录和资源路径。', '逐页验证链接、移动端、搜索、可访问性及三维降级。', '确认无密钥、未授权资料或待核实内容误作事实。', '保存本次提交标识、构建日志与平台部署版本。'] },
       { heading: '回滚与复核', paragraphs: ['发布前保留上一个已验证的生产提交及平台部署版本。发生问题时，按平台实际能力恢复上一版本，或由授权人员将已知良好的提交重新构建发布；具体操作与权限以平台设置为准。', '恢复后核对页面与静态资源可访问，并记录故障、回滚时间和验证结果。平台是否支持一键回滚及具体步骤待现场核实。'] },
-    ], sources: [{ label: '本仓库 package.json', note: '构建脚本：astro check && astro build。' }, { label: '本仓库 astro.config.mjs 与 esa.jsonc', note: '静态输出、assets 路径与 ./dist 配置；生产分支未在文件中指定。' }, { label: 'Astro 部署文档', note: 'https://docs.astro.build/en/guides/deploy/' }], related: [{ label: '查看项目', href: '/projects' }] },
+    ], sources: [{ label: '本仓库 package.json', note: '构建脚本：astro check && astro build。' }, { label: '本仓库 astro.config.mjs 与 esa.jsonc', note: '静态输出、assets 路径与 ./dist 配置；生产分支未在文件中指定。' }, { label: 'Astro 部署文档', note: 'https://docs.astro.build/en/guides/deploy/' }], related: [{ label: '查看项目', href: '/projects' }, { label: '回滚手册：先确认生产版本', href: '/docs/rollback-runbook' }] },
+  {
+    slug: 'rollback-runbook', title: '回滚手册：先确认生产版本，再选恢复路径', kind: '部署记录', updated: '2026-11-12',
+    summary: '把"出问题就回滚"拆成可执行步骤：核对当前生产版本、按故障类型选恢复点、两条恢复路径、恢复后核验，并明确哪些环节只是演练过、哪些还没验证。',
+    sections: [
+      { heading: '第一步不是回滚，是确认线上跑的是哪个提交', paragraphs: ['静态托管平台（本站使用阿里云 ESA Pages）在分支推送后自行构建发布，构建产物不会把提交哈希写进页面，所以"线上是哪个版本"不能靠文件时间或感觉判断。本项目用三组证据交叉确认：发布时记录的生产提交哈希与平台部署时间；首页及关键页面的可观测特征（某张资源的字节数、某个新路由是否存在）；站点地图与 canonical 是否已经包含本批新增的页面。', '三组证据一致才继续。若平台仍在灰度（推送后数十秒到数分钟可能新旧版本混跑），单次测量会误判，需要间隔复测两到三次并核对新特征是否稳定。'] },
+      { heading: '第二步：判断故障属于哪一类，恢复点并不相同', paragraphs: ['不同故障对应不同的最小恢复动作，先分类再动手，能避免把局部问题扩大到整站。下面按现象列出判断依据与对应的恢复点。'], list: ['构建失败、线上仍是上一版：不需要回滚，修正后重新推送即可。', '构建成功但页面报错、样式错乱：用上一个已验证的发布点恢复。', '单个页面或资源 404：先核对服务目录、路由与构建产物，确认不是本地预览进程指向了旧目录再动手。', '内容或计算口径错误：优先用反向提交精确撤回那一处改动，而不是整体回退。', '证书、域名、备案相关问题：属于平台与账号层面，代码回滚不解决，须由项目管理员在控制台处理。'] },
+      { heading: '路径一：在平台侧恢复到上一个已验证部署', paragraphs: ['ESA Pages 控制台保留历史部署记录，可以把某个历史版本重新发布，这是最直接的恢复方式，也不需要改写仓库历史。本项目没有取得该控制台的自动化调用能力，这一步需要项目管理员本人操作，具体入口、保留天数与是否支持指定版本重新发布，都属于待现场核实项，写在这里是为了说明它是首选路径，而不是由脚本代劳。'] },
+      { heading: '路径二：用反向提交或回滚点重建', paragraphs: ['没有控制台权限或需要留痕时，用仓库自身恢复。每次发布同时打两个标签：发布点与发布前回滚点，因此总能找到"上一稳定版本"对应的提交。精确撤回一处改动用反向提交；整批撤销用回滚点重建。', '强制推送用 --force-with-lease 而不是 -f：前者在远端已被别人改动时会拒绝执行，避免覆盖掉他人的提交。改写生产分支历史前，先确认没有其他人基于该分支工作。'], code: `# 1) 看生产分支最近提交与已有回滚点
+git log --oneline -5 origin/main
+git tag --list 'rollback-before-batch*'
+
+# 2) 精确撤回某一处改动（生成一条新提交，历史保留）
+git revert --no-edit <bad-sha>
+git push origin HEAD:main
+
+# 3) 或整批回退到发布前回滚点（会改写生产分支历史）
+git push --force-with-lease origin rollback-before-batch26:main` },
+      { heading: '恢复后必须核验的五项', paragraphs: ['恢复不等于结束。回滚后必须按同一套判据重新测量，确认线上确实回到了已知良好状态，而不是停在灰度中间。'], list: ['首页与本次涉及的关键路由返回 200，且页面特征回到预期版本。', '静态资源（图片、动画、索引文件）可访问，字节数与上一稳定版一致。', 'canonical、站点地图与 robots 指向正确，未残留回退批次的页面。', '浏览器控制台无新增报错，移动端宽度无横向溢出。', '把故障现象、回滚时间、恢复到的提交与核验结果写入检查点文件。'] },
+      { heading: '本项目的演练记录与边界', paragraphs: ['发布标签与回滚点在 26 个批次上持续执行，标签本身经过核对；强制推送曾在隔离分支上验证过能够生效。但真正意义上的回滚——线上出故障、按本手册操作并恢复——还没有发生过，因此回滚只能记为"已准备"，不能记为"已验证"。这个区别写在文章里，是为了避免把流程文档当成故障经验。'] },
+      { heading: '不该做的几件事', paragraphs: ['下面几条是故障处理中最容易造成二次伤害的操作，写在这里作为自查清单。'], list: ['没有确认线上版本就先动手，容易把一个小问题扩成两个。', '用 git reset 后强推覆盖生产分支，历史丢失后无法再判断当时改了什么。', '删除发布标签或回滚点，等于销毁唯一可靠的恢复坐标。', '故障期间同时改代码和回滚，两次变更叠在一起，事后无法归因。'] },
+    ], sources: [{ label: '本仓库发布与回滚标签', note: '每次发布打 published-batchNN 与 rollback-before-batchNN 两个标签，共 26 个批次。' }, { label: '强制推送演练', note: '在隔离分支验证过 --force-with-lease 生效，未在真实故障中触发。' }], related: [{ label: '静态网站部署实践', href: '/docs/static-site-deployment' }, { label: '静态站的收录基线', href: '/docs/seo-baseline' }] },
   {
     slug: 'ups-runtime', title: 'UPS 备用时间的假设边界与误差来源', kind: '计算记录', updated: '2026-11-11',
     summary: '把 t = 容量 × 电压 × 放电深度 × 效率 ÷ 负载 拆成五个假设，逐条说明什么时候会明显偏差。',
@@ -152,11 +173,11 @@ export const docs: Doc[] = [
     summary: '把全文索引放在构建期生成，首屏不加载；只在用户开始检索时取一次 JSON，并有页面内文字的降级路径。',
     sections: [
       { heading: '要解决的不是“有没有搜索框”', paragraphs: ['文档数量少时，浏览器自带的查找就够用；需要搜索框，是因为读者往往不知道关键词落在摘要、章节标题还是正文里。所以检索范围必须覆盖标题、摘要、章节标题、正文段落、列表、表格与代码片段，并且要能按文档类型筛选。', '反过来，如果为了一个搜索框在首屏加载几百 KB 的索引，静态站点的性能优势就被吃掉了。约束是两条：覆盖要全，首屏要零成本。'] },
-      { heading: '索引在构建期生成', paragraphs: ['用 Astro 的静态端点把 src/data/docs.ts 的每篇文档摊平成一条记录：slug、title、kind、updated、summary 与 text。text 由标题、类型、摘要、各章节的标题、段落、列表、表格单元格与代码块拼成，统一转小写后以空格连接。', '端点输出 dist/docs-index.json（当前 14 篇文档约 47 KB），不依赖任何运行时服务；内容更新时随构建一起更新，不存在索引过期的问题。'] },
+      { heading: '索引在构建期生成', paragraphs: ['用 Astro 的静态端点把 src/data/docs.ts 的每篇文档摊平成一条记录：slug、title、kind、updated、summary 与 text。text 由标题、类型、摘要、各章节的标题、段落、列表、表格单元格与代码块拼成，统一转小写后以空格连接。', '端点输出 dist/docs-index.json（当前 15 篇文档约 52 KB），不依赖任何运行时服务；内容更新时随构建一起更新，不存在索引过期的问题。'] },
       { heading: '首屏不加载索引', paragraphs: ['页面 HTML 里只有列表本身，索引文件不在初始请求里。逻辑写在独立模块 src/scripts/docs-finder.ts 里，由页面内联脚本 import 后调用 mountDocsFinder()。', '触发时机有两处：输入框第一次获得焦点时预取一次，输入时再取一次（同一个 Promise，只发一个请求）。当前实测：打开 /docs/ 时索引请求数为 0，开始输入后为 1。'] },
       { heading: '匹配规则', paragraphs: ['关键词按空白切成多个 token，全部命中才算匹配（AND），大小写不敏感；类型下拉为空表示不限类型。计数文案在有条件时显示“显示 X / 共 N 篇”，无条件时显示“N 篇文档”。', '没有命中时显示一条明确提示，而不是留一片空白；把关键词和类型都清空后，列表恢复全部条目。'] },
       { heading: '降级路径', paragraphs: ['索引请求失败（离线、被拦截、文件缺失）时不抛错到控制台，而是退回用页面里已有条目的 textContent 建本地索引，检索仍然可用，只是匹配范围限于列表展示的文字。', '这里有一个必须记住的教训：索引与 DOM 是两套来源，选择器写错（例如漏掉列表容器的 id）时，过滤逻辑会因为“找不到条目”而静默返回，看起来像搜索没生效而不是报错。'] },
-      { heading: '验证方法', paragraphs: ['用真实浏览器按固定步骤跑：打开页面记录条目数；输入“压降”应只剩与压降相关的几篇；再把类型切到“计算记录”继续收窄；输入不可能命中的关键词时计数为 0 且提示可见；清空后恢复全部条目。每一步同时记录 pageerror、横向溢出（innerWidth 与 scrollWidth 相等）。'], list: ['1440×900（14 篇文档）：14 条 → 搜索“压降”5 条 → 类型切“计算记录”3 条 → 无命中 0 条且提示可见 → 清空恢复 14 条，无报错，无横向溢出', '390×844：无页面报错，横向溢出为 0（2026-11-11 复测）', '索引文件：HTTP 200，条数 14，字段为 slug / title / kind / updated / summary / text', '首屏索引请求数：打开页面为 0，开始输入后为 1'] },
+      { heading: '验证方法', paragraphs: ['用真实浏览器按固定步骤跑：打开页面记录条目数；输入“压降”应只剩与压降相关的几篇；再把类型切到“计算记录”继续收窄；输入不可能命中的关键词时计数为 0 且提示可见；清空后恢复全部条目。每一步同时记录 pageerror、横向溢出（innerWidth 与 scrollWidth 相等）。'], list: ['1440×900（15 篇文档）：15 条 → 搜索“压降”5 条 → 类型切“计算记录”3 条 → 无命中 0 条且提示可见 → 清空恢复 15 条，无报错，无横向溢出', '390×844：无页面报错，横向溢出为 0（2026-11-11 复测）', '索引文件：HTTP 200，条数 15，字段为 slug / title / kind / updated / summary / text', '首屏索引请求数：打开页面为 0，开始输入后为 1'] },
       { heading: '已知限制', paragraphs: ['当前实现是子串匹配，没有分词、词干化与相关度排序；中文没有空格，多个字连写时要整段命中。文档规模继续增长（比如超过几百篇）时，应该改成构建期生成倒排索引与按词切分的方案，而不是继续放大这个 JSON。', '索引与页面文字是两份数据，新增文档时只要经过 docs.ts 就会同时更新；如果手工在页面里加条目而不同步数据源，搜索结果会缺这一篇。'] },
     ],
     sources: [{ label: '实现位置', note: '索引端点 src/pages/docs-index.json.ts；前端模块 src/scripts/docs-finder.ts；页面 src/pages/docs.astro。' }, { label: '实测记录', note: '浏览器验证脚本 _work/nova-test-docs-search.mjs 与 _work/nova-poll-docs10.mjs；线上验证于 2026-11-11 完成。' }],
@@ -168,7 +189,7 @@ export const docs: Doc[] = [
     sections: [
       { heading: '收录不是“提交一次就完事”', paragraphs: ['静态站没有后台，但同样会产生重复 URL：带不带结尾斜杠、带不带 www、带不带查询参数，都可能被当成不同页面。canonical 的作用是把这些变体收敛到一个规范地址；站点地图的作用是告诉爬虫有哪些页面、哪些最近改过。两者都不是排名手段，写错反而拉低收录质量。'] },
       { heading: 'canonical 由 site 配置派生', paragraphs: ['在 astro.config.mjs 里把 site 设为 https://www.token-xxo.cn（含 www，与线上主机名一致），布局里用当前路径拼出绝对地址。这样同一个布局同时服务首页、文档列表、文档详情与项目详情时，不会出现“所有页面 canonical 都指向首页”这种常见错误。', '同时补上 og:type、og:site_name、og:locale 与 twitter:card：分享卡片依赖这些字段，缺了会退化成只有标题。'], code: "const canonical = new URL(Astro.url.pathname, Astro.site ?? 'https://www.token-xxo.cn').href;" },
-      { heading: '站点地图在构建期生成', paragraphs: ['新增静态端点 src/pages/sitemap.xml.ts，直接从 src/data/docs.ts、src/data/projects.ts 与 src/data/posts.ts 展开 URL 清单：9 条固定路由、14 篇文档、4 个项目、7 篇札记，共 34 条；文档、项目与札记的 lastmod 取记录里的 updated 字段。', '关键是“同一数据源”：页面路由与站点地图都由同一份数据展开，新增文档后不需要维护第二份清单，也不会出现地图指向不存在页面。'], code: "for (const doc of docs) entries.push({ path: `/docs/${doc.slug}/`, lastmod: doc.updated });\nfor (const post of posts) entries.push({ path: `/blog/${post.slug}/`, lastmod: post.updated });" },
+      { heading: '站点地图在构建期生成', paragraphs: ['新增静态端点 src/pages/sitemap.xml.ts，直接从 src/data/docs.ts、src/data/projects.ts 与 src/data/posts.ts 展开 URL 清单：9 条固定路由、15 篇文档、4 个项目、7 篇札记，共 35 条；文档、项目与札记的 lastmod 取记录里的 updated 字段。', '关键是“同一数据源”：页面路由与站点地图都由同一份数据展开，新增文档后不需要维护第二份清单，也不会出现地图指向不存在页面。'], code: "for (const doc of docs) entries.push({ path: `/docs/${doc.slug}/`, lastmod: doc.updated });\nfor (const post of posts) entries.push({ path: `/blog/${post.slug}/`, lastmod: post.updated });" },
       { heading: 'robots.txt 只做两件事', paragraphs: ['public/robots.txt 里只有 Allow: / 与 Sitemap: https://www.token-xxo.cn/sitemap.xml。没有 Disallow 规则，因为本站没有需要隐藏的路径；也没写 Crawl-delay——那是爬虫侧的自愿约定，写了不保证被遵守。'] },
       { heading: '怎么验证', paragraphs: ['构建后解析 dist/sitemap.xml，确认 loc 数量与路由数一致；用浏览器打开页面读 link[rel="canonical"] 与 meta[property="og:url"]，确认是绝对地址且逐页不同；用原始请求取 /sitemap.xml 与 /robots.txt，确认返回 200。这些检查都在发布前的门禁里，不是发布后再看。'] },
       { heading: '边界', paragraphs: ['没有向搜索引擎后台提交站点地图，收录速度不由本站决定；canonical 不能替代 301 重定向，也不解决 HTTP 与 HTTPS 并存的问题（那该由平台侧强制跳转）；站点地图的 lastmod 是“记录整理日期”，表达内容新鲜度而非部署时间。'] }
