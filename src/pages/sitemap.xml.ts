@@ -1,4 +1,5 @@
-import type { APIRoute } from 'astro';
+// 用结构化类型替代 `import type { APIRoute } from 'astro'`：
+// 本机 astro check 无法解析该包的 type 声明（ts(2307)），构建不受影响。
 import { docs } from '../data/docs';
 import { projects } from '../data/projects';
 
@@ -20,7 +21,7 @@ const staticRoutes = [
 
 interface Entry { path: string; lastmod?: string }
 
-export const GET: APIRoute = () => {
+export const GET = (): Response => {
   const entries: Entry[] = [...staticRoutes];
   for (const doc of docs) entries.push({ path: `/docs/${doc.slug}/`, lastmod: doc.updated });
   for (const project of projects) entries.push({ path: `/projects/${project.slug}/`, lastmod: project.updated });
