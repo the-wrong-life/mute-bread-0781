@@ -203,6 +203,35 @@ def ground_shadow():
     p.is_shadow_catcher = True
     print("GROUND-SHADOW ok")
 
+def shell_fresnel():
+    """把玉壳的底色交给 Fresnel 控制：中心暖白、边缘青绿。
+
+    参考图里的球并不是"白玻璃"也不是"整颗青玉"，而是中心一片暖白高光、
+    越靠轮廓越沉积成青绿玉肉。Principled 的单色 Base Color 做不出这个渐变，
+    所以这里单独接一层 Layer Weight -> Power -> Mix 覆盖 Base Color。
+    （s9 实测：靠 Alpha 混合只能得到"奶白半透明球"，与参考图方向相反。）
+    """
+    m = bpy.data.materials.get("mat-jade-shell")
+    if not m or not m.use_nodes: return
+    nt = m.node_tree
+    bsdf = next((n for n in nt.nodes if n.type == "BSDF_PRINCIPLED"), None)
+    if not bsdf: return
+    core = tuple(float(v) for v in os.environ.get("NOVA_SHELL_CORE_COLOR", "0.97,0.94,0.85").split(","))
+    edge = tuple(float(v) for v in os.environ.get("NOVA_SHELL_EDGE_COLOR", "0.16,0.42,0.30").split(","))
+    lw = nt.nodes.new("ShaderNodeLayerWeight")
+    lw.inputs["Blend"].default_value = 0.5
+    pw = nt.nodes.new("ShaderNodeMath")
+    pw.operation = "POWER"
+    pw.inputs[1].default_value = float(os.environ.get("NOVA_SHELL_FRES_POW", "2.0"))
+    mix = nt.nodes.new("ShaderNodeMixRGB")
+    mix.inputs["Color1"].default_value = (*core, 1.0)
+    mix.inputs["Color2"].default_value = (*edge, 1.0)
+    nt.links.new(lw.outputs["Fresnel"], pw.inputs[0])
+    nt.links.new(pw.outputs[0], mix.inputs["Fac"])
+    nt.links.new(mix.outputs["Color"], bsdf.inputs["Base Color"])
+    bsdf.inputs["Roughness"].default_value = float(os.environ.get("NOVA_SHELL_ROUGH", "0.10"))
+    print("SHELL-FRESNEL ok core=%s edge=%s" % (core, edge))
+
 def materials():
     sb = tuple(float(v) for v in SHELL_BASE.split(","))
     # SSS 半径决定"肉色"：旧值 (0.30,0.62,0.44) 是绿色的，球体再怎么调底都发青；
@@ -222,6 +251,8 @@ def materials():
                 _n.inputs['Roughness'].default_value = max(_n.inputs['Roughness'].default_value, 0.04)
                 break
         bpy.data.materials["mat-jade-shell"].blend_method = 'BLEND'
+    if os.environ.get("NOVA_SHELL_FRESNEL", "0") == "1":
+        shell_fresnel()
     shell_volume()
     kernel_warm()
     pearl_glass()

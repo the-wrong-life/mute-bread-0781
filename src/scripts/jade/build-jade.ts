@@ -281,14 +281,17 @@ export function buildJadeModel(options: { quality?: 'high' | 'low' } = {}): Jade
   strutMat.name = 'mat-jade-strut';
   // 0.90 的旧值在"瓷胎"加进来之后把整组梁埋进了胎体里（瓷胎半径 0.988）：参考图的梁是
   // 贴在球面上的浮雕，所以半径要抬到与瓷胎齐平，让梁有一半露在外面。
-  const STRUT_R = 0.806;
+  // 第 26 轮：壳改成 Alpha 薄壁（NOVA_SHELL_ALPHA）之后，0.806 的梁深埋在内层玉胎里，
+  // 从外面只剩几根淡线；抬到 0.90 让它贴住玻璃壳内侧，才是参考图"梁在壳内"的层次。
+  const STRUT_R = 0.90;
   // 参考图球内是 6 道成组的宽弧梁（不是 4 道细线）：数量与截面都要按"梁"的尺度给。
   const STRUT_MERIDIANS = 6;
   // 0.020 在 560² 下只有 2–3 px，和玻璃壳的高光抢亮度时整片读成白色网格；
   // 加到 0.030（≈4–5 px）才有"梁"的厚度感。
   // 参考图的球面是"细缝状分瓣"（玻璃灯笼的瓣缝），不是 5 px 宽的白梁；
   // 0.034 在我们的灯位下被打成白线，读成线框笼子。收到 0.011 并压暗底色才对。
-  const STRUT_TUBE = hi ? 0.011 : 0.012;
+  // 0.011 在 alpha 半透壳下几乎看不见，读成"空壳"；0.016 才像梁又不至于变成笼子。
+  const STRUT_TUBE = hi ? 0.016 : 0.018;
   for (let i = 0; i < STRUT_MERIDIANS; i += 1) {
     const meridian = new THREE.Mesh(
       new THREE.TorusGeometry(STRUT_R, STRUT_TUBE, hi ? 10 : 6, hi ? 120 : 64),
