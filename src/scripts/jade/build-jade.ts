@@ -184,40 +184,27 @@ export function buildJadeModel(options: { quality?: 'high' | 'low' } = {}): Jade
   shell.renderOrder = 6;
   root.add(shell);
 
-  // 1a. 瓷胎开窗：整球 0.95 透射会读成"玻璃气球"，参考图其实是"瓷/玉胎 + 正面玻璃窗"。
-  // 用部分球（缺一个 35° 极冠）转到 +Z 当窗口，外覆原玻璃壳；开口处补金圈当窗口边框。
-  const windowHalf = 0.62; // 极冠半角（弧度）
+  // 1a. 内层玉球（结构按参考图实测比例：内球直径约为外球 0.84，球心一颗亮珠）：
+  // 旧版把"瓷胎"放在 0.988，与外玻璃壳几乎重合，两层球在画面上叠成一颗"奶白球"，
+  // 内部结构全被它吃掉。参考图明显是"外玻璃壳 R=1.0 + 内层玉球 R≈0.84"两层。
   const opalMat = new THREE.MeshPhysicalMaterial({
-    color: new THREE.Color('#a9cdb4'),
-    roughness: 0.34,
+    color: new THREE.Color('#a9cfb4'),
+    roughness: 0.30,
     metalness: 0,
-    transmission: 0.42,
-    thickness: 0.5,
+    transmission: 0.55,
+    thickness: 0.3,
     ior: 1.45,
-    attenuationColor: new THREE.Color('#4e7d5f'),
-    attenuationDistance: 0.9,
+    attenuationColor: new THREE.Color('#5c8f6f'),
+    attenuationDistance: 1.2,
     clearcoat: 0.35,
-    clearcoatRoughness: 0.28,
+    clearcoatRoughness: 0.26,
   });
   opalMat.name = 'mat-opal';
-  const opalGeo = new THREE.SphereGeometry(0.988, hi ? 128 : 64, hi ? 88 : 44, 0, Math.PI * 2, windowHalf, Math.PI - windowHalf);
-  const opal = new THREE.Mesh(opalGeo, opalMat);
-  opal.name = 'opal-shell';
-  opal.rotation.x = Math.PI / 2; // 极冠缺口转向 +Z（镜头方向）
+  const opal = new THREE.Mesh(new THREE.SphereGeometry(0.84, hi ? 128 : 64, hi ? 88 : 44), opalMat);
+  opal.name = 'inner-globe';
   opal.castShadow = true;
   opal.receiveShadow = true;
   root.add(opal);
-
-  // 窗口金圈：贴在开口边缘，遮住部分球的切口，读成"舷窗框"
-  const winRimMat = new THREE.MeshStandardMaterial({ color: new THREE.Color('#c9a864'), roughness: 0.28, metalness: 1, envMapIntensity: 1.8 });
-  winRimMat.name = 'mat-window-rim';
-  const winRim = new THREE.Mesh(
-    new THREE.TorusGeometry(Math.sin(windowHalf) * 0.988, 0.026, hi ? 16 : 10, hi ? 96 : 48),
-    winRimMat,
-  );
-  winRim.name = 'window-rim';
-  winRim.position.z = Math.cos(windowHalf) * 0.988;
-  root.add(winRim);
 
   // 1b. 内壁：略小的背面子壳，制造玉壁厚度与边缘散射
   const innerMat = new THREE.MeshPhysicalMaterial({
@@ -286,12 +273,14 @@ export function buildJadeModel(options: { quality?: 'high' | 'low' } = {}): Jade
   strutMat.name = 'mat-jade-strut';
   // 0.90 的旧值在"瓷胎"加进来之后把整组梁埋进了胎体里（瓷胎半径 0.988）：参考图的梁是
   // 贴在球面上的浮雕，所以半径要抬到与瓷胎齐平，让梁有一半露在外面。
-  const STRUT_R = 0.995;
+  const STRUT_R = 0.806;
   // 参考图球内是 6 道成组的宽弧梁（不是 4 道细线）：数量与截面都要按"梁"的尺度给。
   const STRUT_MERIDIANS = 6;
   // 0.020 在 560² 下只有 2–3 px，和玻璃壳的高光抢亮度时整片读成白色网格；
   // 加到 0.030（≈4–5 px）才有"梁"的厚度感。
-  const STRUT_TUBE = hi ? 0.034 : 0.036;
+  // 参考图的球面是"细缝状分瓣"（玻璃灯笼的瓣缝），不是 5 px 宽的白梁；
+  // 0.034 在我们的灯位下被打成白线，读成线框笼子。收到 0.011 并压暗底色才对。
+  const STRUT_TUBE = hi ? 0.011 : 0.012;
   for (let i = 0; i < STRUT_MERIDIANS; i += 1) {
     const meridian = new THREE.Mesh(
       new THREE.TorusGeometry(STRUT_R, STRUT_TUBE, hi ? 10 : 6, hi ? 120 : 64),
@@ -353,7 +342,9 @@ export function buildJadeModel(options: { quality?: 'high' | 'low' } = {}): Jade
   // 0.20 在画面上是 ~90 px 的硬边白盘（用户指出"内珠偏大偏白"）；收到 0.17，
   // 并把底色从纯白换成暖白，让它读成"珠"而不是"灯"。
   // 0.17 → 0.22：和参考图并排后发现参考珠径约球径 22%，0.17 显得像一颗小豆。
-  const pearl = new THREE.Mesh(new THREE.SphereGeometry(0.22, hi ? 64 : 32, hi ? 48 : 24), pearlMat);
+  // 参考图网格标尺（670 px 版）复测：珠径 110 px / 外球径 494 px ≈ 0.222 D → 半径 0.222 R。
+  // 上一版把"直径占比"当成了半径，0.29 让珠涨到球径的 58%，比参考大一圈。
+  const pearl = new THREE.Mesh(new THREE.SphereGeometry(0.222, hi ? 64 : 32, hi ? 48 : 24), pearlMat);
   pearl.name = 'jade-pearl';
   pearl.position.set(0, 0.06, 0);
   pearl.renderOrder = 4;
@@ -367,7 +358,7 @@ export function buildJadeModel(options: { quality?: 'high' | 'low' } = {}): Jade
     metalness: 0.92,
   });
   collarMat.name = 'mat-pearl-collar';
-  for (const [tiltZ, rad] of [[0, 0.185], [Math.PI / 2, 0.185]] as [number, number][]) {
+  for (const [tiltZ, rad] of [[0, 0.192], [Math.PI / 2, 0.192]] as [number, number][]) {
     const collar = new THREE.Mesh(new THREE.TorusGeometry(rad, 0.0125, 12, hi ? 96 : 48), collarMat);
     collar.name = 'pearl-collar';
     collar.position.set(0, 0.06, 0);
@@ -375,6 +366,53 @@ export function buildJadeModel(options: { quality?: 'high' | 'low' } = {}): Jade
     collar.renderOrder = 5;
     root.add(collar);
   }
+
+  // 1b3. 内圈宽带：参考图里斜跨球面、压在珍珠前方的那道金带（半径贴内球表面 0.85）。
+  // 没有它，球心只有一颗珠，缺"浑天仪"的骨架关系；它的存在也让球体有明确的朝向。
+  const bandMat = new THREE.MeshPhysicalMaterial({
+    color: new THREE.Color('#c9a25c'),
+    roughness: 0.26,
+    metalness: 0.95,
+    envMapIntensity: 1.4,
+  });
+  bandMat.name = 'mat-inner-band';
+  const innerBand = new THREE.Group();
+  innerBand.name = 'inner-band';
+  const bandRibbon = new THREE.Mesh(new THREE.TorusGeometry(0.85, 0.050, hi ? 18 : 10, hi ? 128 : 64), bandMat);
+  bandRibbon.name = 'inner-band-ribbon';
+  innerBand.add(bandRibbon);
+  // 带上的方形网格牌（参考图球心左下方那块"筛格"）：小方块 + 6×6 铜点
+  const badgeMat = new THREE.MeshStandardMaterial({ color: new THREE.Color('#8a6a32'), roughness: 0.34, metalness: 0.9 });
+  badgeMat.name = 'mat-band-badge';
+  const badge = new THREE.Mesh(new THREE.BoxGeometry(0.135, 0.135, 0.030), badgeMat);
+  const badgeAngle = -1.15;
+  badge.name = 'band-badge';
+  badge.position.set(Math.cos(badgeAngle) * 0.85, Math.sin(badgeAngle) * 0.85, 0.012);
+  badge.rotation.z = badgeAngle + Math.PI / 2;
+  innerBand.add(badge);
+  const dotMat = new THREE.MeshStandardMaterial({ color: new THREE.Color('#d9bb7a'), roughness: 0.30, metalness: 0.85 });
+  dotMat.name = 'mat-band-dot';
+  const dotGeo = new THREE.SphereGeometry(0.009, 8, 6);
+  for (let r = 0; r < 6; r += 1) {
+    for (let c = 0; c < 6; c += 1) {
+      const dot = new THREE.Mesh(dotGeo, dotMat);
+      dot.name = 'band-dot-' + r + '-' + c;
+      dot.position.set((c - 2.5) * 0.019, (r - 2.5) * 0.019, 0.020);
+      badge.add(dot);
+    }
+  }
+  // 带上的刻度点（参考图沿带分布的小圆点）：沿环每隔 18° 一颗，避开方格牌
+  for (let i = 0; i < 20; i += 1) {
+    const a = (i / 20) * Math.PI * 2;
+    if (Math.abs(((a - badgeAngle + Math.PI) % (Math.PI * 2)) - Math.PI) < 0.28) continue;
+    const tick = new THREE.Mesh(new THREE.SphereGeometry(0.012, 10, 8), dotMat);
+    tick.name = 'band-tick-' + i;
+    tick.position.set(Math.cos(a) * 0.85, Math.sin(a) * 0.85, 0.050);
+    innerBand.add(tick);
+  }
+  // 左侧低、右侧高的斜挂角度（参考图实测约 -17°）
+  innerBand.rotation.set(0.14, 0.0, -0.30);
+  root.add(innerBand);
 
   // 1c. 光晕：包裹内核的加法混合球，让白光向外柔和衰减，
   // 否则内核在玉壳里是硬边白圆盘，读不出"珠中有光"。
@@ -561,7 +599,9 @@ export function buildJadeModel(options: { quality?: 'high' | 'low' } = {}): Jade
   neck.name = 'serpent-neck';
   neck.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), fwd.clone().negate());
   neck.position.copy(tip).addScaledVector(fwd, -0.06);
-  root.add(neck);
+  // 必须挂在 serpent 组下：颈部坐标是在蛇环局部空间算的，挂到 root 就少了 tilt 变换，
+  // 会以"漂浮的小金筒"的形式留在未旋转的环平面上（§30 用 glb-pos.mjs 求世界坐标才定位到）。
+  serpent.add(neck);
   // 以球面外法线作"上"，让蛇头沿切线方向前探，背脊朝球外。
   // 基向量必须是右手系（X×Y=Z）：旧写法 sideV=up×fwd、upV=fwd×sideV 得到 X×Y=-Z，
   // 行列式 -1，setFromRotationMatrix 对镜像矩阵给出反向旋转，吻部会朝切线反方向。
@@ -574,10 +614,11 @@ export function buildJadeModel(options: { quality?: 'high' | 'low' } = {}): Jade
   head.quaternion.setFromRotationMatrix(new THREE.Matrix4().makeBasis(fwd, upV, sideV));
   // 头部整体缩到与收细后的蛇身匹配（原建模按蛇身半径 0.134 设计，现为 0.05）
   // 1.06 → 1.22：首页尺寸下 1.06 的蛇头只有 ~28 px，读不出"蛇首"（用户第 4 项）。
-  head.scale.setScalar(1.35);
+  // 520 px 显示尺寸下 1.35 的蛇头仍读成"金筒端帽"（§30 复查）；放大到 1.85 让吻部/眉骨可辨。
+  head.scale.setScalar(1.85);
 
   const headMat = new THREE.MeshPhysicalMaterial({
-    color: new THREE.Color('#b08a4e'),
+    color: new THREE.Color('#8f6a37'),
     roughness: 0.28,
     metalness: 0.62,
     clearcoat: 0.45,
@@ -738,11 +779,12 @@ export function buildJadeModel(options: { quality?: 'high' | 'low' } = {}): Jade
   // 4. 竖直玉轴
   const axis = new THREE.Group();
   axis.name = 'jade-axis';
-  const shaftGeo = new THREE.CylinderGeometry(0.042, 0.042, 2.44, hi ? 32 : 16);
+  // 参考图玉轴宽约 22 px / 452 px ≈ 0.049 直径 → 半径 0.024；旧 0.042 透过内球读成一条粗绿条。
+  const shaftGeo = new THREE.CylinderGeometry(0.026, 0.026, 2.44, hi ? 32 : 16);
   const shaftMat = new THREE.MeshPhysicalMaterial({
-    color: new THREE.Color('#cfe3d4'),
-    roughness: 0.2,
-    transmission: 0.5,
+    color: new THREE.Color('#e2eee4'),
+    roughness: 0.16,
+    transmission: 0.72,
     thickness: 0.4,
     ior: 1.5,
     metalness: 0,
@@ -782,8 +824,9 @@ export function buildJadeModel(options: { quality?: 'high' | 'low' } = {}): Jade
   // 参考图的测量带宽度≈直径 12%（0.24 R），原来的 0.13 R 在缩到 520 px 时只剩 4 px，
   // 读成"细手镯"。加宽到 0.20 R 并略微外扩，才有"结构件"的分量。
   const ringInner = 1.005;
-  const ringOuter = 1.125;
-  const ringHalf = 0.10;
+  // 参考图实测：外环带宽约 40 px / 球径 452 px ≈ 8.8% → 半宽 0.045；旧值 0.10 让环读成"碗沿"。
+  const ringOuter = 1.075;
+  const ringHalf = 0.090;
   const ringCham = 0.012;
   const ringProfile: THREE.Vector2[] = [];
   const arcPts = 4;
@@ -827,6 +870,30 @@ export function buildJadeModel(options: { quality?: 'high' | 'low' } = {}): Jade
   copperRing2.castShadow = true;
   root.add(copperRing2);
 
+  // 5b2. 环面菱形浮雕：参考图的金环满布菱形网格纹，纯金属面在 520 px 下会读成"光滑手镯"。
+  // 用压扁的八面体排成两行，形成可辨的菱形颗粒，而不引入贴图依赖。
+  const studMat = new THREE.MeshStandardMaterial({ color: new THREE.Color('#e0c184'), roughness: 0.22, metalness: 1, envMapIntensity: 1.6 });
+  studMat.name = 'mat-ring-stud';
+  // 铆钉半径 0.021 在 700² 下是 7 px 的凸点，整圈读成"贝壳边"；收到 0.011 才是细密的菱格纹。
+  const studGeo = new THREE.OctahedronGeometry(0.011, 0);
+  const addStuds = (ring: THREE.Object3D) => {
+    const rMidStud = (ringInner + ringOuter) / 2;
+    for (const row of [-0.62, 0.62]) {
+      for (let i = 0; i < (hi ? 36 : 18); i += 1) {
+        const n = hi ? 36 : 18;
+        const stud = new THREE.Mesh(studGeo, studMat);
+        stud.name = 'ring-stud-' + ring.name + '-' + row + '-' + i;
+        const a = (i / n) * Math.PI * 2 + (row > 0 ? Math.PI / n : 0);
+        stud.position.set(Math.cos(a) * rMidStud, Math.sin(a) * rMidStud, row * ringHalf * 0.72);
+        stud.rotation.z = a - Math.PI / 2;
+        stud.scale.set(1, 1, 0.45);
+        ring.add(stud);
+      }
+    }
+  };
+  addStuds(copperRing);
+  addStuds(copperRing2);
+
   // 5c. 环上玉片嵌条：参考图的金环不是纯金，隔一段嵌一段青玉，才有"玉金相嵌"的层次。
   const inlayMat = new THREE.MeshPhysicalMaterial({
     color: new THREE.Color('#5f9c7e'),
@@ -838,11 +905,13 @@ export function buildJadeModel(options: { quality?: 'high' | 'low' } = {}): Jade
   });
   inlayMat.name = 'mat-ring-inlay';
   for (let i = 0; i < 12; i += 1) {
-    const seg = new THREE.Mesh(new THREE.BoxGeometry(0.055, 0.030, 0.075), inlayMat);
+    // 0.055×0.030×0.075 + z=ringHalf*0.92 时玉片会从环的侧壁凸出来，
+    // 在 520 px 下读成"球面边缘碎玉碴"（§30 d1 对比图）。改成薄片并压到带面里侧。
+    const seg = new THREE.Mesh(new THREE.BoxGeometry(0.050, 0.024, 0.030), inlayMat);
     seg.name = 'ring-inlay-' + i;
     const a = (i / 12) * Math.PI * 2 + 0.13;
     const rMid = (ringInner + ringOuter) / 2;
-    seg.position.set(Math.cos(a) * rMid, Math.sin(a) * rMid, ringHalf * 0.92);
+    seg.position.set(Math.cos(a) * rMid, Math.sin(a) * rMid, ringHalf * 0.52);
     seg.rotation.z = a - Math.PI / 2;
     copperRing.add(seg);
   }
@@ -863,45 +932,77 @@ export function buildJadeModel(options: { quality?: 'high' | 'low' } = {}): Jade
   );
   tickFace.position.z = 0.066;
   tick.add(tickFace);
-  // 游标原本在 +X 位置，正好落在右上蛇头旁边，读成"漂浮的小金疙瘩"；挪到左下空档
+  // 游标块在 §29 的 520 px 复看里始终读成"漂浮的小金疙瘩"（它挂在环的局部坐标上，
+  // 环一改宽度/倾角就与带面脱开），而参考图的游标只在近景才能辨认。按"宁可减少元素"直接不显示。
   tick.position.set(-0.90, -0.52, 0.0);
   tick.rotation.z = Math.PI / 2;
+  tick.visible = false;
   copperRing.add(tick);
 
-  // 6. 底部徽章
+  // 6. 底座：参考图是半圆"花板"座——分层线脚 + 一圈莲瓣浮雕 + 一道玉箍，
+  // 旧版是一块放大的薄荷圆饼，读成塑料扣子，因此整体重做。
   const baseBadge = new THREE.Group();
   baseBadge.name = 'base-badge';
   const plinthMat = new THREE.MeshPhysicalMaterial({
-    color: new THREE.Color('#8fc7ae'),
-    roughness: 0.16,
-    transmission: 0.34,
-    thickness: 0.4,
-    ior: 1.5,
-    clearcoat: 0.8,
+    color: new THREE.Color('#c8a469'),
+    roughness: 0.26,
+    metalness: 0.86,
+    envMapIntensity: 1.25,
+    emissive: new THREE.Color('#3a2a10'),
+    emissiveIntensity: 0.24,
   });
   plinthMat.name = 'mat-plinth';
-  const disc = new THREE.Mesh(new THREE.CylinderGeometry(0.112, 0.134, 0.024, hi ? 64 : 32), plinthMat);
-  disc.rotation.x = Math.PI / 2;
-  baseBadge.add(disc);
-  const discInner = new THREE.Mesh(
-    new THREE.CylinderGeometry(0.082, 0.082, 0.028, hi ? 64 : 32),
-    new THREE.MeshStandardMaterial({ color: new THREE.Color('#9c7a4a'), roughness: 0.38, metalness: 0.9 }),
+  // 线脚剖面：底缘外扩、腰部内收、顶面再收，形成须弥座式的层叠
+  const plinthProfile: THREE.Vector2[] = [
+    new THREE.Vector2(0.0, -0.08),
+    new THREE.Vector2(0.335, -0.08),
+    new THREE.Vector2(0.335, -0.048),
+    new THREE.Vector2(0.298, -0.03),
+    new THREE.Vector2(0.298, 0.012),
+    new THREE.Vector2(0.244, 0.032),
+    new THREE.Vector2(0.182, 0.044),
+    new THREE.Vector2(0.176, 0.074),
+    new THREE.Vector2(0.206, 0.088),
+    new THREE.Vector2(0.206, 0.1),
+    new THREE.Vector2(0.0, 0.1),
+  ];
+  const plinth = new THREE.Mesh(new THREE.LatheGeometry(plinthProfile, hi ? 128 : 64), plinthMat);
+  plinth.name = 'plinth-body';
+  baseBadge.add(plinth);
+  // 莲瓣浮雕：12 片扁椭球贴腰线排布，向外微倾
+  const petalGeo = new THREE.SphereGeometry(1, hi ? 18 : 10, hi ? 12 : 6);
+  for (let i = 0; i < 12; i += 1) {
+    const petal = new THREE.Mesh(petalGeo, plinthMat);
+    petal.name = 'plinth-petal-' + i;
+    const a = (i / 12) * Math.PI * 2;
+    petal.position.set(Math.cos(a) * 0.222, 0.016, Math.sin(a) * 0.222);
+    petal.scale.set(0.072, 0.046, 0.026);
+    petal.rotation.y = -a;
+    petal.rotation.x = 0.16;
+    baseBadge.add(petal);
+  }
+  // 腰线玉箍：金座里嵌一圈青玉，呼应"玉金相嵌"
+  const baseJade = new THREE.Mesh(
+    new THREE.TorusGeometry(0.188, 0.011, 12, hi ? 96 : 48),
+    inlayMat,
   );
-  discInner.rotation.x = Math.PI / 2;
-  baseBadge.add(discInner);
-  const emblem = new THREE.Mesh(
-    new THREE.TorusGeometry(0.07, 0.011, 12, hi ? 64 : 32),
-    new THREE.MeshStandardMaterial({ color: new THREE.Color('#e8d3a4'), roughness: 0.3, metalness: 0.9 }),
+  baseJade.name = 'plinth-jade';
+  baseJade.rotation.x = Math.PI / 2;
+  baseJade.position.y = 0.05;
+  baseBadge.add(baseJade);
+  // 顶面中心的金钮（坠孔）
+  const knob = new THREE.Mesh(
+    new THREE.TorusGeometry(0.052, 0.012, 12, hi ? 64 : 32),
+    new THREE.MeshStandardMaterial({ color: new THREE.Color('#e8d3a4'), roughness: 0.28, metalness: 0.95 }),
   );
-  baseBadge.add(emblem);
-  // 教训：y=-1.3 时底徽悬在球下方 0.3，读成"吊坠"；贴到球底（-1.02）才像底座
-  // 参考图底座是明显的半圆花板（约球径 55%），原来的 0.112 半径在 760² 下只有 20 px，
-  // 读成"球底一颗小铆钉"。整体放大 2.6 倍并下移，让它承担构图配重。
-  baseBadge.scale.setScalar(2.6);
-  baseBadge.position.set(0, -1.16, 0.02);
-  baseBadge.rotation.x = -0.2;
+  knob.name = 'plinth-knob';
+  knob.rotation.x = Math.PI / 2;
+  knob.position.y = 0.104;
+  baseBadge.add(knob);
+  // 参考图底座约占球径 45%，贴到球底（y≈-1.05）才像座，悬空会读成吊坠
+  baseBadge.position.set(0, -1.09, 0.02);
+  baseBadge.rotation.x = -0.18;
   root.add(baseBadge);
-
   // 7. 右侧辛巳玉牌
   // 玉牌不能是一张方卡片：做成圆角、带倒角厚度的小玉牌，边缘有收进的光
   const tabletShape = new THREE.Shape();

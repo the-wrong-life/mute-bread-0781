@@ -160,6 +160,37 @@ def kernel_warm():
     bs.inputs['Emission Strength'].default_value = KERNEL
     o.data.materials.clear(); o.data.materials.append(m)
 
+
+def pearl_glass():
+    """珍珠材质按对象名覆盖（不要再用 rep("mat-kernel-glass")）。
+
+    第 29 轮红色诊断（NOVA_GLASS_COLOR=1,0,0 / TRANS=0 / EMIT=1）渲出画面里没有红色，
+    证明 rep("mat-kernel-glass", ...) 完全没命中：glTF 导入后材质名不可靠（可能被去重加后缀）。
+    与 kernel_warm() 同理，直接按对象名取 jade-pearl 并换上一份新材质，参数全部走环境变量。
+    """
+    o = bpy.data.objects.get("jade-pearl")
+    if not o or o.type != "MESH":
+        print("PEARL-MISS pearl-like objects:", [x.name for x in bpy.data.objects if "pearl" in x.name.lower()])
+        print("PEARL-MISS glass-like materials:", [m.name for m in bpy.data.materials if "glass" in m.name.lower()])
+        return
+    col = tuple(float(v) for v in os.environ.get("NOVA_PEARL_COLOR", "0.96,0.92,0.82").split(","))
+    m = bpy.data.materials.new("mat-pearl-v2"); m.use_nodes = True
+    nt = m.node_tree
+    bs = [n for n in nt.nodes if n.type == "BSDF_PRINCIPLED"][0]
+    bs.inputs["Base Color"].default_value = (col[0], col[1], col[2], 1)
+    bs.inputs["Roughness"].default_value = float(os.environ.get("NOVA_PEARL_ROUGH", "0.06"))
+    bs.inputs["Metallic"].default_value = 0.0
+    bs.inputs["IOR"].default_value = float(os.environ.get("NOVA_PEARL_IOR", "1.47"))
+    # 薄壁玻璃珠：透射高但不为 1，保留一点奶白体色；自发光只补"内部有一点光"的印象。
+    if "Transmission Weight" in bs.inputs:
+        bs.inputs["Transmission Weight"].default_value = float(os.environ.get("NOVA_PEARL_TRANS", "0.62"))
+    if "Coat Weight" in bs.inputs:
+        bs.inputs["Coat Weight"].default_value = float(os.environ.get("NOVA_PEARL_COAT", "1.0"))
+        bs.inputs["Coat Roughness"].default_value = 0.02
+    bs.inputs["Emission Color"].default_value = (col[0], col[1], col[2], 1)
+    bs.inputs["Emission Strength"].default_value = float(os.environ.get("NOVA_PEARL_EMIT", "0.12"))
+    o.data.materials.clear(); o.data.materials.append(m)
+    print("PEARL-OVERRIDE ok", o.name, "mats:", [s.material.name for s in o.material_slots if s.material])
 def ground_shadow():
     """接触阴影：没有它，玉衡在暖白页面上是"浮着"的。
 
@@ -182,6 +213,8 @@ def materials():
     rep("mat-jade-shell", sb, shell_rough, 0.0, trans=TRANS, ior=float(os.environ.get("NOVA_IOR", "1.55")), coat=float(os.environ.get("NOVA_COAT", "0.20")), sss=SSS, sss_rad=sss_rad, sss_scale=0.14)
     shell_volume()
     kernel_warm()
+    pearl_glass()
+    print("MATS-kernel:", [m.name for m in bpy.data.materials if "kernel" in m.name.lower()])
     rep("mat-kernel", (1.0, 0.96, 0.88), 0.62, 0.0, emit=(1.0, 0.88, 0.66), emit_str=KERNEL)
     rep("mat-serpent", (0.66, 0.48, 0.19), 0.30, 0.85, coat=0.30)
     serpent_plates()
@@ -197,6 +230,17 @@ def materials():
     rep("mat-serpent-mouth", (0.12, 0.07, 0.04), 0.55, 0.0)
     rep("mat-eye", (0.20, 0.72, 0.48), 0.12, 0.0, emit=(0.14, 0.55, 0.34), emit_str=1.2, coat=1.0)
     rep("mat-kernel-glow", (1.0, 0.94, 0.80), 0.9, 0.0)
+    # 内层玉球（build-jade.ts 的 inner-globe）：参考图里它是"半透玉胎 + 细白星点"，
+    # 外玻璃壳几乎全透，所以它才是球体主体的颜色来源。
+    opal_rgb = tuple(float(v) for v in os.environ.get("NOVA_OPAL_COLOR", "0.74,0.86,0.72").split(","))
+    rep("mat-opal", opal_rgb, float(os.environ.get("NOVA_OPAL_ROUGH", "0.30")), 0.0,
+        trans=float(os.environ.get("NOVA_OPAL_TRANS", "0.55")), ior=1.45, coat=0.30,
+        emit=opal_rgb, emit_str=float(os.environ.get("NOVA_OPAL_EMIT", "0.0")))
+    # 内圈宽带与带上装饰：与铜环同族材质，色略亮
+    band_rgb = tuple(float(v) for v in os.environ.get("NOVA_BAND_COLOR", "0.72,0.52,0.22").split(","))
+    rep("mat-inner-band", band_rgb, 0.26, 0.95)
+    rep("mat-band-badge", (0.42, 0.31, 0.12), 0.34, 0.9)
+    rep("mat-band-dot", (0.86, 0.72, 0.40), 0.30, 0.85)
     # 内层玻璃珠：参考图球心是一颗能反光的玻璃球，不是一颗发光的小豆。
     # 给它薄壁玻璃 + 极弱的内部自发光，高光弧由环境灯盘打出。
     # 教训：trans=0.94 + 薄壁 在小球上等于"看不见"——m1 诊断里球心是空的。
