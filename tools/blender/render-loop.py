@@ -211,6 +211,17 @@ def materials():
     # 壳粗糙度可覆盖：参考图是薄玻璃壳，边缘要有 Fresnel 弧光；0.22 的粗糙度会把弧光磨成雾面
     shell_rough = float(os.environ.get("NOVA_SHELL_ROUGH", "0.22"))
     rep("mat-jade-shell", sb, shell_rough, 0.0, trans=TRANS, ior=float(os.environ.get("NOVA_IOR", "1.55")), coat=float(os.environ.get("NOVA_COAT", "0.20")), sss=SSS, sss_rad=sss_rad, sss_scale=0.14)
+    # 第 26 轮：壳是实心球，Transmission=1 时光在两层界面间反复折射，Cycles 里永远渲成乳白
+    # （s5-a/s6-a 实测：transmission 拉满、吸收关掉仍不透）。要"薄壁玻璃"只能改用 Alpha 混合，
+    # 让壳几乎不参与折射，只保留边缘高光与反射。NOVA_SHELL_ALPHA<1 时切到 BLEND。
+    _shell_alpha = float(os.environ.get("NOVA_SHELL_ALPHA", "1.0"))
+    if _shell_alpha < 0.999:
+        for _n in bpy.data.materials["mat-jade-shell"].node_tree.nodes:
+            if _n.type == 'BSDF_PRINCIPLED':
+                _n.inputs['Alpha'].default_value = _shell_alpha
+                _n.inputs['Roughness'].default_value = max(_n.inputs['Roughness'].default_value, 0.04)
+                break
+        bpy.data.materials["mat-jade-shell"].blend_method = 'BLEND'
     shell_volume()
     kernel_warm()
     pearl_glass()
@@ -236,6 +247,14 @@ def materials():
     rep("mat-opal", opal_rgb, float(os.environ.get("NOVA_OPAL_ROUGH", "0.30")), 0.0,
         trans=float(os.environ.get("NOVA_OPAL_TRANS", "0.55")), ior=1.45, coat=0.30,
         emit=opal_rgb, emit_str=float(os.environ.get("NOVA_OPAL_EMIT", "0.0")))
+    # 内球半透同样只能走 Alpha：rep() 会 nt.nodes.clear() 重建节点树，所以这段必须放在 rep 之后。
+    _opal_alpha = float(os.environ.get("NOVA_OPAL_ALPHA", "1.0"))
+    if _opal_alpha < 0.999:
+        for _n in bpy.data.materials["mat-opal"].node_tree.nodes:
+            if _n.type == 'BSDF_PRINCIPLED':
+                _n.inputs['Alpha'].default_value = _opal_alpha
+                break
+        bpy.data.materials["mat-opal"].blend_method = 'BLEND'
     # 内圈宽带与带上装饰：与铜环同族材质，色略亮
     band_rgb = tuple(float(v) for v in os.environ.get("NOVA_BAND_COLOR", "0.72,0.52,0.22").split(","))
     rep("mat-inner-band", band_rgb, 0.26, 0.95)
