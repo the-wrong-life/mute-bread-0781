@@ -1,0 +1,322 @@
+{
+ "generator": "tools/verify/oracle.py",
+ "cases": [
+  {
+   "id": "u1",
+   "tool": "convertUnit",
+   "expected": {
+    "value": 1.0
+   }
+  },
+  {
+   "id": "u2",
+   "tool": "convertUnit",
+   "expected": {
+    "value": -40.0
+   }
+  },
+  {
+   "id": "u3",
+   "tool": "convertUnit",
+   "expected": {
+    "value": -273.15
+   }
+  },
+  {
+   "id": "u4",
+   "tool": "convertUnit",
+   "expected": {
+    "value": 14.503773773020923
+   }
+  },
+  {
+   "id": "u5",
+   "tool": "convertUnit",
+   "expected": {
+    "value": 16.666666666666668
+   }
+  },
+  {
+   "id": "u6",
+   "tool": "convertUnit",
+   "expected": {
+    "value": 135.58179483314004
+   }
+  },
+  {
+   "id": "u7",
+   "tool": "convertUnit",
+   "expected": {
+    "value": 0.45359237
+   }
+  },
+  {
+   "id": "u8",
+   "tool": "convertUnit",
+   "expected": {
+    "value": 7.456998715822702
+   }
+  },
+  {
+   "id": "u9",
+   "tool": "convertUnit",
+   "expected": {
+    "value": 0.0980665
+   }
+  },
+  {
+   "id": "u10",
+   "tool": "convertUnit",
+   "expected": {
+    "value": 18.92705892
+   }
+  },
+  {
+   "id": "u11",
+   "tool": "convertUnit",
+   "expected": {
+    "value": 0.0
+   }
+  },
+  {
+   "id": "u12",
+   "tool": "convertUnit",
+   "expected": {
+    "value": 273.15
+   }
+  },
+  {
+   "id": "d1",
+   "tool": "dcVoltageDrop",
+   "expected": {
+    "drop": 0.7000000000000001,
+    "percent": 2.916666666666667,
+    "endVoltage": 23.3,
+    "resistance": 0.14,
+    "loopLength": 20.0
+   }
+  },
+  {
+   "id": "d2",
+   "tool": "dcVoltageDrop",
+   "expected": {
+    "drop": 0.35000000000000003,
+    "percent": 1.4583333333333335,
+    "endVoltage": 23.65,
+    "resistance": 0.07,
+    "loopLength": 10.0
+   }
+  },
+  {
+   "id": "d3",
+   "tool": "dcVoltageDrop",
+   "expected": {
+    "drop": 2.8733333333333326,
+    "percent": 5.98611111111111,
+    "endVoltage": 45.126666666666665,
+    "resistance": 0.14366666666666664,
+    "loopLength": 50.0
+   }
+  },
+  {
+   "id": "d4",
+   "tool": "dcVoltageDrop",
+   "expected": {
+    "drop": 0.42875,
+    "percent": 3.5729166666666665,
+    "endVoltage": 11.57125,
+    "resistance": 0.12250000000000001,
+    "loopLength": 7.0
+   }
+  },
+  {
+   "id": "d5",
+   "tool": "dcVoltageDrop",
+   "expected": {
+    "drop": 0.0,
+    "percent": 0.0,
+    "endVoltage": 12.0,
+    "resistance": 0.17500000000000002,
+    "loopLength": 10.0
+   }
+  },
+  {
+   "id": "p1",
+   "tool": "upsRuntime",
+   "expected": {
+    "nominalWh": 2400.0,
+    "usableWh": 1920.0,
+    "deliveredWh": 1728.0,
+    "hours": 11.52,
+    "minutes": 691.1999999999999
+   }
+  },
+  {
+   "id": "p2",
+   "tool": "upsRuntime",
+   "expected": {
+    "nominalWh": 9600.0,
+    "usableWh": 6720.0,
+    "deliveredWh": 6182.4,
+    "hours": 5.152,
+    "minutes": 309.12
+   }
+  },
+  {
+   "id": "p3",
+   "tool": "upsRuntime",
+   "expected": {
+    "nominalWh": 84.0,
+    "usableWh": 42.0,
+    "deliveredWh": 35.7,
+    "hours": 1.1900000000000002,
+    "minutes": 71.4
+   }
+  },
+  {
+   "id": "b1",
+   "tool": "bendAllowance",
+   "expected": {
+    "allowance": 4.523893421169302,
+    "setback": 3.9999999999999996,
+    "deduction": 3.476106578830697,
+    "flat": 76.5238934211693
+   }
+  },
+  {
+   "id": "b2",
+   "tool": "bendAllowance",
+   "expected": {
+    "allowance": 4.71238898038469,
+    "setback": 4.499999999999999,
+    "deduction": 4.2876110196153085,
+    "flat": 0.0
+   }
+  },
+  {
+   "id": "b3",
+   "tool": "bendAllowance",
+   "expected": {
+    "allowance": 7.602654221687299,
+    "setback": 7.794228634059945,
+    "deduction": 7.985803046432592,
+    "flat": 0.0
+   }
+  },
+  {
+   "id": "b4",
+   "tool": "bendAllowance",
+   "expected": {
+    "allowance": 1.0995574287564276,
+    "setback": 0.8284271247461901,
+    "deduction": 0.5572968207359525,
+    "flat": 0.0
+   }
+  },
+  {
+   "id": "b5",
+   "tool": "bendAllowance",
+   "expected": {
+    "allowance": 4.523893421169302,
+    "setback": 3.9999999999999996,
+    "deduction": 3.476106578830697,
+    "flat": 196.5238934211693
+   }
+  },
+  {
+   "id": "b6",
+   "tool": "bendAllowance",
+   "expected": {
+    "allowance": 1.0367255756846319,
+    "setback": 1.9999999999999998,
+    "deduction": 2.963274424315368,
+    "flat": 57.036725575684635
+   }
+  },
+  {
+   "id": "s1",
+   "tool": "supplyCurrent",
+   "expected": {
+    "current": 26.81193200571018,
+    "apparent": 17.647058823529413,
+    "active": 15.0,
+    "reactive": 9.296165076046536
+   }
+  },
+  {
+   "id": "s2",
+   "tool": "supplyCurrent",
+   "expected": {
+    "current": 15.15151515151515,
+    "apparent": 3.333333333333333,
+    "active": 3.0,
+    "reactive": 1.4529663145135574
+   }
+  },
+  {
+   "id": "s3",
+   "tool": "supplyCurrent",
+   "expected": {
+    "current": 72.16878364870323,
+    "apparent": 50.0,
+    "active": 40.0,
+    "reactive": 29.999999999999993
+   }
+  },
+  {
+   "id": "s4",
+   "tool": "supplyCurrent",
+   "expected": {
+    "current": 43.47826086956522,
+    "apparent": 10.0,
+    "active": 10.0,
+    "reactive": 0.0
+   }
+  },
+  {
+   "id": "c1",
+   "tool": "cabinetThermal",
+   "expected": {
+    "natural": 176.0,
+    "airflowBase": 156.0,
+    "airflow": 195.0,
+    "deltaT": 10.0,
+    "passiveOk": false
+   }
+  },
+  {
+   "id": "c2",
+   "tool": "cabinetThermal",
+   "expected": {
+    "natural": 330.0,
+    "airflowBase": 249.6,
+    "airflow": 312.0,
+    "deltaT": 15.0,
+    "passiveOk": false
+   }
+  },
+  {
+   "id": "c3",
+   "tool": "cabinetThermal",
+   "expected": {
+    "natural": 275.0,
+    "airflowBase": 93.6,
+    "airflow": 117.0,
+    "deltaT": 10.0,
+    "passiveOk": false
+   }
+  },
+  {
+   "id": "c4",
+   "tool": "cabinetThermal",
+   "expected": {
+    "natural": 396.0,
+    "airflowBase": 52.0,
+    "airflow": 65.0,
+    "deltaT": 12.0,
+    "passiveOk": true
+   }
+  }
+ ],
+ "spec": "用例由 tools/verify/oracle.py 独立实现生成期望值；verify-tools.mjs 只做比对，不参与推导。约定：未填边 A/B 时展开长记 0；电弧/载流量等现场条件不在本工具范围。"
+}
