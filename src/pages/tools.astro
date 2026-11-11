@@ -1,9 +1,9 @@
 ---
 import NovaShell from '../layouts/NovaShell.astro';
 ---
-<NovaShell title="工程工具箱" description="单位换算、JSON 格式化和文本整理，均在浏览器本地完成。" active="/tools">
+<NovaShell title="工程工具箱" description="单位换算、直流压降、UPS 备用时间、电源容量、柜内散热与折弯展开等工程计算，均在浏览器本地完成并经独立验证。" active="/tools">
   <div class="page">
-    <header class="hero"><p class="eyebrow">ENGINEERING TOOLBOX / 工程工具箱</p><h1>让细节<br /><em>有据可循。</em></h1><p class="lead">六个轻量工具，帮助处理工程工作中的常见小事。输入仅在当前浏览器处理，不会通过工具上传。</p></header>
+    <header class="hero"><p class="eyebrow">ENGINEERING TOOLBOX / 工程工具箱</p><h1>让细节<br /><em>有据可循。</em></h1><p class="lead">八个轻量工具：四个电气计算、一个钣金展开，以及单位换算、JSON 校验与文本整理。输入仅在当前浏览器处理，不会通过工具上传。</p></header>
     <nav class="tool-nav" aria-label="工具目录"><a href="#units">单位换算</a><a href="#drop">直流压降</a><a href="#ups">UPS 备用时间</a><a href="#supply">电源容量</a><a href="#cabinet">柜内散热</a><a href="#bend">折弯展开</a><a href="#json">JSON 校验</a><a href="#text">文本整理</a></nav>
     <section id="units" class="tool" aria-labelledby="units-title">
       <div class="heading"><span class="number">01</span><div><h2 id="units-title">单位换算</h2><p>选择类别与单位，输入数值后自动换算；可选择结果的有效数字位数。</p></div></div>
@@ -108,6 +108,11 @@ import NovaShell from '../layouts/NovaShell.astro';
       <div class="result" aria-live="polite"><span id="cabinet-status">等待输入</span><output id="cabinet-result">—</output></div>
       <p id="cabinet-detail" class="status"></p>
       <div class="actions"><button type="button" id="cabinet-example">填入示例</button><button type="button" id="cabinet-copy">复制结果</button><span id="cabinet-copy-status" role="status"></span></div>
+    </section>
+    <section id="verification" class="tool" aria-labelledby="verify-title">
+      <div class="heading"><span class="number">09</span><div><h2 id="verify-title">验证记录</h2><p>每个工具都经过独立参考实现、数值与拒绝用例、真实浏览器三层检查；方法与仍存在的适用边界写在知识库里。</p></div></div>
+      <p class="note">当前状态（2026-11-11）：数值用例 34/34、拒绝用例 22/22、界面检查 34 项全部通过；环境为 Node v24.17.0 与系统 Chrome，未在其它浏览器引擎重复。验证通过只说明在文档列出的假设下算得对，不替代设计核算、现场测量与验收。</p>
+      <nav class="tool-nav" aria-label="验证记录"><a href="/docs/tools-verification">验证方法与已确认边界</a><a href="/docs/calculation-record">工程计算记录方法</a></nav>
     </section>
   </div>
 </NovaShell>
