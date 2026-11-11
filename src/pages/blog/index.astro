@@ -1,0 +1,45 @@
+---
+import NovaShell from '../../layouts/NovaShell.astro';
+import { posts, postCategories } from '../../data/posts';
+// 列表按日期倒序，日期相同保持数据源顺序，保证构建结果稳定。
+const ordered = posts.slice().sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0));
+---
+<NovaShell title="研究札记" description="PROJECT NOVA 的工程札记：验证方法、渲染排错与发布流程的真实记录。" active="/blog">
+  <div class="page">
+    <header class="intro">
+      <p class="eyebrow">研究记录 / 札记</p>
+      <h1>记录过程，<br />也记录未完成。</h1>
+      <p>每篇札记对应仓库里可核查的提交、脚本或实测数据；结论与待验证部分分开写。</p>
+    </header>
+
+    <form class="filters" role="search" onsubmit="return false">
+      <label class="field"><span>关键词</span><input id="post-query" type="search" name="q" placeholder="例如 材质、CSP、门禁" autocomplete="off" /></label>
+      <label class="field"><span>分类</span><select id="post-kind" name="kind"><option value="">全部分类</option>{postCategories.map((name) => <option value={name}>{name}</option>)}</select></label>
+      <p id="post-count" class="count" aria-live="polite">{ordered.length} 篇札记</p>
+    </form>
+    <p id="post-empty" class="empty" hidden>没有匹配的札记。清空关键词或切换分类再试。</p>
+
+    <section id="post-list" class="entries" aria-label="研究札记列表">
+      {ordered.map((post) => (
+        <article class="entry" data-category={post.category}>
+          <div class="meta">
+            <time datetime={post.date}>{post.date}</time>
+            <span class="kind">{post.category}</span>
+          </div>
+          <div class="body">
+            <h2><a href={`/blog/${post.slug}/`}>{post.title}</a></h2>
+            <p>{post.summary}</p>
+            <p class="tags">{post.tags.map((tag) => <span>{tag}</span>)}</p>
+          </div>
+        </article>
+      ))}
+    </section>
+  </div>
+</NovaShell>
+<script>
+  import { mountPostFinder } from '../../scripts/post-finder';
+  mountPostFinder();
+</script>
+<style>
+  .page{max-width:1120px;margin:auto;padding:clamp(64px,9vw,110px) clamp(20px,5vw,72px) 40px;overflow-wrap:anywhere}.intro{max-width:750px;margin-bottom:44px}.eyebrow,.meta,.tags,.count{color:#52735e;font:12px ui-monospace,monospace}.eyebrow{letter-spacing:.08em}h1{margin:20px 0 24px;font-size:clamp(36px,6vw,70px);line-height:1.2;font-weight:500}.intro>p:last-child{font-size:17px;color:#3f604c;line-height:1.8}.filters{display:flex;flex-wrap:wrap;align-items:end;gap:18px;padding:20px 0 24px;border-top:1px solid #b78b57}.field{display:flex;flex-direction:column;gap:6px;font:12px ui-monospace,monospace;color:#52735e}.field input,.field select{min-height:44px;padding:8px 12px;border:1px solid #b78b57;background:#f4efe4;color:#202923;font:15px/1.4 inherit;min-width:min(320px,72vw)}.field input:focus-visible,.field select:focus-visible{outline:2px solid #a74432;outline-offset:2px}.count{margin:0 0 12px;align-self:center}.empty{padding:24px 0;color:#3f604c}#post-list .entry[hidden]{display:none}.entries article.entry{display:grid;grid-template-columns:150px minmax(0,1fr);gap:30px;padding:30px 0;border-top:1px solid #b78b57}.entries article.entry:last-child{border-bottom:1px solid #b78b57}.meta{display:flex;flex-direction:column;gap:10px;line-height:1.6}.kind{color:#8f6438}h2{font-size:25px;font-weight:500;margin:0 0 12px;line-height:1.35}h2 a{color:#202923;text-decoration:none;display:inline-flex;align-items:center;min-height:44px}h2 a:hover{text-decoration:underline;text-decoration-color:#a74432}.body p{max-width:680px;margin:0;line-height:1.8;color:#3f604c}.tags{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}.tags span{padding:2px 8px;border:1px solid #cbb79a;color:#52735e}@media(max-width:600px){.intro{margin-bottom:32px}.entries article.entry{grid-template-columns:1fr;gap:12px}.meta{flex-direction:row;gap:18px}.field input,.field select{min-width:min(280px,80vw)}}
+</style>
