@@ -1,0 +1,79 @@
+---
+import NovaShell from '../layouts/NovaShell.astro';
+---
+<NovaShell title="材质试验台" description="玉材质参数对比" active="/lab">
+  <main class="wrap">
+    <h1>玉材质 A/B</h1>
+    <div class="row">
+      <div class="cell" data-v="0"><canvas></canvas><p>A 去 sheen 高透</p></div>
+      <div class="cell" data-v="1"><canvas></canvas><p>B 低透+厚</p></div>
+      <div class="cell" data-v="2"><canvas></canvas><p>C 无内壳</p></div>
+      <div class="cell" data-v="3"><canvas></canvas><p>D 玻璃+强clearcoat</p></div>
+    </div>
+  </main>
+</NovaShell>
+<style>
+  .wrap{padding:32px;max-width:1200px;margin:0 auto}
+  h1{font-family:"Songti SC",serif;margin:0 0 20px}
+  .row{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}
+  .cell{background:#f3efe3;border:1px solid #d9d3c1}
+  .cell canvas{display:block;width:100%;aspect-ratio:1/1}
+  .cell p{margin:0;padding:6px 10px;font:12px/1.5 ui-monospace,monospace;color:#3c4b41}
+</style>
+<script>
+  import * as THREE from 'three';
+  import { createJadeVeins } from '../scripts/jade/procedural-textures';
+
+  function env(): THREE.Texture {
+    const w = 512, h = 256;
+    const c = document.createElement('canvas'); c.width = w; c.height = h;
+    const ctx = c.getContext('2d')!;
+    const g = ctx.createLinearGradient(0, 0, 0, h);
+    g.addColorStop(0, '#ffffff'); g.addColorStop(0.26, '#f4f7ef');
+    g.addColorStop(0.46, '#c8d6c6'); g.addColorStop(0.62, '#6d8472');
+    g.addColorStop(0.82, '#2e4036'); g.addColorStop(1, '#1b271f');
+    ctx.fillStyle = g; ctx.fillRect(0, 0, w, h);
+    const t = new THREE.CanvasTexture(c);
+    t.mapping = THREE.EquirectangularReflectionMapping;
+    t.colorSpace = THREE.SRGBColorSpace;
+    return t;
+  }
+
+  const CONFIGS: Array<Record<string, unknown>> = [
+    { color: '#cfe9dc', roughness: 0.06, transmission: 0.98, thickness: 0.45, ior: 1.52, attenuationColor: '#5fbf95', attenuationDistance: 2.6, clearcoat: 0.2, envMapIntensity: 1.3 },
+    { color: '#8fd0b3', roughness: 0.18, transmission: 0.72, thickness: 1.6, ior: 1.5, attenuationColor: '#2f8266', attenuationDistance: 1.2, clearcoat: 0.9, envMapIntensity: 1.1 },
+    { color: '#d9f0e4', roughness: 0.04, transmission: 1.0, thickness: 0.25, ior: 1.48, attenuationColor: '#7ad3ab', attenuationDistance: 4.0, clearcoat: 0.1, envMapIntensity: 1.5 },
+    { color: '#e6f4ec', roughness: 0.02, transmission: 0.95, thickness: 0.8, ior: 1.6, attenuationColor: '#86d8b4', attenuationDistance: 3.2, clearcoat: 1.0, clearcoatRoughness: 0.02, envMapIntensity: 1.6 },
+  ];
+
+  const vein = createJadeVeins();
+  const cells = Array.from(document.querySelectorAll<HTMLElement>('[data-v]'));
+
+  for (const cell of cells) {
+    const idx = Number(cell.dataset.v);
+    const canvas = cell.querySelector('canvas')!;
+    const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+    renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.06;
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color('#f1ede0');
+    const pmrem = new THREE.PMREMGenerator(renderer);
+    scene.environment = pmrem.fromEquirectangular(env()).texture;
+    const cam = new THREE.PerspectiveCamera(32, 1, 0.1, 100);
+    cam.position.set(0, 0, 5.4);
+    const mesh = new THREE.Mesh(
+      new THREE.SphereGeometry(1, 96, 72),
+      new THREE.MeshPhysicalMaterial({ map: vein, ...(CONFIGS[idx] as object) }),
+    );
+    scene.add(mesh);
+    const key = new THREE.DirectionalLight(0xfff6e6, 2.4); key.position.set(2.6, 4.6, 3.4); scene.add(key);
+    const rim = new THREE.DirectionalLight(0xdfeaf5, 1.1); rim.position.set(-3.4, 1.2, -2.6); scene.add(rim);
+    scene.add(new THREE.HemisphereLight(0xfffaf0, 0x8d9888, 1.5));
+    const rect = cell.getBoundingClientRect();
+    renderer.setSize(rect.width, rect.width, false);
+    renderer.render(scene, cam);
+    (window as unknown as { __abReady?: boolean }).__abReady = true;
+  }
+</script>

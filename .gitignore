@@ -1,5 +1,7 @@
 # build output
 dist/
+# local scratch
+_work/
 # generated types
 .astro/
 

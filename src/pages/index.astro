@@ -183,7 +183,7 @@ const journals = [
   }
   @media (max-width: 700px) {
     .hero { --core-width: min(88vw, 300px); }
-    .hero-grid { min-height: 0; align-content: start; padding: 20px 20px 32px; grid-template-columns: minmax(0, 1fr); grid-template-rows: auto; grid-template-areas: "intro" "core" "cta" "lede" "side"; gap: 0; }
+    .hero-grid { min-height: 0; align-content: start; padding: 20px 20px 32px; grid-template-columns: minmax(0, 1fr); grid-template-rows: auto; grid-template-areas: "intro" "lede" "core" "cta" "side"; gap: 0; }
     .hero-side { margin-top: 24px; }
     .hero-side .domains a { min-height: 52px; padding: 12px 0; }
     .hero-intro { align-self: auto; }
@@ -194,6 +194,8 @@ const journals = [
     .core-caption { margin-top: 2px; font-size: 11px; }
     .hero .button { justify-self: stretch; min-width: 0; margin-top: 10px; }
     .hero-lede { margin-top: 12px; font-size: 13px; line-height: 1.6; }
+    /* 移动端把导语放在标题下、CTA 之上，避免"按钮在前、说明在后"的阅读倒错 */
+    .core-stage { order: 0; }
     .section { padding: 64px 20px; }
     .section-heading { display: block; margin-bottom: 24px; }
     .section-heading > p { margin-top: 12px; }

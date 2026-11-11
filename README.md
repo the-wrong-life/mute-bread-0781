@@ -1,128 +1,111 @@
-# ESA Pages Template
+# DIY Engineering Lab（PROJECT NOVA）
 
-A modern, beautiful website template built with Astro and TypeScript
+https://www.token-xxo.cn 的源码仓库。Astro 静态站，阿里云 ESA Pages 托管，生产分支 `main`。
 
-## 🚀 Features
+## 站点结构
 
-- **Modern Stack**: Built with Astro, TypeScript, and Tailwind CSS
-- **Responsive**: Fully responsive design that works on all devices
-- **Performance**: Optimized for speed with Astro's zero-JS by default approach
-- **SEO Ready**: Built-in SEO optimization and meta tags
-- **Accessible**: Following web accessibility best practices
+- `src/pages/` 页面；`src/data/` 项目与文档数据（纯 TS，无 CMS）
+- `src/layouts/NovaShell.astro` 全站壳层（导航、移动菜单、跳过链接、页脚）
+- `src/components/NovaCore.astro` 玉衡静态 SVG 底图（无 JS 也可见）
+- `src/scripts/jade/` 玉衡三维模型：`build-jade.ts`（程序化几何）、`viewer.ts`（渲染与导出）、`jade-material.ts`（玉质着色器）、`procedural-textures.ts`（贴图）
+- `src/scripts/tools/` 工程计算器的纯函数与 UI 绑定
+- `tools/blender/` 玉衡离线渲染管线（GLB 导出、Blender 渲染脚本、WebP 打包）
 
-## 🛠️ Tech Stack
+## 常用命令
 
-- [Astro](https://astro.build/) - Static site generator
-- [TypeScript](https://www.typescriptlang.org/) - Type safety
-- [Tailwind CSS](https://tailwindcss.com/) - Utility-first CSS framework
-- [Tailwind Typography](https://tailwindcss.com/docs/typography-plugin) - Beautiful typography
-
-## 📦 Installation
-
-1. Clone this repository:
 ```bash
-git clone <your-repo-url>
-cd esa-pages-template
-```
-
-2. Install dependencies:
-```bash
-npm install
-# or
-yarn install
-# or
 pnpm install
+node node_modules/astro/bin/astro.mjs dev      # 开发
+node node_modules/astro/bin/astro.mjs check    # 类型检查
+node node_modules/astro/bin/astro.mjs build    # 产出 dist/
 ```
 
-3. Start the development server:
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-```
+**注意**：本仓库的 `node_modules` 没有 `.bin` 目录，`pnpm exec astro` 会报 `Command "astro" not found`。必须用上面的 `node node_modules/astro/bin/astro.mjs` 形式。
 
-4. Open your browser and visit `http://localhost:4321`
+## 路由清单
 
-## 🏗️ Build
+以下由 `dist/` 实际产物枚举（`Get-ChildItem dist -Recurse -Filter index.html`），不是手工维护的列表。
 
-To build for production:
-
-```bash
-npm run build
-```
-
-The built files will be in the `dist/` directory.
-
-## 📁 Project Structure
+开发分支 `nova/v1-foundation`（19 条）：
 
 ```
-/
-├── public/
-│   └── favicon.svg
-├── src/
-│   ├── components/
-│   │   ├── Header.astro
-│   │   ├── Hero.astro
-│   │   ├── Features.astro
-│   │   └── Footer.astro
-│   ├── layouts/
-│   │   └── BaseLayout.astro
-│   ├── pages/
-│   │   └── index.astro
-│   ├── styles/
-│   │   └── global.css
-│   └── env.d.ts
-├── astro.config.mjs
-├── tailwind.config.mjs
-├── tsconfig.json
-└── package.json
+/                                       /projects
+/about                                  /projects/engineering-notes
+/ai                                     /projects/engineering-toolbox
+/blog                                   /projects/project-nova
+/docs                                   /projects/yuheng-core
+/docs/calculation-record                 /tools
+/docs/reusable-archives                  /marine        （领域页：船舶电气）
+/docs/static-site-deployment             /mechanical    （领域页：机械设计）
+/docs/unit-conversion                    /lab           （开发预览，不发布）
+                                         /lab-material  （开发预览，不发布）
 ```
 
-## 🎨 Customization
+生产分支（15 条，不含 `/lab`、`/lab-material`、`/marine`、`/mechanical`）：以 origin/main 的构建产物为准。
 
-### Colors
-The template uses a custom color palette defined in `tailwind.config.mjs`. You can modify the colors to match your brand:
+## 玉衡三维模型：结论的适用范围
 
-```js
-colors: {
-  primary: {
-    // Your custom colors
-  }
-}
+`docs/NOVA-YUHENG-20261110.md` 里的材质与渲染结论**只对当轮的渲染条件成立**（Blender 4.5.10 + Cycles CPU + 110 samples + AgX Medium High Contrast + 固定相机与灯光）。换渲染器、换引擎、换灯光都需要重新验证。
+
+要特别避免的两个误读：
+
+1. **不是引擎能力缺失。** Three.js 的 `MeshPhysicalMaterial` 本身就提供 `thickness`、`attenuationColor`、`attenuationDistance`、`transmission`、`ior`、`clearcoat` 等参数（见 [官方文档](https://github.com/mrdoob/three.js/blob/dev/docs/pages/MeshPhysicalMaterial.html.md)）。本项目实时侧的观感问题，正确表述是「**本轮实时方案未达到目标效果**」，不能写成引擎不支持。
+2. **深色背景下 Transmission 表达不了玉**，这是在本轮背景色（#1d3a2f 系）与曝光（1.36）下得出的观察，换成暖白背景需要重测。
+
+### 复现离线渲染
+
+```powershell
+# 1. 导出 GLB：需要本地预览服务在 127.0.0.1:4340
+node _work/nova-export-glb.mjs
+
+# 2. Blender 渲染：两个环境变量必填，否则报 "Please select a file"
+$env:NOVA_GLB="<绝对路径>/yuheng-jade-core.glb"
+$env:NOVA_OUT="<输出目录>"
+& "C:\Program Files\Blender Foundation\Blender 4.5\blender.exe" -b --python tools/blender/render-yuheng.py
 ```
 
-### Components
-All components are located in `src/components/` and can be easily customized:
+可选开关：`NOVA_GRAY=1` 灰模、`NOVA_ONLY=<子串>` 只留匹配网格、`NOVA_HIDE=<子串>` 隐藏、`NOVA_HEADS=1` 头部四机位、`NOVA_SAMPLE=1` 鳞片样段特写、`NOVA_TRANS/SSS/DENS/ROUGH/COAT/KERNEL` 材质参数、`NOVA_TAG` 输出前缀。
 
-- **Header.astro**: Navigation and branding
-- **Hero.astro**: Main hero section with call-to-action
-- **Features.astro**: Feature showcase grid
-- **Footer.astro**: Site footer with links and social media
+导出注意：`jade-material.ts` 是自定义 `ShaderMaterial`，写不进 glTF 材质。`viewer.ts` 在导出前会把球壳临时换成名为 `mat-jade-shell` 的 `MeshPhysicalMaterial` 代理，`finally` 再换回；否则 Blender 侧拿到白球。
 
-### Layout
-The base layout is in `src/layouts/BaseLayout.astro` and includes:
+### 循环动画管线
 
-- Meta tags for SEO
-- Open Graph tags for social sharing
-- TypeScript support
-- Global styles import
+首页主视觉是静态 WebP（LCP 优先），首屏稳定后才换成 8 秒循环动画，可暂停，尊重 `prefers-reduced-motion`。
 
-## 🚀 Deployment
+```powershell
+# 1. 逐帧导出姿态 GLB（需要本地预览在 127.0.0.1:4340）
+node _work/nova-export-frames.mjs 48        # → _work/nova-loop/glb/frame-000..047.glb，约 146 ms/帧
 
-This template can be deployed to any static hosting service:
+# 2. 逐帧离线渲染（720² / 24 samples，约 10 s/帧）
+$env:NOVA_FRAMES="_work/nova-loop/glb"; $env:NOVA_OUT="_work/nova-loop/png-720"
+$env:NOVA_RES="720"; $env:NOVA_SAMPLES="24"
+$env:NOVA_HIDE="kernel-glow,jade-inner-core,serpent-scales-sample"
+$env:NOVA_KERNEL="14"; $env:NOVA_AXIS_EMIT="0.5"
+& "C:\Program Files\Blender Foundation\Blender 4.5\blender.exe" -b --python tools/blender/render-loop.py
 
-- **Netlify**: Connect your Git repository for automatic deployments
-- **Vercel**: Deploy with zero configuration
-- **Cloudflare Pages**: Fast global deployment
-- **GitHub Pages**: Free hosting for public repositories
+# 3. 打包动画 WebP（480² / 24 帧 / 4fps / q72，约 384 KB）
+python _work/nova-pack-loop.py _work/nova-loop/png-720 _work/nova-loop/out 480 4
+```
 
-## 📝 License
+渲染前必须先 `astro build`，否则 /lab 加载的是旧 bundle，导出的 GLB 不会包含最新几何。
 
-This project is open source and available under the [MIT License](LICENSE).
+`NOVA_HIDE` 里的 `jade-inner-core` 与 `kernel-glow` 是 WebGL 侧为暖白页面加的辅助件（内层壳、加法光晕球），
+离线渲染时必须跳过：内层壳会把真实内核整个挡掉，实测 A/B/C/D 四组对照见 `docs/NOVA-YUHENG-MOTION-20261111.md`。
 
-## 🤝 Contributing
+## 测试
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+- 全路由审计：`node _work/nova-audit-all.mjs`（开发分支，17 路由 × 4 视口）
+- 生产批次审计：`node _work/nova-audit-release.mjs`（15 路由 × 4 视口）
+- 点击与导航回归：`node _work/nova-click-regress.mjs`
+- 首页动画播放/暂停/降级：`node _work/nova-anim-check.mjs`
+- 七视口首屏几何：`node _work/nova-shots3.mjs`
 
+这些脚本需要 Playwright（`C:/Users/33126/Documents/DIY/node_modules/playwright`）与 `TEMP/TMP` 指向可写目录。截图与脚本落在 `_work/`，不进版本库。
+
+## 发布
+
+`main` 是生产分支，推送后 ESA Pages 自动构建。回滚见 `docs/NOVA-RELEASE-20261110.md`。
+
+## 许可证与素材
+
+玉衡三维模型、渲染图、着色器均为本项目原创，随本仓库发布。未引入第三方模型、贴图或字体文件。

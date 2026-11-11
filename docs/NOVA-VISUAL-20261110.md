@@ -1,0 +1,91 @@
+# 玉衡主视觉与首页改版记录（2026-11-10）
+
+对应提交：`4875608`（首屏暖白纸底 + 玉衡主视觉）、`e3733d7`（首页卡片接真实数据）
+分支：`nova/v1-foundation`　生产：`main` / `87b722c`（未改动）
+
+## 一、结论先行
+
+- 首页视觉从「深墨绿底 + Three.js 实时球」改为「暖白纸底 + Blender 离线渲染的青玉主视觉」。
+- 三维资产采用双轨：`/lab` 保留可旋转、可导出 GLB 的 Three.js 实时模型；首页使用 51 KB 的透明 WebP。
+- 全站 17 条路由 × 4 视口 = 68 组合实测通过，无横向溢出、无 JS 错误、无资源加载失败。
+  （此前回报的「11 条路由」不完整，漏计 6 条，完整清单见第六节。）
+- **未发布到生产**。理由见第七节：这是重大视觉改版，需要先确认视觉方向。
+
+## 二、为什么必须换到离线渲染
+
+同一份 GLB 几何，两条渲染路径的结果差异极大：
+
+| 项目 | Three.js 实时 | Blender Cycles 离线 |
+| --- | --- | --- |
+| 玉的厚度沉积 | 做不到（transmission 只有「白玻璃 / 暗玻璃」两极） | `Volume Absorption` 直接表达，厚处沉色、薄处透亮 |
+| 次表面散射 | 无 | `Subsurface Weight` + 半径可调 |
+| 金属反射 | 依赖 envmap，民用环境图易失真 | 真实三点布光 + 反射 |
+| 成本 | 首屏需加载 500 KB three.js | 51 KB WebP，无运行时开销 |
+
+实测教训：**只调 Base Color 永远得到「奶绿塑料球」**。玉感来自体积吸收，不来自颜色。
+
+## 三、Blender 侧关键参数（`tools/blender/render-yuheng.py`）
+
+- 球壳：Transmission 0.86、IOR 1.55、Coat 0.55、Subsurface Weight 0.22。
+- 体积吸收：Color (0.16, 0.52, 0.36)、Density 1.75。这是玉质感的唯一来源。
+- 蛇身：半径 0.098（球径的 9.8%），砖格程序化纹理 scale 15，金铜双色 + 亮金细缝。
+- 铜环带：`CylinderGeometry(1.30, 1.30, 0.072)`，刻度由 Wave 纹理表达。
+- 渲染：1400×1400、128 samples、`film_transparent=True`、Cycles CPU，约 60–90 秒。
+
+## 四、几何修正（`src/scripts/jade/build-jade.ts`）
+
+三处曾被判定为「廉价感来源」并已修正：
+
+1. **蛇环必须是球面路径**。`serpentCurve()` 改用球面参数化：半径 1.086、纬度按 `cos(a) * 0.125` 起伏。平面圆环无论怎么调都像呼啦圈。
+2. **刻度齿不能做成几何**。原先 60 个 `BoxGeometry` 齿在 1100 px 渲染里退化成白点圈，已删除，改由铜环带自身的 Wave 纹理表达。
+3. **透明图不能压在深色底上**。玉按暖白背景设计，深墨绿底上球体发灰绿、像塑料。首屏最终确定为暖白径向渐变。
+
+## 五、首屏版面（实测坐标，Chrome）
+
+| 视口 | 核心区 | 主视觉 | 标题 | 主按钮 | 横向溢出 |
+| --- | --- | --- | --- | --- | --- |
+| 1585×992 | x701 y141 740×630 | 600×600 | x145 y207 | x145 y509 | 无 |
+| 1440×900 | x625 743×630 | 600×600 | x72 y217 | x72 y509 | 无 |
+| 390×844 | x20 y238 350×374 | 343×343 | x20 y121 | x20 y622 350×48 | 无 |
+| 360×800 | 320×347 | 317×317 | — | y589 320×48 | 无 |
+
+实测 `innerWidth === scrollWidth` 在四个视口全部成立，`pageerror` 与 `requestfailed` 均为 0。
+
+## 六、功能验收
+
+**全站审计**（`nova-audit-all.mjs`，脚本从 `dist/` 实际构建产物生成路由清单）：17 路由 × 4 视口 = 68 组合，
+全部 200、有 h1、无溢出、无 pageerror、无 requestfailed。
+
+完整路由（由 `dist/**/index.html` 枚举）：`/`、`/about`、`/ai`、`/blog`、`/docs`、`/docs/calculation-record`、
+`/docs/reusable-archives`、`/docs/static-site-deployment`、`/docs/unit-conversion`、`/lab`、`/lab-material`、
+`/projects`、`/projects/engineering-notes`、`/projects/engineering-toolbox`、`/projects/project-nova`、
+`/projects/yuheng-core`、`/tools`。
+
+**工程工具箱**（`nova-tools-test.mjs`）：
+
+- 长度 25.4 mm → 1 in；温度 0 °C → 32 °F。
+- 非法输入 `abc` → 「请输入有效的十进制数字。」并置 `aria-invalid=true`。
+- 超范围 `1e20` → 「请输入绝对值不超过 1×10¹⁵ 的有限数字。」
+- JSON 非法 `{"a":1,}` → 定位到第 1 行第 8 列，附带字符偏移，并置 `aria-invalid=true`。
+- 文本去重 `alpha/beta/alpha/空/beta/gamma` → `alpha/beta/gamma`。
+
+**导航回归**（`nova-nav-test.mjs`）：首页 CTA → `/projects/`；领域「工程工具」→ `/tools/`；项目首卡 → `/projects/project-nova/`；文档首篇 → `/docs/unit-conversion/`；移动端 details 菜单展开后 6 个链接、无溢出、可跳转。
+
+本轮修复：`/projects/[slug]/` 原先缺少返回入口，已补 `← 返回项目中心`（44 px 触控高度）。
+
+## 七、发布判定：暂不发布
+
+按项目既定门禁，发布前需确认「未明显偏离已认可的视觉设计」。当前状态：
+
+- 版面结构、配色与参考图方向一致（暖白纸底、两行宋体大标题、朱砂按钮、右侧主视觉）。
+- 但主视觉本体仍是渲染近似品：蛇头为简化椭球 + 吻部，玉牌为 Canvas 文字而非雕刻，与参考图的玉器细节仍有差距。
+
+因此本轮**只保留开发分支与本地预览**，不合并 `main`、不触发 ESA 生产部署。生产仍为 `87b722c`（Last-Modified 2026-11-08）。
+
+## 八、待完成
+
+1. 蛇头几何细化（鳞片过渡、眼窝、吻部形态）。
+2. 玉牌与七星刻纹改为真实几何或法线贴图。
+3. 尾斜杠口径统一（当前 18 个站内链接中 3 个带斜杠）。
+4. 跨引擎验证（Safari / Firefox）、读屏器抽查、Lighthouse 实测。
+5. `src/data/projects.ts` 中玉衡条目需在视觉定稿后更新事实表述。
