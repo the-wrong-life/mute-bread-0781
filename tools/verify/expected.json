@@ -326,6 +326,81 @@
     "deltaT": 12.0,
     "passiveOk": true
    }
+  },
+  {
+   "id": "a1",
+   "tool": "acCableDrop",
+   "expected": {
+    "drop": 5.5178169043353025,
+    "percent": 1.3794542260838256,
+    "endVoltage": 394.4821830956647,
+    "rKm": 0.7,
+    "xKm": 0.08,
+    "sinPhi": 0.526782687642637,
+    "limitPercent": 5.0,
+    "pass": true,
+    "factor": 1.7320508075688772
+   }
+  },
+  {
+   "id": "a2",
+   "tool": "acCableDrop",
+   "expected": {
+    "drop": 5.106952687772785,
+    "percent": 2.220414212075124,
+    "endVoltage": 224.89304731222722,
+    "rKm": 2.9166666666666665,
+    "xKm": 0.08,
+    "sinPhi": 0.4358898943540673,
+    "limitPercent": 5.0,
+    "pass": true,
+    "factor": 2.0
+   }
+  },
+  {
+   "id": "a3",
+   "tool": "acCableDrop",
+   "expected": {
+    "drop": 15.392488091034958,
+    "percent": 3.84812202275874,
+    "endVoltage": 384.607511908965,
+    "rKm": 0.40285714285714286,
+    "xKm": 0.08,
+    "sinPhi": 0.5999999999999999,
+    "limitPercent": 5.0,
+    "pass": true,
+    "factor": 1.7320508075688772
+   }
+  },
+  {
+   "id": "a4",
+   "tool": "acCableDrop",
+   "expected": {
+    "drop": 0.0,
+    "percent": 0.0,
+    "endVoltage": 380.0,
+    "rKm": 1.09375,
+    "xKm": 0.08,
+    "sinPhi": 0.4358898943540673,
+    "limitPercent": 3.0,
+    "pass": true,
+    "factor": 1.7320508075688772
+   }
+  },
+  {
+   "id": "a5",
+   "tool": "acCableDrop",
+   "expected": {
+    "drop": 3.7333333333333334,
+    "percent": 1.6969696969696972,
+    "endVoltage": 216.26666666666668,
+    "rKm": 11.666666666666666,
+    "xKm": 0.0,
+    "sinPhi": 0.0,
+    "limitPercent": 3.0,
+    "pass": true,
+    "factor": 2.0
+   }
   }
  ],
  "spec": "用例由 tools/verify/oracle.py 独立实现生成期望值；verify-tools.mjs 只做比对，不参与推导。约定：未填边 A/B 时展开长记 0；电弧/载流量等现场条件不在本工具范围。"

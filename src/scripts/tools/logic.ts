@@ -294,3 +294,69 @@ export function cabinetThermal(p: {
   }
   return { deltaT, area, natural, airflow, airflowBase, passiveOk };
 }
+
+
+/** 交流系统型式：ac3 三相三线/四线，ac1 单相两线。 */
+export type AcSystem = 'ac3' | 'ac1';
+
+export interface AcDropResult {
+  /** 线路压降（V） */
+  drop: number;
+  /** 压降占线电压的百分比 */
+  percent: number;
+  /** 负载端线电压（V） */
+  endVoltage: number;
+  /** 导体交流电阻（Ω/km） */
+  rKm: number;
+  /** 导体电抗（Ω/km） */
+  xKm: number;
+  /** 由功率因数导出的 sinφ */
+  sinPhi: number;
+  /** 允许压降限值（%） */
+  limitPercent: number;
+  /** 是否满足限值 */
+  pass: boolean;
+  /** 回路系数 k：三相 √3、单相 2 */
+  factor: number;
+}
+
+/**
+ * 交流线路压降（低压电缆，集中负载）。
+ *
+ * 公式：ΔU = k · I · (R′·cosφ + X′·sinφ) · L/1000
+ *   R′ = ρ20 · 1000 / A（Ω/km），k = √3（三相线电压）/ 2（单相）。
+ *
+ * 适用边界与常见误用：
+ * - 集肤效应与邻近效应在小截面（≤ 35 mm²）低压电缆上可忽略；大截面应按厂家 R/X 数据替代 ρ/A；
+ * - X′ 取 0.08 Ω/km 是低压多芯电缆的常用估算值，穿管、桥架并排敷设与谐波环境会偏离；
+ * - 只算线路本体，不含变压器内阻、母线、开关与接触电阻；启动电流与短路校验须另做；
+ * - 结果不替代按 IEC 60364-5-52 / GB/T 16895 的载流量、保护配合与温升校验。
+ */
+export function acCableDrop(p: {
+  system: AcSystem; voltage: string; current: string; length: string; area: string;
+  rho: string; pf: string; x: string; limit: string;
+}): AcDropResult {
+  const voltage = parsePositive(p.voltage, '线电压');
+  const current = parsePositive(p.current, '负载电流', true);
+  const length = parsePositive(p.length, '单程线长');
+  const area = parsePositive(p.area, '导体截面积');
+  const rho = parsePositive(p.rho, '电阻率');
+  const pf = parsePositive(p.pf, '功率因数');
+  const xKm = parsePositive(p.x, '单位电抗', true);
+  const limitPercent = parsePositive(p.limit, '允许压降');
+  if (voltage > 1000) throw new Error('线电压超过 1000 V，本工具只适用于低压系统。');
+  if (area > 1000) throw new Error('导体截面积超过 1000 mm²，请确认单位是否为 mm²。');
+  if (length > 100000) throw new Error('单程线长超过 100 km，请确认单位是否为 m。');
+  if (pf > 1) throw new Error('功率因数必须在 0 到 1 之间。');
+  if (xKm > 0.5) throw new Error('单位电抗应在 0–0.5 Ω/km 之间，低压电缆常用 0.08。');
+  if (limitPercent > 100) throw new Error('允许压降不能超过 100%。');
+  const sinPhi = Math.sqrt(Math.max(0, 1 - pf * pf));
+  const rKm = (rho * 1000) / area;
+  const factor = p.system === 'ac3' ? Math.sqrt(3) : 2;
+  const drop = factor * current * (rKm * pf + xKm * sinPhi) * (length / 1000);
+  const percent = (drop / voltage) * 100;
+  if (!Number.isFinite(drop) || !Number.isFinite(percent)) throw new Error('计算结果溢出，请检查输入范围。');
+  if (percent >= 100) throw new Error('计算压降已达到或超过线电压，请检查输入是否合理。');
+  return { drop, percent, endVoltage: voltage - drop, rKm, xKm, sinPhi, limitPercent, pass: percent <= limitPercent, factor };
+}
+

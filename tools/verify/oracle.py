@@ -118,6 +118,21 @@ def cabinet(loss, area, ambient, inside, k, safety):
             'deltaT': delta_t, 'passiveOk': loss <= natural}
 
 
+def ac_drop(system, voltage, current, length, area, rho, pf, x_km, limit):
+    """交流线路压降：ΔU = k·I·(R'·cosφ + X'·sinφ)·L/1000。
+
+    与实现独立：这里按"每公里阻抗 → 回路总长"推导，k 由相数决定（三相 √3、单相 2）。
+    """
+    r_km = rho * 1000.0 / area
+    sin_phi = math.sqrt(max(0.0, 1.0 - pf * pf))
+    factor = math.sqrt(3.0) if system == 'ac3' else 2.0
+    drop = factor * current * (r_km * pf + x_km * sin_phi) * (length / 1000.0)
+    percent = drop / voltage * 100.0
+    return {'drop': drop, 'percent': percent, 'endVoltage': voltage - drop,
+            'rKm': r_km, 'xKm': x_km, 'sinPhi': sin_phi,
+            'limitPercent': limit, 'pass': percent <= limit, 'factor': factor}
+
+
 def evaluate(case):
     a = case['args']
     tool = case['tool']
@@ -134,6 +149,8 @@ def evaluate(case):
         return supply(a[0], a[1], float(a[2]), float(a[3]), float(a[4]))
     if tool == 'cabinetThermal':
         return cabinet(*(float(x) for x in a))
+    if tool == 'acCableDrop':
+        return ac_drop(a[0], *(float(x) for x in a[1:]))
     raise ValueError('未知工具：' + tool)
 
 
