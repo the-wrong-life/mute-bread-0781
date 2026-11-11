@@ -29,7 +29,9 @@ const links = [
     <!-- 托管平台（阿里云 ESA Pages 免费版）不应用仓库里的 public/_headers，
          这些头部只能在 HTML 里表达：referrer 与 CSP 用 meta，HSTS/X-Frame-Options 仍需控制台设置。 -->
     <meta name="referrer" content="strict-origin-when-cross-origin" />
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline' https://rjsprbi.myalicdn.com; font-src 'self'; connect-src 'self' https://rjsprbi.myalicdn.com; object-src 'none'; base-uri 'self'; form-action 'self'" />
+    <!-- ESA 边缘会注入自家 RUM：脚本来自 rjsprbi.myalicdn.com，上报接口在 rumtc.myalicdn.com，
+         两个域名都要放行，否则页面每隔几秒就会报一条 CSP 拦截错误。 -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline' https://rjsprbi.myalicdn.com; font-src 'self'; connect-src 'self' https://rjsprbi.myalicdn.com https://rumtc.myalicdn.com; object-src 'none'; base-uri 'self'; form-action 'self'" />
   </head>
   <body>
     <a class="skip-link" href="#main-content">跳到主要内容</a>
