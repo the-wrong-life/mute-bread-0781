@@ -204,12 +204,12 @@ git push --force-with-lease origin rollback-before-batch26:main` },
     sections: [
       { heading: '收录不是“提交一次就完事”', paragraphs: ['静态站没有后台，但同样会产生重复 URL：带不带结尾斜杠、带不带 www、带不带查询参数，都可能被当成不同页面。canonical 的作用是把这些变体收敛到一个规范地址；站点地图的作用是告诉爬虫有哪些页面、哪些最近改过。两者都不是排名手段，写错反而拉低收录质量。'] },
       { heading: 'canonical 由 site 配置派生', paragraphs: ['在 astro.config.mjs 里把 site 设为 https://www.token-xxo.cn（含 www，与线上主机名一致），布局里用当前路径拼出绝对地址。这样同一个布局同时服务首页、文档列表、文档详情与项目详情时，不会出现“所有页面 canonical 都指向首页”这种常见错误。', '同时补上 og:type、og:site_name、og:locale 与 twitter:card：分享卡片依赖这些字段，缺了会退化成只有标题。'], code: "const canonical = new URL(Astro.url.pathname, Astro.site ?? 'https://www.token-xxo.cn').href;" },
-      { heading: '站点地图在构建期生成', paragraphs: ['新增静态端点 src/pages/sitemap.xml.ts，直接从 src/data/docs.ts、src/data/projects.ts 与 src/data/posts.ts 展开 URL 清单：9 条固定路由、16 篇文档、4 个项目、7 篇札记，共 36 条；文档、项目与札记的 lastmod 取记录里的 updated 字段。', '关键是“同一数据源”：页面路由与站点地图都由同一份数据展开，新增文档后不需要维护第二份清单，也不会出现地图指向不存在页面。'], code: "for (const doc of docs) entries.push({ path: `/docs/${doc.slug}/`, lastmod: doc.updated });\nfor (const post of posts) entries.push({ path: `/blog/${post.slug}/`, lastmod: post.updated });" },
+      { heading: '站点地图在构建期生成', paragraphs: ['新增静态端点 src/pages/sitemap.xml.ts，直接从 src/data/docs.ts、src/data/projects.ts 与 src/data/posts.ts 展开 URL 清单：9 条固定路由、17 篇文档、4 个项目、7 篇札记，共 37 条；文档、项目与札记的 lastmod 取记录里的 updated 字段。', '关键是“同一数据源”：页面路由与站点地图都由同一份数据展开，新增文档后不需要维护第二份清单，也不会出现地图指向不存在页面。'], code: "for (const doc of docs) entries.push({ path: `/docs/${doc.slug}/`, lastmod: doc.updated });\nfor (const post of posts) entries.push({ path: `/blog/${post.slug}/`, lastmod: post.updated });" },
       { heading: 'robots.txt 只做两件事', paragraphs: ['public/robots.txt 里只有 Allow: / 与 Sitemap: https://www.token-xxo.cn/sitemap.xml。没有 Disallow 规则，因为本站没有需要隐藏的路径；也没写 Crawl-delay——那是爬虫侧的自愿约定，写了不保证被遵守。'] },
       { heading: '怎么验证', paragraphs: ['构建后解析 dist/sitemap.xml，确认 loc 数量与路由数一致；用浏览器打开页面读 link[rel="canonical"] 与 meta[property="og:url"]，确认是绝对地址且逐页不同；用原始请求取 /sitemap.xml 与 /robots.txt，确认返回 200。这些检查都在发布前的门禁里，不是发布后再看。'] },
       { heading: '边界', paragraphs: ['没有向搜索引擎后台提交站点地图，收录速度不由本站决定；canonical 不能替代 301 重定向，也不解决 HTTP 与 HTTPS 并存的问题（那该由平台侧强制跳转）；站点地图的 lastmod 是“记录整理日期”，表达内容新鲜度而非部署时间。'] }
     ],
-    sources: [{ label: '实现位置', note: '站点配置 astro.config.mjs；布局 src/layouts/NovaShell.astro；站点地图端点 src/pages/sitemap.xml.ts；public/robots.txt。' }, { label: '验证记录', note: '构建产物解析出 36 条 URL；首页、文档列表、文档详情、项目详情与札记详情的 canonical 与 og:url 均为绝对地址且逐页不同；/sitemap.xml 与 /robots.txt 均返回 200。' }],
+    sources: [{ label: '实现位置', note: '站点配置 astro.config.mjs；布局 src/layouts/NovaShell.astro；站点地图端点 src/pages/sitemap.xml.ts；public/robots.txt。' }, { label: '验证记录', note: '构建产物解析出 37 条 URL；首页、文档列表、文档详情、项目详情与札记详情的 canonical 与 og:url 均为绝对地址且逐页不同；/sitemap.xml 与 /robots.txt 均返回 200。' }],
     related: [{ label: '静态站点部署实践', href: '/docs/static-site-deployment' }, { label: '性能指标的现场读数口径', href: '/docs/perf-field-readings' }]
   },
   {
@@ -242,5 +242,21 @@ git push --force-with-lease origin rollback-before-batch26:main` },
     ],
     sources: [{ label: '公式与系数说明', note: 'ΔU = k·I·(R′cosφ + X′sinφ)·L 为集中参数近似式，k 取 √3（三相）或 2（单相两线）；不含具体标准条款。' }, { label: '本仓库验证用例', note: 'tools/verify/vectors.json 的 a1–a5 与本页算例同参数，期望值由 tools/verify/oracle.py 独立算出：a1 的 drop 5.5178 V、percent 1.3795%。反算一侧的 z1–z5 与 a1/a2/a3/a5 用同一回路条件交叉核对：z1 反算得 10 mm²、回代 3.3118%；z5 与 a5 落在同一压降 3.7333 V。' }],
     related: [{ label: '交流电缆压降计算器', href: '/tools#acdrop' }, { label: '按压降选截面（反算）', href: '/tools#acsize' }, { label: '电源容量与线电流', href: '/docs/supply-current' }, { label: '工程计算记录方法', href: '/docs/calculation-record' }]
+  },
+  {
+    slug: 'conduit-fill', title: '电缆穿管填充率：外径平方比与 53/31/40 分档', kind: '计算记录', updated: '2026-11-13',
+    summary: '为什么填充率只用外径平方比、53% 与 31% 这两个数从哪来、双规格怎么叠加，以及它为什么不能替代载流量校验。',
+    sections: [
+      { heading: '为什么只剩外径平方与根数', paragraphs: ['填充率问的是管内圆形截面的占位比例。电缆按外径当作圆、管内按内径当作圆，两者面积都含 π/4，做比值时这个常数自己抵消，于是 f = 100 · Σ(nᵢ·dᵢ²) / D²。', '这个简化很重要：它说明填充率只由「根数 × 外径平方」和「内径平方」决定，与电缆是几芯、芯线多粗、绝缘厚多少都无关——那些信息已经包含在外径里。也说明它纯粹是几何占位，不含任何电或热的信息。'], math: '<math display="block"><mi>f</mi><mo>=</mo><mn>100</mn><mo>&#x00B7;</mo><mfrac><mrow><mo>&#x2211;</mo><msub><mi>n</mi><mi>i</mi></msub><mo>&#x00B7;</mo><msubsup><mi>d</mi><mi>i</mi><mn>2</mn></msubsup></mrow><msup><mi>D</mi><mn>2</mn></msup></mfrac></math>' },
+      { heading: '53/31/40 这三个数从哪来', paragraphs: ['这三个上限来自美国国家电气规范（NEC，NFPA 70）第 9 章表 1 的常用规则：管内 1 根电缆不超过 53%，2 根不超过 31%，3 根及以上不超过 40%。它们原本针对的是导线在管内的散热与拉线可行性，后来被大量工程实践借用。', 'IEC 体系（IEC 60364 系列）并没有给出统一的填充率百分比，而是要求按制造商提供的载流量表、敷设方式与弯曲半径确定；船级社规范同样偏重载流量与拉线工艺。所以这里的百分比只是初筛判据，不能当合规依据。', '三档里最容易被忽略的是 2 根 31%——它比 3 根的 40% 更严。原因是两根电缆在管内常并排贴着，散热与拉线阻力都比三根分散布置更差。'] },
+      { heading: '算例：DN50 穿 3 根外径 14 mm 电缆', paragraphs: ['条件：管内径 50 mm、电缆外径 14 mm、3 根。', '管内净截面 = π × 50² / 4 = 1963.5 mm²；电缆占用 = 3 × π × 14² / 4 = 461.8 mm²；填充率 = 461.8 / 1963.5 = 23.52%。3 根对应上限 40%，判定通过。', '若同样 3 根电缆但改成 2 根，上限降到 31%，填充率 15.68% 仍通过；若换成 8 根 22 mm 穿 DN80（内径 80 mm），填充率 = 8 × 484 / 6400 = 60.5%，超过 40%，需要加大管径或分流。'], list: ['DN50 / 1 根 22 mm：19.36%，上限 53%，通过', 'DN50 / 2 根 14 mm：15.68%，上限 31%，通过', 'DN80 / 8 根 22 mm：60.5%，上限 40%，超限', 'DN100 / 3 根 30 mm + 4 根 12 mm：32.76%，上限 40%，通过'] },
+      { heading: '常见错误', paragraphs: ['把芯数当根数：一根 4×2.5 mm² 电缆是一根，不是四根。填充率按整根外径计，填 4 会让结果虚高近四倍。', '把导体截面当外径：2.5 mm² 导体的直径约 1.78 mm，但成品电缆外径通常 10 mm 以上，两者不能混用。工具要求填外径（mm），不是 mm²。', '忽略弯曲与拉线余量：直线段算得过、转弯处过不去，是现场最常见的问题。长距离、多弯头时应另做拉线力与弯曲半径校验。', '只看填充率不看载流量：见下一节。'], list: [] },
+      { heading: '填充率通过不等于能长期运行', paragraphs: ['管内敷设的散热条件比空气中差，载流量必须按 IEC 60364-5-52 的敷设方式（B1、B2、C、E 等）折算，成束敷设还要乘校正系数。填充率只回答「塞不塞得进去」，不回答「会不会过热」。'],
+        list: ['同一根管里多回路并联或成束时，载流量校正系数可能低到 0.7 以下。', '环境温度高于 30 ℃ 时还要按温度校正系数折算。', '短路热稳定与保护整定与填充率无关，必须单独校验。'] },
+      { heading: '双规格与反向问法', paragraphs: ['同一根管里常混穿不同外径的电缆，这时填充率按 Σ(nᵢ·dᵢ²) 叠加即可，工具第二组输入就是为此准备的。', '施工前更常见的问法是反过来的：这根管最多能穿几根。按上限反解 n ≤ 上限 × D² / d²，向下取整。注意它给的是「同一种外径」的根数上限，混穿时要回到正向计算逐次试算。'] },
+      { heading: '待核实项', paragraphs: ['下面几项在本页算例中没有数据支撑，用于实际工程前必须补齐。'], list: ['未按实际电缆外径核对：不同厂家同规格电缆外径可能差 1–2 mm，应以到货样品或厂家数据表为准。', '未计入电缆不圆度、管内毛刺与接头套管处的局部收缩。', '未校核载流量、电压降与短路热稳定，这三项与填充率是独立的三道校验。', '船用与海工项目应以船级社规范与船东认可的做法为准，本页百分比只作初筛。'] }
+    ],
+    sources: [{ label: '分档依据', note: '53% / 31% / 40% 取自 NEC（NFPA 70）第 9 章表 1 的常用规则；IEC 与船级社无统一百分比，按载流量表与弯曲半径确定。' }, { label: '本仓库验证用例', note: 'tools/verify/vectors.json 的 cf1–cf5 与 ecf1–ecf6，期望值由 tools/verify/oracle.py 独立实现生成。' }],
+    related: [{ label: '穿管填充率计算器', href: '/tools#cfill' }, { label: '交流电缆压降', href: '/docs/ac-cable-drop' }, { label: '工程计算器的验证方法', href: '/docs/tools-verification' }, { label: '工程计算记录方法', href: '/docs/calculation-record' }],
   },
 ];
