@@ -166,6 +166,35 @@ def ac_size(system, voltage, current, length, rho, pf, x_km, limit):
             'reactiveLimited': False, 'factor': factor}
 
 
+CONDUIT_LIMITS = ((1, 53.0), (2, 31.0))  # 其余为 40.0
+
+
+def conduit_fill(diameter, dia_a, count_a, dia_b, count_b):
+    """电缆穿管填充率：先按面积比算，再用 d² 简化式交叉核对。
+
+    面积比：f = (Σ n·π·d²/4) / (π·D²/4) × 100 = 100·Σ(n·d²)/D²。
+    这里两条都算一遍，取面积比结果，并断言与简化式一致（π/4 必须抵消）。
+    """
+    total = count_a + count_b
+    if total <= 0:
+        raise ValueError('根数为 0，无法计算')
+    tube = math.pi * diameter ** 2 / 4.0
+    cable = (count_a * math.pi * dia_a ** 2 + count_b * math.pi * dia_b ** 2) / 4.0
+    fill = cable / tube * 100.0
+    simple = 100.0 * (count_a * dia_a ** 2 + count_b * dia_b ** 2) / diameter ** 2
+    assert abs(fill - simple) <= 1e-9 * max(1.0, abs(fill)), (fill, simple)
+    limit = 40.0
+    for n, val in CONDUIT_LIMITS:
+        if total <= n:
+            limit = val
+            break
+    d_max = max(dia_a, dia_b if count_b > 0 else 0.0)
+    max_count = int(math.floor(limit / 100.0 * diameter ** 2 / d_max ** 2))
+    return {'tubeArea': tube, 'cableArea': cable, 'spareArea': tube - cable,
+            'fillPercent': fill, 'limitPercent': limit, 'total': total,
+            'pass': fill <= limit, 'maxCount': max_count}
+
+
 def evaluate(case):
     a = case['args']
     tool = case['tool']
@@ -186,6 +215,10 @@ def evaluate(case):
         return ac_drop(a[0], *(float(x) for x in a[1:]))
     if tool == 'acCableSize':
         return ac_size(a[0], *(float(x) for x in a[1:]))
+    if tool == 'conduitFill':
+        db = 0.0 if a[3] in (None, '') else float(a[3])
+        nb = 0 if a[4] in (None, '') else int(a[4])
+        return conduit_fill(float(a[0]), float(a[1]), int(a[2]), db, nb)
     raise ValueError('未知工具：' + tool)
 
 

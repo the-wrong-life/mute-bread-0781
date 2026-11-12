@@ -66,7 +66,9 @@ function phase(time: number): number {
  * 2. 环半径的呼吸（两倍频），让外轮廓不是死圆；
  * 3. 绕环轴的轻微进动，给出三维姿态变化（侧视也能看出前后错动）。
  */
-export function snakePoint(u: number, time: number, out = new THREE.Vector3()): THREE.Vector3 {
+export interface TailHermite { p0: THREE.Vector3; m0: THREE.Vector3; p1: THREE.Vector3; m1: THREE.Vector3 }
+
+export function snakePoint(u: number, time: number, out = new THREE.Vector3(), hermite?: TailHermite): THREE.Vector3 {
   const ph = phase(time);
   const a = END_ANGLE - SWEEP * (1 - u);
   const s = (a - (END_ANGLE - SWEEP)) / SWEEP; // 0 尾 → 1 颈
@@ -98,13 +100,39 @@ export function snakePoint(u: number, time: number, out = new THREE.Vector3()): 
   const st = Math.sin(tilt);
   const p = out.set(x, y * ct - z * st, y * st + z * ct);
 
-  // §44 衔尾约束：尾段（u 小）向嘴内锚点收拢，权重 (1-u/L)^2 平滑衰减到 0，
-  // 因此不会在过渡处出现折角，颈端（u=1）完全不受影响。
-  // 校正量每帧由 build-jade.ts 在头部姿态确定后写入，管体与鳞片共用这条路径，
-  // 所以两者永远不会一先一后地脱开。
-  if (u < TAIL_LOCK_LEN) {
-    const w = 1 - u / TAIL_LOCK_LEN;
-    p.addScaledVector(tailLockDelta, w * w);
+  if (hermite && u < TAIL_LOCK_LEN) {
+    const t = u / TAIL_LOCK_LEN;
+    const ra = hermite.p0.length();
+    const rb = hermite.p1.length();
+    const a = hermite.p0.clone().normalize();
+    const b = hermite.p1.clone().normalize();
+    const theta = Math.acos(THREE.MathUtils.clamp(a.dot(b), -1, 1));
+    const sinTheta = Math.sin(theta);
+    const spherical = (v: number, target: THREE.Vector3) => {
+      if (Math.abs(sinTheta) < 1e-6) {
+        target.copy(a).lerp(b, v).normalize();
+      } else {
+        target.copy(a).multiplyScalar(Math.sin((1 - v) * theta) / sinTheta)
+          .addScaledVector(b, Math.sin(v * theta) / sinTheta).normalize();
+      }
+      return target.multiplyScalar(THREE.MathUtils.lerp(ra, rb, v) + 0.06 * Math.sin(Math.PI * v));
+    };
+    if (t < 0.25) {
+      const q = t / 0.25;
+      const q2 = q * q;
+      const q3 = q2 * q;
+      const end = spherical(0.25, new THREE.Vector3());
+      const h = 0.00001;
+      const tangent = spherical(0.25 + h, new THREE.Vector3())
+        .sub(spherical(0.25 - h, new THREE.Vector3())).multiplyScalar(0.25 / (2 * h));
+      const startTangent = hermite.m0.clone().normalize().multiplyScalar(0.5 * hermite.p0.distanceTo(hermite.p1));
+      p.copy(hermite.p0).multiplyScalar(2 * q3 - 3 * q2 + 1)
+        .addScaledVector(startTangent, q3 - 2 * q2 + q)
+        .addScaledVector(end, -2 * q3 + 3 * q2)
+        .addScaledVector(tangent, q3 - q2);
+    } else {
+      spherical(t, p);
+    }
   }
   return p;
 }
@@ -115,24 +143,15 @@ export function snakePoint(u: number, time: number, out = new THREE.Vector3()): 
  * 之所以用"整体偏移 + 平方衰减"而不是重算一条贝塞尔：管体、鳞片、切向全部经由 snakePoint
  * 取样，只要偏移写进这一个函数，三者自动保持一致，不需要各自再实现一遍尾部过渡。
  */
-const tailLockDelta = new THREE.Vector3();
-const TAIL_LOCK_LEN = 0.16;
-
-export function setTailLockTarget(dx: number, dy: number, dz: number): void {
-  tailLockDelta.set(dx, dy, dz);
-}
-
-export function clearTailLock(): void {
-  tailLockDelta.set(0, 0, 0);
-}
+export const TAIL_LOCK_LEN = 0.30;
 
 /** 切向：中心差分，比单侧差分稳定。 */
-export function snakeTangent(u: number, time: number, out = new THREE.Vector3()): THREE.Vector3 {
+export function snakeTangent(u: number, time: number, out = new THREE.Vector3(), hermite?: TailHermite): THREE.Vector3 {
   const h = 1e-3;
   const u0 = Math.max(0, u - h);
   const u1 = Math.min(1, u + h);
-  const p0 = snakePoint(u0, time, new THREE.Vector3());
-  const p1 = snakePoint(u1, time, new THREE.Vector3());
+  const p0 = snakePoint(u0, time, new THREE.Vector3(), hermite);
+  const p1 = snakePoint(u1, time, new THREE.Vector3(), hermite);
   return out.subVectors(p1, p0).normalize();
 }
 
@@ -169,7 +188,7 @@ export interface SnakeTubeTargets {
  *
  * 坐标架用平行传输而不是 Frenet：Frenet 在曲率近零处会翻转，蛇身会出现整段扭麻花。
  */
-export function updateSnakeTube(target: SnakeTubeTargets, time: number): void {
+export function updateSnakeTube(target: SnakeTubeTargets, time: number, hermite?: TailHermite): void {
   const { positions, normals, tubularSegments: N, radialSegments: M } = target;
   const p = new THREE.Vector3();
   const t = new THREE.Vector3();
@@ -179,15 +198,15 @@ export function updateSnakeTube(target: SnakeTubeTargets, time: number): void {
   const tmp = new THREE.Vector3();
 
   // 初值：任取一个与切向不平行的向量做正交化
-  snakeTangent(0, time, t);
+  snakeTangent(0, time, t, hermite);
   prevN.set(0, 1, 0);
   if (Math.abs(prevN.dot(t)) > 0.9) prevN.set(0, 0, 1);
   prevN.sub(tmp.copy(t).multiplyScalar(prevN.dot(t))).normalize();
 
   for (let i = 0; i <= N; i += 1) {
     const u = i / N;
-    snakePoint(u, time, p);
-    snakeTangent(u, time, t);
+    snakePoint(u, time, p, hermite);
+    snakeTangent(u, time, t, hermite);
 
     // 平行传输：把上一帧的法向投影到当前截面上
     n.copy(prevN).sub(tmp.copy(t).multiplyScalar(prevN.dot(t)));
@@ -293,7 +312,7 @@ export function buildScaleUv(): Float32Array {
  * 每帧原地重算甲片顶点。与 updateSnakeTube 同源（同一 snakePoint / snakeTangent / snakeRadius），
  * 因此鳞片永远贴在管体表面上，不会出现"动画一动就飞出去"。
  */
-export function updateSnakeScales(positions: Float32Array, normals: Float32Array, time: number): void {
+export function updateSnakeScales(positions: Float32Array, normals: Float32Array, time: number, hermite?: TailHermite): void {
   const p = new THREE.Vector3();
   const tan = new THREE.Vector3();
   const radial = new THREE.Vector3();
@@ -302,13 +321,14 @@ export function updateSnakeScales(positions: Float32Array, normals: Float32Array
   const wdir = new THREE.Vector3();
   const centre = new THREE.Vector3();
   const v = new THREE.Vector3();
+  const surface = new THREE.Vector3();
   let k = 0;
   const bodyArc = 2 * Math.PI * BASE_RADIUS;
   for (let i = 0; i < SCALE_ROWS; i += 1) {
     // 收进 0.5 个步距，避免尾端与颈端出现半片
     const u = (i + 0.5) / SCALE_ROWS;
-    snakePoint(u, time, p);
-    snakeTangent(u, time, tan);
+    snakePoint(u, time, p, hermite);
+    snakeTangent(u, time, tan, hermite);
     radial.copy(p).normalize();
     radial.addScaledVector(tan, -radial.dot(tan));
     if (radial.lengthSq() < 1e-8) radial.set(0, 0, 1);
@@ -322,19 +342,19 @@ export function updateSnakeScales(positions: Float32Array, normals: Float32Array
     // 覆瓦系数不能大：2.05 让每片后缘抬起近半个行距，叠成竹节台阶（s1-base 实测）。
     // 1.35 仍保证后缘压住下一行，但台阶高度只剩行距的 35%。
     // §44：1.35 时后缘抬起超过半个行距，整条蛇读成瓦楞；1.22 只留 22% 的浅搭。
-    const plateLen = rowStep * (1.22 - 0.10 * (1 - u));
+    const plateLen = rowStep * 1.25;
 
     // §44 平面轮廓：旧版 across 宽度沿长度恒定，6×6 面片的边界就是矩形，特写读成"编织网"。
     // 现在基准宽度加大（1.95 步距）再乘一个沿长度变化的水滴形因子：
     // 前缘 0.58（贴身）、中后段 ~1.0（最宽）、尾端 0.20（收成尖），片与片之间自然形成圆角轮廓。
     const plateWid = arcStep * 1.95;
-    const amp = r * 0.05;
+    const amp = 0.020;
     for (let j = 0; j < SCALE_COLS; j += 1) {
       const stagger = (i % 2) * 0.5;
       const ang = ((j + stagger) / SCALE_COLS) * Math.PI * 2;
       dir.copy(radial).multiplyScalar(Math.cos(ang)).addScaledVector(side, Math.sin(ang)).normalize();
       wdir.crossVectors(dir, tan).normalize();
-      centre.copy(p).addScaledVector(dir, r * 0.95);
+      centre.copy(p);
       for (let a = 0; a <= SCALE_SEG_A; a += 1) {
         const ua = a / SCALE_SEG_A;
         // 前缘贴实在管体上、后缘抬起压住下一片：这才是覆瓦，不是贴一排小鼓包
@@ -349,14 +369,18 @@ export function updateSnakeScales(positions: Float32Array, normals: Float32Array
           const across = (vb - 0.5) * plateWid * hwF;
           // 横向收边：两侧压低，片才有隆起的弧面
           const edge = Math.sin(Math.PI * vb) ** 0.6;
-          v.copy(centre).addScaledVector(tan, along).addScaledVector(wdir, across).addScaledVector(dir, lift * edge);
+          // 周向投影到真实管面：前缘略嵌入，后缘仅浅搭。
+          const theta = across / r;
+          surface.copy(dir).multiplyScalar(Math.cos(theta)).addScaledVector(wdir, Math.sin(theta));
+          const height = r * 0.997 + lift * edge;
+          v.copy(centre).addScaledVector(tan, along).addScaledVector(surface, height);
           positions[k] = v.x;
           positions[k + 1] = v.y;
           positions[k + 2] = v.z;
           // 法线：径向为主，向四边轻微外倾，近看才有圆瓦感
-          const nx = dir.x * 0.86 + tan.x * (ua - 0.5) * 0.75 + wdir.x * (vb - 0.5) * 0.75;
-          const ny = dir.y * 0.86 + tan.y * (ua - 0.5) * 0.75 + wdir.y * (vb - 0.5) * 0.75;
-          const nz = dir.z * 0.86 + tan.z * (ua - 0.5) * 0.75 + wdir.z * (vb - 0.5) * 0.75;
+          const nx = surface.x - tan.x * 0.025 * ua;
+          const ny = surface.y - tan.y * 0.025 * ua;
+          const nz = surface.z - tan.z * 0.025 * ua;
           const nl = Math.hypot(nx, ny, nz) || 1;
           normals[k] = nx / nl;
           normals[k + 1] = ny / nl;

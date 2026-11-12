@@ -1,6 +1,6 @@
 ---
-export interface Props { title: string; description?: string; active?: string; }
-const { title, description = 'DIY 工程实验室 — 工程、实验与可复用工具。', active = '' } = Astro.props;
+export interface Props { title: string; description?: string; active?: string; robots?: 'noindex'; }
+const { title, description = 'DIY 工程实验室 — 工程、实验与可复用工具。', active = '', robots } = Astro.props;
 // canonical 必须由 site + 当前路径生成，而不是硬编码：文档详情、项目详情共用一个布局。
 const canonical = new URL(Astro.url.pathname, Astro.site ?? 'https://www.token-xxo.cn').href;
 const links = [
@@ -18,6 +18,8 @@ const links = [
     <meta name="theme-color" content="#f4f0e6" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="canonical" href={canonical} />
+    {/* 开发预览页与材质试验台不在 sitemap 里：显式 noindex，避免"不收录"只靠 sitemap 缺项这种弱信号。 */}
+    {robots === 'noindex' && <meta name="robots" content="noindex, follow" />}
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="DIY 工程实验室" />
     <meta property="og:locale" content="zh_CN" />
