@@ -18,7 +18,8 @@ function walk(dir, out = []) {
     const p = join(dir, name);
     const st = statSync(p);
     if (st.isDirectory()) walk(p, out);
-    else if (name.endsWith('.html')) out.push(p);
+    // 404.html 是错误页产物，不是可导航路由（它的 404 状态是正确行为），不参与路由清单
+    else if (name.endsWith('.html') && name !== '404.html') out.push(p);
   }
   return out;
 }
