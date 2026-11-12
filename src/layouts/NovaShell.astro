@@ -36,7 +36,9 @@ const links = [
   <body>
     <a class="skip-link" href="#main-content">跳到主要内容</a>
     <header class="site-header">
-      <a class="brand" href="/" aria-label="返回实验室首页"><span class="brand-mark" aria-hidden="true">✦</span><span>DIY 工程实验室</span></a>
+      <!-- §43：axe-core 报 label-content-name-mismatch（serious）——aria-label 必须包含可见文字，
+           否则语音控制用户说"点击 DIY 工程实验室"无法命中该链接。 -->
+      <a class="brand" href="/" aria-label="DIY 工程实验室 返回首页"><span class="brand-mark" aria-hidden="true">✦</span><span>DIY 工程实验室</span></a>
       <nav class="desktop-navigation" aria-label="主导航">{links.map((link) => <a href={link.href} aria-current={active === link.href ? 'page' : undefined}>{link.label}</a>)}</nav>
       <details class="navigation">
         <summary aria-label="切换主导航" aria-controls="primary-navigation"><span class="menu-icon" aria-hidden="true"></span><span>导航</span></summary>

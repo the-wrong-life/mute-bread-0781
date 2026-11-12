@@ -217,7 +217,9 @@ export function buildJadeModel(options: { quality?: 'high' | 'low' } = {}): Jade
   });
   arcMat.name = 'mat-arc-jade';
   arcMat.side = THREE.DoubleSide;
-  const arcGap = qnum('agap', 1.60); // 正面开口角宽（rad），1.60 ≈ 92°
+  // §43：1.60（92°）让整球读成"半开的蛋壳"，上半球与正面同时缺失。
+// 收到 0.95（54°）——只留一个正面观察窗，球壳在其余方向闭合，与参考图"完整玻璃球"一致。
+const arcGap = qnum('agap', 0.95);
   const arcCount = Math.max(2, Math.round(qnum('acount', 4)));
   const arcSpan = (Math.PI * 2 - arcGap) / arcCount;
   const arcStartTheta = qnum('at0', 0.12) * Math.PI;
@@ -323,11 +325,12 @@ export function buildJadeModel(options: { quality?: 'high' | 'low' } = {}): Jade
   const strutMat = new THREE.MeshPhysicalMaterial({
     // 第 13 轮：原 #bcd9c6 + emissive 0.12 在玻璃球里被打成"荧光白线"，
     // 参考图的梁是实心玉色，所以压深底色、去掉自发光、降低透射让梁有体积。
-    color: new THREE.Color('#7f9c68'),
-    roughness: 0.26,
+    // §43：玉瓣要比旧"白梁"更沉、更有玉肉感——旧 #7f9c68 在强光下被打成荧光线。
+    color: new THREE.Color('#5f8a67'),
+    roughness: 0.22,
     metalness: 0,
-    transmission: 0.18,
-    thickness: 0.12,
+    transmission: 0.32,
+    thickness: 0.22,
     ior: 1.5,
     clearcoat: 0.2,
     emissive: new THREE.Color('#c8dcb4'),
@@ -338,38 +341,31 @@ export function buildJadeModel(options: { quality?: 'high' | 'low' } = {}): Jade
   // 贴在球面上的浮雕，所以半径要抬到与瓷胎齐平，让梁有一半露在外面。
   // 第 26 轮：壳改成 Alpha 薄壁（NOVA_SHELL_ALPHA）之后，0.806 的梁深埋在内层玉胎里，
   // 从外面只剩几根淡线；抬到 0.90 让它贴住玻璃壳内侧，才是参考图"梁在壳内"的层次。
-  const STRUT_R = 0.90;
-  // 参考图球内是 6 道成组的宽弧梁（不是 4 道细线）：数量与截面都要按"梁"的尺度给。
-  const STRUT_MERIDIANS = 6;
-  // 0.020 在 560² 下只有 2–3 px，和玻璃壳的高光抢亮度时整片读成白色网格；
-  // 加到 0.030（≈4–5 px）才有"梁"的厚度感。
-  // 参考图的球面是"细缝状分瓣"（玻璃灯笼的瓣缝），不是 5 px 宽的白梁；
-  // 0.034 在我们的灯位下被打成白线，读成线框笼子。收到 0.011 并压暗底色才对。
-  // 0.011 在 alpha 半透壳下几乎看不见，读成"空壳"；0.016 才像梁又不至于变成笼子。
-  // §32：0.016 在 520 px 下只有 2 px 宽，整组"浑天仪梁"读成划过球面的细丝，
-// 与参考图里成组的宽弧梁差得远。0.028 让梁在球径 494 px 时约 7 px，才看得出是结构件。
-const STRUT_TUBE = hi ? 0.028 : 0.030;
-  for (let i = 0; i < STRUT_MERIDIANS; i += 1) {
-    const meridian = new THREE.Mesh(
-      new THREE.TorusGeometry(STRUT_R, STRUT_TUBE, hi ? 10 : 6, hi ? 120 : 64),
+  const STRUT_R = 0.905;
+  // §43 §1：把"白色细梁"换成"贴球面侧后方的厚玉弧瓣"。
+  // 依据：6 道细圆环在 520 px 下读成白色线框笼，正是用户点名要去掉的"抢眼白梁"；
+  // 参考图的球内是几片厚玉瓣（球面分瓣），正面中央还留出看内珠的通路。
+  // 做法：直接用球面片（SphereGeometry 的 phi/theta 区间）铺在背面与两侧，
+  // 厚度交给 render-loop.py 的 Solidify（片名含 arc-shell，复用 ARC_THICK）。
+  // §43 二次修正：5 片在中景读成"竖条百叶窗"，把内珠切成条纹。
+  // 参考图球内只是少数几片弧形玉片，所以减到 3 片、加宽正面缺口到 0.95 rad（约 54°）。
+  const PANEL_COUNT = 3;
+  const FRONT_GAP = 0.95;
+  const PANEL_SPAN = Math.PI * 2 - FRONT_GAP * 2;
+  for (let i = 0; i < PANEL_COUNT; i += 1) {
+    const phiStart = Math.PI / 2 + FRONT_GAP + (i * PANEL_SPAN) / PANEL_COUNT;
+    // 片间留 0.22 rad 缝，读成"分瓣"而不是整块壳
+    const phiLen = PANEL_SPAN / PANEL_COUNT - 0.22;
+    const panel = new THREE.Mesh(
+      new THREE.SphereGeometry(STRUT_R, hi ? 48 : 24, hi ? 64 : 32,
+        phiStart, phiLen, 0.62, 1.72),
       strutMat,
     );
-    meridian.name = 'lattice-meridian-' + i;
-    meridian.rotation.y = (i / STRUT_MERIDIANS) * Math.PI;
-    lattice.add(meridian);
+    panel.name = 'arc-shell-panel-' + i;
+    lattice.add(panel);
   }
-  // 三道纬线把球面切成密集方格，读成"法拉第笼"；参考图是稀疏的长方形开窗，故回到两道。
-  for (const lat of [-0.52, 0.52]) {
-    const ringR = Math.sqrt(Math.max(STRUT_R * STRUT_R - lat * lat, 0.01));
-    const latitude = new THREE.Mesh(
-      new THREE.TorusGeometry(ringR, STRUT_TUBE * 0.9, hi ? 10 : 6, hi ? 120 : 64),
-      strutMat,
-    );
-    latitude.name = 'lattice-latitude';
-    latitude.rotation.x = Math.PI / 2;
-    latitude.position.y = lat;
-    lattice.add(latitude);
-  }
+  // §43：原 6 道 meridian 圆环 + 2 道纬线全部删除（读成白色线框笼，正是要修掉的"抢眼白梁"），
+  // 内层改为上面 5 片贴球面的厚玉弧瓣；侧后支撑由弧瓣自身承担，正面中央保持通透。
   root.add(lattice);
 
   // 2. 暖白内核
@@ -416,7 +412,8 @@ const STRUT_TUBE = hi ? 0.028 : 0.030;
   // 即半径 0.40 R（此前 0.222 是按 670 px 缩略图量出的 22% D，偏小，珠在 520 px 下像颗小豆）。
   // §42：1440 主图实测，0.40 R 的珍珠在球心占去三分之一、边缘是硬白圆盘，压过了参考图里
   // 那颗偏暖、半透、有柔和光晕的内珠。降到 0.30 R（珠径约球径 30%），配合 KERNEL 2.4 柔化光晕。
-  const pearl = new THREE.Mesh(new THREE.SphereGeometry(0.30, hi ? 64 : 32, hi ? 48 : 24), pearlMat);
+  // §43 §1：压到 0.26，给"上、下两段玉轴"让出可见长度（0.30 时轴上段被珠顶吃掉大半）。
+  const pearl = new THREE.Mesh(new THREE.SphereGeometry(0.26, hi ? 64 : 32, hi ? 48 : 24), pearlMat);
   pearl.name = 'jade-pearl';
   pearl.position.set(0, 0.02, 0);
   pearl.renderOrder = 4;
@@ -910,11 +907,14 @@ const STRUT_TUBE = hi ? 0.028 : 0.030;
   const axis = new THREE.Group();
   axis.name = 'jade-axis';
   // 参考图玉轴宽约 22 px / 452 px ≈ 0.049 直径 → 半径 0.024；旧 0.042 透过内球读成一条粗绿条。
-  const shaftGeo = new THREE.CylinderGeometry(0.026, 0.026, 2.44, hi ? 32 : 16);
+  // §43 §1：0.026 在 520 px 下只有 3 px，被珍珠一挡就看不出"轴"；加粗到 0.042（约 5 px）并压低透射，
+  // 让上、下两段轴在珠上下各有清楚的一段硬边。
+  // §43：2.44 让轴顶穿出球面 0.22、在画面里读成"天线"；收到 1.86（±0.93）让轴只在球内。
+  const shaftGeo = new THREE.CylinderGeometry(0.042, 0.042, 1.86, hi ? 32 : 16);
   const shaftMat = new THREE.MeshPhysicalMaterial({
     color: new THREE.Color('#e2eee4'),
     roughness: 0.16,
-    transmission: 0.72,
+    transmission: 0.50,
     thickness: 0.4,
     ior: 1.5,
     metalness: 0,
@@ -931,8 +931,9 @@ const STRUT_TUBE = hi ? 0.028 : 0.030;
     envMapIntensity: 2.2,
   });
   goldMat.name = 'mat-gold';
-  for (const y of [1.1, -1.1]) {
-    const collar = new THREE.Mesh(new THREE.CylinderGeometry(0.072, 0.072, 0.09, hi ? 32 : 16), goldMat);
+  // §43：1.1 在球半径 1.0 之外 → 轴上金箍浮在球顶成"天线帽"，收到 0.86 才在球内。
+  for (const y of [0.86, -0.86]) {
+    const collar = new THREE.Mesh(new THREE.CylinderGeometry(0.068, 0.068, 0.08, hi ? 32 : 16), goldMat);
     collar.name = 'axis-collar-' + (y > 0 ? 'top' : 'bottom');
     collar.position.y = y;
     axis.add(collar);
@@ -988,7 +989,9 @@ const STRUT_TUBE = hi ? 0.028 : 0.030;
   // §41：参考图的主环是**横穿球体赤道的宽金带**（水平偏斜约 -11°，正面看是被球遮住前后的椭圆带），
   // 不是竖直的"提梁"。旧值 π/2-0.855 让环面接近竖直，与蛇环一起读成壶把手。
   // 现在环面基本水平（π/2-0.19 ≈ 水平偏 11°），绕 Z 再压 -0.18 形成构图倾斜。
-  copperRing.rotation.set(Math.PI / 2 - 0.19, 0.0, -0.18);
+  // §43 §1：用户要求"主铜环斜过球体中段"——旧值只偏 11°，读成水平腰带。
+  // 现在绕 X 压到 0.34 rad、绕 Z 再斜 0.26，环面真正斜跨球体中段，正视图是明显斜椭圆。
+  copperRing.rotation.set(Math.PI / 2 - 0.34, 0.12, -0.26);
   copperRing.scale.set(1, 1, 1);
   copperRing.castShadow = true;
   root.add(copperRing);
@@ -999,7 +1002,9 @@ const STRUT_TUBE = hi ? 0.028 : 0.030;
   copperRing2.name = 'copper-ring-2';
   // §41：次环改为接近竖直（与水平主环正交交叉），才读成浑天仪的"双环交扣"，
   // 而不是两条平行提手；绕 Y 转 0.55 让它在球前偏右，形成前后穿插。
-  copperRing2.rotation.set(0.10, 0.55, 0.30);
+  // §43 §1：次环"退到后方"——沿 -Z（远离镜头）后移，同时加大倾斜，形成前后两层而不是双提手。
+  copperRing2.rotation.set(0.42, 0.80, 0.46);
+  copperRing2.position.z = -0.42;
   copperRing2.castShadow = true;
   root.add(copperRing2);
 
