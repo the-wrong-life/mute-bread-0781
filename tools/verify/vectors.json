@@ -580,6 +580,68 @@
       ],
       "note": "cosφ=1、X′=0 纯电阻边界，与 a5 应得同一压降 3.7333 V"
     }
+
+,
+    {
+      "id": "cf1",
+      "tool": "conduitFill",
+      "args": [
+        "50",
+        "14",
+        "3",
+        null,
+        null
+      ],
+      "note": "DN50 管穿 3 根外径 14 mm 电缆：23.52%，上限 40%，通过"
+    },
+    {
+      "id": "cf2",
+      "tool": "conduitFill",
+      "args": [
+        "50",
+        "14",
+        "2",
+        null,
+        null
+      ],
+      "note": "同管 2 根：15.68%，上限 31%（两根档更严）"
+    },
+    {
+      "id": "cf3",
+      "tool": "conduitFill",
+      "args": [
+        "50",
+        "22",
+        "1",
+        null,
+        null
+      ],
+      "note": "同管 1 根 22 mm：19.36%，上限 53%"
+    },
+    {
+      "id": "cf4",
+      "tool": "conduitFill",
+      "args": [
+        "80",
+        "22",
+        "8",
+        null,
+        null
+      ],
+      "note": "DN80 穿 8 根 22 mm：60.5%，超上限 40%"
+    },
+    {
+      "id": "cf5",
+      "tool": "conduitFill",
+      "args": [
+        "100",
+        "30",
+        "3",
+        "12",
+        "4"
+      ],
+      "note": "双规格：3×30 + 4×12，7 根共 32.76%，上限 40%"
+    }
   ],
   "errors": [
     {
@@ -1005,6 +1067,80 @@
         "5"
       ],
       "match": "线长"
+    }
+
+,
+    {
+      "id": "ecf1",
+      "tool": "conduitFill",
+      "args": [
+        "0",
+        "14",
+        "3",
+        null,
+        null
+      ],
+      "match": "管内径"
+    },
+    {
+      "id": "ecf2",
+      "tool": "conduitFill",
+      "args": [
+        "50",
+        "60",
+        "3",
+        null,
+        null
+      ],
+      "match": "必须小于"
+    },
+    {
+      "id": "ecf3",
+      "tool": "conduitFill",
+      "args": [
+        "50",
+        "14",
+        "0",
+        null,
+        null
+      ],
+      "match": "总根数"
+    },
+    {
+      "id": "ecf4",
+      "tool": "conduitFill",
+      "args": [
+        "600",
+        "14",
+        "3",
+        null,
+        null
+      ],
+      "match": "超过 500"
+    },
+    {
+      "id": "ecf5",
+      "tool": "conduitFill",
+      "args": [
+        "50",
+        "14",
+        "2.5",
+        null,
+        null
+      ],
+      "match": "必须是整数"
+    },
+    {
+      "id": "ecf6",
+      "tool": "conduitFill",
+      "args": [
+        "50",
+        "14",
+        "3",
+        "60",
+        "2"
+      ],
+      "match": "第二组"
     }
   ],
   "tolerance": {

@@ -481,6 +481,76 @@
     "reactiveLimited": false,
     "factor": 2.0
    }
+  },
+  {
+   "id": "cf1",
+   "tool": "conduitFill",
+   "expected": {
+    "tubeArea": 1963.4954084936207,
+    "cableArea": 461.8141200776996,
+    "spareArea": 1501.6812884159212,
+    "fillPercent": 23.520000000000003,
+    "limitPercent": 40.0,
+    "total": 3,
+    "pass": true,
+    "maxCount": 5
+   }
+  },
+  {
+   "id": "cf2",
+   "tool": "conduitFill",
+   "expected": {
+    "tubeArea": 1963.4954084936207,
+    "cableArea": 307.8760800517997,
+    "spareArea": 1655.619328441821,
+    "fillPercent": 15.68,
+    "limitPercent": 31.0,
+    "total": 2,
+    "pass": true,
+    "maxCount": 3
+   }
+  },
+  {
+   "id": "cf3",
+   "tool": "conduitFill",
+   "expected": {
+    "tubeArea": 1963.4954084936207,
+    "cableArea": 380.132711084365,
+    "spareArea": 1583.3626974092558,
+    "fillPercent": 19.36,
+    "limitPercent": 53.0,
+    "total": 1,
+    "pass": true,
+    "maxCount": 2
+   }
+  },
+  {
+   "id": "cf4",
+   "tool": "conduitFill",
+   "expected": {
+    "tubeArea": 5026.548245743669,
+    "cableArea": 3041.06168867492,
+    "spareArea": 1985.4865570687493,
+    "fillPercent": 60.5,
+    "limitPercent": 40.0,
+    "total": 8,
+    "pass": false,
+    "maxCount": 5
+   }
+  },
+  {
+   "id": "cf5",
+   "tool": "conduitFill",
+   "expected": {
+    "tubeArea": 7853.981633974483,
+    "cableArea": 2572.9643832900406,
+    "spareArea": 5281.017250684443,
+    "fillPercent": 32.76,
+    "limitPercent": 40.0,
+    "total": 7,
+    "pass": true,
+    "maxCount": 4
+   }
   }
  ],
  "spec": "用例由 tools/verify/oracle.py 独立实现生成期望值；verify-tools.mjs 只做比对，不参与推导。约定：未填边 A/B 时展开长记 0；电弧/载流量等现场条件不在本工具范围。"

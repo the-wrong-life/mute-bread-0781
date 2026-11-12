@@ -473,3 +473,87 @@ export function acCableSize(p: {
   if (![rKm, drop, percent].every(Number.isFinite)) throw new Error('计算结果溢出，请检查输入范围。');
   return { required, selected, drop, percent, limitVolts, limitPercent, reactiveDrop, rKm, reactiveLimited: false, factor };
 }
+
+
+/** 穿管填充率的允许上限（%）：按管内电缆总数分档。 */
+export function conduitFillLimit(total: number): number {
+  if (total <= 1) return 53;
+  if (total === 2) return 31;
+  return 40;
+}
+
+export interface ConduitFillResult {
+  /** 管内净内截面（mm²） */
+  tubeArea: number;
+  /** 电缆占用截面（mm²） */
+  cableArea: number;
+  /** 剩余截面（mm²）；为负表示已超容 */
+  spareArea: number;
+  /** 填充率（%）= 100 × Σ(n·d²) / D² */
+  fillPercent: number;
+  /** 允许填充率上限（%） */
+  limitPercent: number;
+  /** 管内电缆总根数 */
+  total: number;
+  /** 是否满足上限 */
+  pass: boolean;
+  /** 按上限估算的、同一外径电缆最多可穿根数 */
+  maxCount: number;
+}
+
+/**
+ * 电缆穿管填充率（按电缆外径计算，不考虑绞合与弯曲余量）。
+ *
+ * 公式：f = 100 · Σ(n_i · d_i²) / D²
+ *   推导：π/4 在分子分母中抵消，故只需外径平方与根数。
+ *   占用截面 A_c = Σ n_i · π d_i²/4，管内净截面 A_t = π D²/4。
+ *
+ * 允许上限取自 NEC（NFPA 70）第 9 章表 1 的常用分档：
+ *   1 根 53%、2 根 31%、3 根及以上 40%。IEC 与船级社并无统一百分比，
+ *   多数船东与船级社要求按制造商载流量表与弯曲半径确定，本判据只作初筛。
+ *
+ * 边界：
+ * - 只按外径算几何占位，不含绞合、电缆不圆度、管内毛刺、弯曲余量；
+ * - 不校核载流量与温升：穿管后散热变差，载流量必须按 IEC 60364-5-52 的敷设方式折算；
+ * - 多芯电缆按整体外径计算，不拆分芯线。
+ */
+export function conduitFill(p: {
+  diameter: string; diaA: string; countA: string; diaB?: string; countB?: string;
+}): ConduitFillResult {
+  const parseCount = (raw: string | undefined, label: string): number => {
+    const text = (raw ?? '').trim();
+    if (text === '') return 0;
+    if (!/^\d+$/.test(text)) throw new Error(`${label}必须是整数。`);
+    const n = Number(text);
+    if (n < 0) throw new Error(`${label}不能为负。`);
+    if (n > 200) throw new Error(`${label}超过 200 根，请确认是否填错。`);
+    return n;
+  };
+
+  const D = parsePositive(p.diameter, '管内径');
+  const dA = parsePositive(p.diaA, '电缆外径');
+  const nA = parseCount(p.countA, '电缆根数');
+  const hasB = (p.diaB ?? '').trim() !== '' || (p.countB ?? '').trim() !== '';
+  const dB = hasB ? parsePositive(p.diaB ?? '', '第二组电缆外径') : 0;
+  const nB = hasB ? parseCount(p.countB, '第二组电缆根数') : 0;
+
+  if (D > 500) throw new Error('管内径超过 500 mm，请确认单位是否为 mm。');
+  if (dA > 100 || dB > 100) throw new Error('电缆外径超过 100 mm，请确认单位是否为 mm。');
+  if (nA === 0 && nB === 0) throw new Error('管内电缆总根数不能为 0。');
+  if (dA >= D) throw new Error('电缆外径必须小于管内径。');
+  if (hasB && dB >= D) throw new Error('第二组电缆外径必须小于管内径。');
+
+  const total = nA + nB;
+  const sumSq = nA * dA * dA + nB * dB * dB;
+  const tubeArea = (Math.PI * D * D) / 4;
+  const cableArea = (Math.PI * sumSq) / 4;
+  const fillPercent = (100 * sumSq) / (D * D);
+  const limitPercent = conduitFillLimit(total);
+  const dMax = Math.max(dA, dB);
+  const maxCount = Math.floor(((limitPercent / 100) * D * D) / (dMax * dMax));
+  if (![tubeArea, cableArea, fillPercent].every(Number.isFinite)) throw new Error('计算结果溢出，请检查输入范围。');
+  return {
+    tubeArea, cableArea, spareArea: tubeArea - cableArea, fillPercent, limitPercent,
+    total, pass: fillPercent <= limitPercent + 8 * Number.EPSILON * Math.max(fillPercent, limitPercent), maxCount,
+  };
+}
