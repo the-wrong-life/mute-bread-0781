@@ -217,9 +217,9 @@ export function buildJadeModel(options: { quality?: 'high' | 'low' } = {}): Jade
   });
   arcMat.name = 'mat-arc-jade';
   arcMat.side = THREE.DoubleSide;
-  // §43：1.60（92°）让整球读成"半开的蛋壳"，上半球与正面同时缺失。
-// 收到 0.95（54°）——只留一个正面观察窗，球壳在其余方向闭合，与参考图"完整玻璃球"一致。
-const arcGap = qnum('agap', 0.95);
+  // §43：1.60（92°）让整球读成"半开的蛋壳"，上半球与正面同时缺失；0.95（54°）仍偏大，
+// 后续收到 0.58（33°）：只留一个正面观察窗，球壳在其余方向闭合，与参考图"完整玻璃球"一致。
+const arcGap = qnum('agap', 0.58);
   const arcCount = Math.max(2, Math.round(qnum('acount', 4)));
   const arcSpan = (Math.PI * 2 - arcGap) / arcCount;
   const arcStartTheta = qnum('at0', 0.12) * Math.PI;
