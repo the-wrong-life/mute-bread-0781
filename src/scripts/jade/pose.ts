@@ -217,10 +217,14 @@ export function snakeCurveAt(time: number, steps = 320): THREE.CatmullRomCurve3 
 // 第 26 轮：40×18 在 620 px 下每片约 15×31 px，整条蛇读成「竹节管」（对照 s1-base）。
 // 参照真蛇的可见鳞列数（正视约 6–9 列、沿身长每 8–10 px 一片），行数提到 110、
 // 列数 22，屏幕上一片约 6×7 px，才读得出「细鳞」而不是「分节」。
-export const SCALE_ROWS = 110;
-export const SCALE_COLS = 22;
-export const SCALE_SEG_A = 3;
-export const SCALE_SEG_B = 3;
+// §43：110×22 且每片仅 3×3 面，片缘是**硬直矩形**，在 520 px 下糊成"编织金属网"
+// （Blender 特写实测 close1out，见 _work/nova-night/close1out/frame-000.png）。
+// 片形比密度更关键：降到 70×14 让每片约 9×11 px，同时把片内网格提到 6×6，
+// 横向收边那段代码才有足够顶点把片缘做成弧面——"椭圆隆起"才读成鳞，"矩形硬边"读成编织。
+export const SCALE_ROWS = 70;
+export const SCALE_COLS = 14;
+export const SCALE_SEG_A = 6;
+export const SCALE_SEG_B = 6;
 const SCALE_VERTS = (SCALE_SEG_A + 1) * (SCALE_SEG_B + 1);
 export const SCALE_VERT_COUNT = SCALE_ROWS * SCALE_COLS * SCALE_VERTS;
 
