@@ -15,6 +15,8 @@ import {
   ringSwing,
   kernelPulse,
   bodyFloat,
+  setTailLockTarget,
+  clearTailLock,
   type SnakeTubeTargets,
 } from './pose';
 
@@ -664,6 +666,13 @@ const arcGap = qnum('agap', 0.58);
   // 球+锥的组装做不到这一点（上一版读成"鸭嘴/勺头"），这里改为沿 +X 轴放样的楔形头。
   const head = new THREE.Group();
   head.name = 'serpent-head';
+  // §44 衔尾锚点：嘴内一点点（吻端内侧），每帧头部姿态定下后取它的世界坐标，
+  // 反算回 serpent 局部空间作为尾尖目标点。放在嘴内而不是吻端外侧，
+  // 是为了让尾尖"伸进嘴里"而不是"顶着嘴唇"。
+  const mouthAnchor = new THREE.Object3D();
+  mouthAnchor.name = 'serpent-mouth-anchor';
+  mouthAnchor.position.set(0.255, 0, -0.010);
+  head.add(mouthAnchor);
   const tip = snakePoint(1, 0);
   const fwd = snakeTangent(1, 0);
 
@@ -1276,21 +1285,13 @@ const arcGap = qnum('agap', 0.58);
   const pSideV = new THREE.Vector3();
   const basis = new THREE.Matrix4();
 
+  // 每帧复用的临时量：衔尾计算每帧都要做，不能在里面 new Vector3
+  const _mouthWorld = new THREE.Vector3();
+  const _mouthLocal = new THREE.Vector3();
+  const _tailNow = new THREE.Vector3();
+
   function updatePose(time: number) {
-    // 1) 蛇身顶点原地重算（拓扑不变，无新显存分配）
-    updateSnakeTube(tubeTarget, time);
-    const posAttr = bodyGeo.getAttribute('position') as THREE.BufferAttribute;
-    const norAttr = bodyGeo.getAttribute('normal') as THREE.BufferAttribute;
-    posAttr.needsUpdate = true;
-    norAttr.needsUpdate = true;
-    bodyGeo.computeBoundingSphere();
-
-    // 1b) 甲片跟着同一套取样走：否则蛇身一动，鳞片还留在上一帧的管面上
-    updateSnakeScales(scalePos, scaleNor, time);
-    (scaleGeo.getAttribute('position') as THREE.BufferAttribute).needsUpdate = true;
-    (scaleGeo.getAttribute('normal') as THREE.BufferAttribute).needsUpdate = true;
-    scaleGeo.computeBoundingSphere();
-
+    // 1) 颈端姿态先行：衔尾约束要用到头部最终姿态，所以头部必须先定下来
     // 2) 颈端姿态：颈部与蛇头必须跟着同一套取样走，否则动起来就脱开
     snakePoint(1, time, pTip);
     snakeTangent(1, time, pFwd);
@@ -1312,7 +1313,33 @@ const arcGap = qnum('agap', 0.58);
     // 会把长轴转到侧向，视觉上就是横穿蛇身的一片叶子（s4 特写已验证）。
     head.rotateX(qnum('headr', 0));
 
-    // 3) 铜环缓慢摆转（幅度小，始终可辨认是环）
+    // 2b) 衔尾：头部姿态定了之后，取嘴内锚点的世界坐标，反算回 serpent 局部空间，
+    // 与当前尾尖求差，写入 pose 的 tail-lock 通道。必须在更新管体/鳞片之前算完，
+    // 否则这一帧的蛇身还是用上一帧的校正量画的（尾部会有一帧抖动）。
+    clearTailLock();
+    root.updateMatrixWorld(true);
+    head.updateWorldMatrix(true, false);
+    mouthAnchor.getWorldPosition(_mouthWorld);
+    _mouthLocal.copy(_mouthWorld);
+    serpent.worldToLocal(_mouthLocal);
+    snakePoint(0, time, _tailNow);
+    setTailLockTarget(_mouthLocal.x - _tailNow.x, _mouthLocal.y - _tailNow.y, _mouthLocal.z - _tailNow.z);
+
+    // 3) 蛇身顶点原地重算（拓扑不变，无新显存分配）——此时 snakePoint 已带衔尾校正
+    updateSnakeTube(tubeTarget, time);
+    const posAttr = bodyGeo.getAttribute('position') as THREE.BufferAttribute;
+    const norAttr = bodyGeo.getAttribute('normal') as THREE.BufferAttribute;
+    posAttr.needsUpdate = true;
+    norAttr.needsUpdate = true;
+    bodyGeo.computeBoundingSphere();
+
+    // 3b) 甲片跟着同一套取样走：否则蛇身一动，鳞片还留在上一帧的管面上
+    updateSnakeScales(scalePos, scaleNor, time);
+    (scaleGeo.getAttribute('position') as THREE.BufferAttribute).needsUpdate = true;
+    (scaleGeo.getAttribute('normal') as THREE.BufferAttribute).needsUpdate = true;
+    scaleGeo.computeBoundingSphere();
+
+    // 4) 铜环缓慢摆转（幅度小，始终可辨认是环）
     const swing = ringSwing(time);
     copperRing.rotation.set(RING_BASE_X + swing * 0.35, 0, RING_BASE_Z + swing);
     // 4) 内核柔和明暗（不做闪烁）

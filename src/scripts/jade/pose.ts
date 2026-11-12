@@ -96,7 +96,34 @@ export function snakePoint(u: number, time: number, out = new THREE.Vector3()): 
   const tilt = 0.035 * Math.sin(Math.PI * 2 * ph);
   const ct = Math.cos(tilt);
   const st = Math.sin(tilt);
-  return out.set(x, y * ct - z * st, y * st + z * ct);
+  const p = out.set(x, y * ct - z * st, y * st + z * ct);
+
+  // §44 衔尾约束：尾段（u 小）向嘴内锚点收拢，权重 (1-u/L)^2 平滑衰减到 0，
+  // 因此不会在过渡处出现折角，颈端（u=1）完全不受影响。
+  // 校正量每帧由 build-jade.ts 在头部姿态确定后写入，管体与鳞片共用这条路径，
+  // 所以两者永远不会一先一后地脱开。
+  if (u < TAIL_LOCK_LEN) {
+    const w = 1 - u / TAIL_LOCK_LEN;
+    p.addScaledVector(tailLockDelta, w * w);
+  }
+  return p;
+}
+
+/**
+ * 衔尾约束：尾部被拉向蛇口的总偏移量（serpent 局部坐标）。
+ *
+ * 之所以用"整体偏移 + 平方衰减"而不是重算一条贝塞尔：管体、鳞片、切向全部经由 snakePoint
+ * 取样，只要偏移写进这一个函数，三者自动保持一致，不需要各自再实现一遍尾部过渡。
+ */
+const tailLockDelta = new THREE.Vector3();
+const TAIL_LOCK_LEN = 0.16;
+
+export function setTailLockTarget(dx: number, dy: number, dz: number): void {
+  tailLockDelta.set(dx, dy, dz);
+}
+
+export function clearTailLock(): void {
+  tailLockDelta.set(0, 0, 0);
 }
 
 /** 切向：中心差分，比单侧差分稳定。 */
@@ -294,9 +321,13 @@ export function updateSnakeScales(positions: Float32Array, normals: Float32Array
     // 片长必须大于行距，后缘才能压住下一行；片宽同理要大于环向步距，两侧才不留缝
     // 覆瓦系数不能大：2.05 让每片后缘抬起近半个行距，叠成竹节台阶（s1-base 实测）。
     // 1.35 仍保证后缘压住下一行，但台阶高度只剩行距的 35%。
-    const plateLen = rowStep * (1.35 - 0.15 * (1 - u));
+    // §44：1.35 时后缘抬起超过半个行距，整条蛇读成瓦楞；1.22 只留 22% 的浅搭。
+    const plateLen = rowStep * (1.22 - 0.10 * (1 - u));
 
-    const plateWid = arcStep * 1.45;
+    // §44 平面轮廓：旧版 across 宽度沿长度恒定，6×6 面片的边界就是矩形，特写读成"编织网"。
+    // 现在基准宽度加大（1.95 步距）再乘一个沿长度变化的水滴形因子：
+    // 前缘 0.58（贴身）、中后段 ~1.0（最宽）、尾端 0.20（收成尖），片与片之间自然形成圆角轮廓。
+    const plateWid = arcStep * 1.95;
     const amp = r * 0.05;
     for (let j = 0; j < SCALE_COLS; j += 1) {
       const stagger = (i % 2) * 0.5;
@@ -311,9 +342,11 @@ export function updateSnakeScales(positions: Float32Array, normals: Float32Array
         const rise = 0.05 + 0.95 * Math.pow(ua, 1.6);
         const lift = amp * lead * rise;
         const along = (ua - 0.5) * plateLen;
+        // 水滴轮廓因子：前缘 0.58 → 峰 ~1.0（约 40% 片长处）→ 尾端 0.20
+        const hwF = 0.58 + 0.42 * Math.sin(Math.PI * Math.pow(ua, 0.55)) - 0.38 * Math.pow(ua, 3);
         for (let b = 0; b <= SCALE_SEG_B; b += 1) {
           const vb = b / SCALE_SEG_B;
-          const across = (vb - 0.5) * plateWid;
+          const across = (vb - 0.5) * plateWid * hwF;
           // 横向收边：两侧压低，片才有隆起的弧面
           const edge = Math.sin(Math.PI * vb) ** 0.6;
           v.copy(centre).addScaledVector(tan, along).addScaledVector(wdir, across).addScaledVector(dir, lift * edge);
