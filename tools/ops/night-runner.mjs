@@ -41,7 +41,24 @@ function sh(cmd) {
 function codeFingerprint() {
   const head = sh('git rev-parse HEAD').out.trim();
   const dirty = sh('git status --porcelain').out.trim();
-  return createHash('sha256').update(head + '\n' + dirty).digest('hex').slice(0, 16);
+  // git status --porcelain 只列"哪些路径变了"，不含内容：同一文件被改第二次时清单文本不变，
+  // 只哈希它会误判"输入没变"而跳过本应重跑的步骤（已被独立复核用隔离仓库复现）。
+  // 因此把实际差异内容与未跟踪文件内容也纳入指纹。
+  const diff = sh('git diff HEAD').out;
+  const untracked = dirty
+    .split('\n')
+    .filter((l) => l.startsWith('??'))
+    .map((l) => l.slice(3).trim())
+    .filter(Boolean);
+  let untrackedHash = '';
+  for (const f of untracked) {
+    try {
+      untrackedHash += f + ':' + createHash('sha256').update(readFileSync(f)).digest('hex') + '\n';
+    } catch {
+      untrackedHash += f + ':unreadable\n';
+    }
+  }
+  return createHash('sha256').update(head + '\n' + dirty + '\n' + diff + '\n' + untrackedHash).digest('hex').slice(0, 16);
 }
 
 const FP = codeFingerprint();

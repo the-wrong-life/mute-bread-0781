@@ -61,6 +61,8 @@ const {
 
     const staticSrcSet = img.getAttribute('srcset') || '';
     let pending: HTMLImageElement | null = null;
+    // 动图请求失败过一次后不再重试：否则每次点击都会重新发出一次注定失败的请求
+    let animFailed = false;
     const cancelLoad = () => {
       if (!pending) return;
       pending.onload = null;
@@ -79,6 +81,7 @@ const {
     };
     const showAnim = () => {
       if (reduce.matches || lightNet || img.dataset.mode === 'anim' || pending) return;
+      if (animFailed) { showStatic(); return; }
       const pre = new Image();
       pending = pre;
       pre.onload = () => {
@@ -92,11 +95,11 @@ const {
         btn.setAttribute('aria-pressed', 'true');
         fig.dataset.anim = 'on';
       };
-      pre.onerror = () => { if (pending === pre) showStatic(); };
+      pre.onerror = () => { if (pending === pre) { animFailed = true; showStatic(); } };
       pre.src = animSrc;
     };
     img.addEventListener('error', () => {
-      if (img.dataset.mode === 'anim') showStatic();
+      if (img.dataset.mode === 'anim') { animFailed = true; showStatic(); }
     });
 
     showStatic();
