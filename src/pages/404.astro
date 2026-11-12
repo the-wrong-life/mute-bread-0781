@@ -1,0 +1,24 @@
+---
+import NovaShell from '../layouts/NovaShell.astro';
+
+const links = [
+  { href: '/', label: '返回首页' },
+  { href: '/docs/', label: '工程知识库' },
+  { href: '/tools/', label: '工程工具箱' }
+];
+---
+<NovaShell robots="noindex" title="页面未找到" description="请求的地址不存在。可以从首页、工程知识库或工程工具箱继续浏览。">
+  <div class="page">
+    <header class="intro">
+      <p class="eyebrow">ERROR 404 / 页面未找到</p>
+      <h1>页面未找到<span>.</span></h1>
+      <p>这个地址没有对应的页面，可能是链接已过期，或输入有误。</p>
+    </header>
+    <nav class="exits" aria-label="继续浏览">
+      <ul>{links.map((link) => <li><a href={link.href}>{link.label}</a></li>)}</ul>
+    </nav>
+  </div>
+</NovaShell>
+<style>
+  .page{max-width:1120px;margin:auto;padding:clamp(64px,9vw,110px) clamp(20px,5vw,72px) 20px;overflow-wrap:anywhere}.intro{max-width:720px}.eyebrow{color:#52735e;font:12px ui-monospace,monospace;letter-spacing:.08em}h1{margin:20px 0 24px;font-family:"Songti SC","Noto Serif CJK SC",SimSun,serif;font-size:clamp(36px,6vw,70px);line-height:1.2;font-weight:500}h1 span{color:#a74432}.intro>p:last-child{font-size:17px;color:#3f604c;line-height:1.8}.exits{margin-top:56px}.exits ul{list-style:none;margin:0;padding:0}.exits li{border-top:1px solid #b78b57}.exits li:last-child{border-bottom:1px solid #b78b57}.exits a{display:inline-flex;align-items:center;min-height:56px;padding:4px 0;color:#202923;font-size:17px;text-decoration-color:#a74432;text-underline-offset:5px}.exits a:hover{text-decoration:underline}@media(max-width:600px){.exits{margin-top:44px}}
+</style>
