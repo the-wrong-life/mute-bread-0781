@@ -202,7 +202,9 @@ export function buildJadeModel(options: { quality?: 'high' | 'low' } = {}): Jade
   // 正面（+Z，即镜头方向）留出开口直接看到内珠与玉轴。厚度由 Blender 端 Solidify 生成
   // （render-loop.py 的 NOVA_ARC_THICK，默认 0.028），这样网页端仍是单层几何、开销不变。
   const arcMat = new THREE.MeshPhysicalMaterial({
-    color: new THREE.Color('#8fb6a0'),
+    // §42：参考图球壳本体是暖白/象牙色，青绿只沉积在厚边与下缘。整球做成青绿就会读成
+  // 薄荷玻璃摆件；改为象牙底壳 + 短衰减距离的深青绿吸收色，让厚处（Solidify 侧壁）自然发绿。
+  color: new THREE.Color('#ddd6c2'),
     roughness: 0.09,
     metalness: 0,
     transmission: 0.62,
@@ -210,8 +212,8 @@ export function buildJadeModel(options: { quality?: 'high' | 'low' } = {}): Jade
     ior: 1.45,
     clearcoat: 0.5,
     clearcoatRoughness: 0.12,
-    attenuationColor: new THREE.Color('#4e7d5f'),
-    attenuationDistance: 0.9,
+    attenuationColor: new THREE.Color('#3f6b52'),
+    attenuationDistance: 0.55,
   });
   arcMat.name = 'mat-arc-jade';
   arcMat.side = THREE.DoubleSide;
@@ -412,7 +414,9 @@ const STRUT_TUBE = hi ? 0.028 : 0.030;
   // 上一版把"直径占比"当成了半径，0.29 让珠涨到球径的 58%，比参考大一圈。
   // §41：按参考图裁片 refcrop-b.png 重新目视量测，中心暖白球直径约为玻璃球径的 40%，
   // 即半径 0.40 R（此前 0.222 是按 670 px 缩略图量出的 22% D，偏小，珠在 520 px 下像颗小豆）。
-  const pearl = new THREE.Mesh(new THREE.SphereGeometry(0.40, hi ? 64 : 32, hi ? 48 : 24), pearlMat);
+  // §42：1440 主图实测，0.40 R 的珍珠在球心占去三分之一、边缘是硬白圆盘，压过了参考图里
+  // 那颗偏暖、半透、有柔和光晕的内珠。降到 0.30 R（珠径约球径 30%），配合 KERNEL 2.4 柔化光晕。
+  const pearl = new THREE.Mesh(new THREE.SphereGeometry(0.30, hi ? 64 : 32, hi ? 48 : 24), pearlMat);
   pearl.name = 'jade-pearl';
   pearl.position.set(0, 0.02, 0);
   pearl.renderOrder = 4;

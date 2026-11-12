@@ -411,6 +411,23 @@ def world():
     wc = tuple(float(v) for v in os.environ.get("NOVA_WORLD_COLOR", "0.92,0.93,0.88").split(","))
     bg.inputs['Color'].default_value = (wc[0], wc[1], wc[2], 1)
     bg.inputs['Strength'].default_value = float(os.environ.get("NOVA_WORLD_STR", "0.55"))
+    # §42：纯色环境光会让金属件变成"平涂金"——金环没有明暗渐变，整张图因此读成塑料模型。
+    # 参考图的高级感很大一部分来自环境反射（上暖白、地平线暖灰、下方压暗）。
+    # 这里用 Generated 坐标的 Z 做垂直渐变，交给 Metal/Transmission 去反射。
+    if os.environ.get("NOVA_ENV_GRAD", "1") == "1":
+        nt = w.node_tree
+        tex = nt.nodes.new('ShaderNodeTexCoord')
+        sep = nt.nodes.new('ShaderNodeSeparateXYZ')
+        ramp = nt.nodes.new('ShaderNodeValToRGB')
+        nt.links.new(tex.outputs['Generated'], sep.inputs[0])
+        nt.links.new(sep.outputs['Z'], ramp.inputs['Fac'])
+        e = ramp.color_ramp.elements
+        e[0].position = 0.0; e[0].color = (0.20, 0.19, 0.17, 1.0)
+        e[1].position = 1.0; e[1].color = (1.00, 0.98, 0.94, 1.0)
+        m = ramp.color_ramp.elements.new(0.52)
+        m.color = (0.62, 0.60, 0.55, 1.0)
+        nt.links.new(ramp.outputs['Color'], bg.inputs['Color'])
+        print("ENV-GRAD on")
 
 def render_settings():
     sc = bpy.context.scene
@@ -419,7 +436,7 @@ def render_settings():
     sc.cycles.samples = SAMPLES
     sc.cycles.use_denoising = True
     sc.render.resolution_x = RES
-    sc.render.resolution_y = RES
+    sc.render.resolution_y = int(os.environ.get("NOVA_RES_Y", str(RES)))
     sc.render.film_transparent = True
     sc.view_settings.view_transform = 'AgX'
     sc.view_settings.look = 'AgX - Medium High Contrast'
