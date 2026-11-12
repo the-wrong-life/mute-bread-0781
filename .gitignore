@@ -29,3 +29,9 @@ pnpm-debug.log*
 *.njsproj
 *.sln
 *.sw?
+
+# screenshot output
+.shots/
+
+# temporary build output from parallel members
+dist-*/

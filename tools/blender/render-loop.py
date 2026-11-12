@@ -272,7 +272,10 @@ def materials():
         bpy.data.materials["mat-jade-shell"].blend_method = 'BLEND'
     if os.environ.get("NOVA_SHELL_FRESNEL", "0") == "1":
         shell_fresnel()
-    shell_volume()
+    # §41：Volume Absorption 需要有厚度的封闭体积；three.js 导出的 SphereGeometry 是单层面片，
+    # 接上 Volume 口会得到"乳白实心球"假象（第 26 轮的结论即由此而来）。做清澈玻璃壳时必须关掉。
+    if os.environ.get("NOVA_SHELL_VOLUME", "1") == "1":
+        shell_volume()
     kernel_warm()
     pearl_glass()
     print("MATS-kernel:", [m.name for m in bpy.data.materials if "kernel" in m.name.lower()])
@@ -408,6 +411,23 @@ def world():
     wc = tuple(float(v) for v in os.environ.get("NOVA_WORLD_COLOR", "0.92,0.93,0.88").split(","))
     bg.inputs['Color'].default_value = (wc[0], wc[1], wc[2], 1)
     bg.inputs['Strength'].default_value = float(os.environ.get("NOVA_WORLD_STR", "0.55"))
+    # §42：纯色环境光会让金属件变成"平涂金"——金环没有明暗渐变，整张图因此读成塑料模型。
+    # 参考图的高级感很大一部分来自环境反射（上暖白、地平线暖灰、下方压暗）。
+    # 这里用 Generated 坐标的 Z 做垂直渐变，交给 Metal/Transmission 去反射。
+    if os.environ.get("NOVA_ENV_GRAD", "1") == "1":
+        nt = w.node_tree
+        tex = nt.nodes.new('ShaderNodeTexCoord')
+        sep = nt.nodes.new('ShaderNodeSeparateXYZ')
+        ramp = nt.nodes.new('ShaderNodeValToRGB')
+        nt.links.new(tex.outputs['Generated'], sep.inputs[0])
+        nt.links.new(sep.outputs['Z'], ramp.inputs['Fac'])
+        e = ramp.color_ramp.elements
+        e[0].position = 0.0; e[0].color = (0.20, 0.19, 0.17, 1.0)
+        e[1].position = 1.0; e[1].color = (1.00, 0.98, 0.94, 1.0)
+        m = ramp.color_ramp.elements.new(0.52)
+        m.color = (0.62, 0.60, 0.55, 1.0)
+        nt.links.new(ramp.outputs['Color'], bg.inputs['Color'])
+        print("ENV-GRAD on")
 
 def render_settings():
     sc = bpy.context.scene
@@ -416,7 +436,7 @@ def render_settings():
     sc.cycles.samples = SAMPLES
     sc.cycles.use_denoising = True
     sc.render.resolution_x = RES
-    sc.render.resolution_y = RES
+    sc.render.resolution_y = int(os.environ.get("NOVA_RES_Y", str(RES)))
     sc.render.film_transparent = True
     sc.view_settings.view_transform = 'AgX'
     sc.view_settings.look = 'AgX - Medium High Contrast'
@@ -435,6 +455,23 @@ def hide_objects():
         bpy.data.objects.remove(o, do_unlink=True)
     print("HIDDEN", len(kill), [o for o in HIDE])
 
+ARC_THICK = float(os.environ.get("NOVA_ARC_THICK", "0.028"))
+
+def solidify_arcs():
+    # §2（m16361）：弧片玉壳在 three.js 里是单层面片，必须加实体厚度，
+    # 否则渲染出来是"纸片"，边缘没有玉肉沉积。用 Solidify 沿法线加厚并生成侧壁。
+    if ARC_THICK <= 0: return
+    n = 0
+    for o in bpy.data.objects:
+        if o.type != 'MESH' or 'arc-shell' not in o.name: continue
+        mod = o.modifiers.new(name="arc-thick", type='SOLIDIFY')
+        mod.thickness = ARC_THICK
+        mod.offset = 0.0
+        mod.use_even_offset = True
+        mod.use_rim = True
+        n += 1
+    print("ARC-THICK", ARC_THICK, "objects", n)
+
 def keep_only():
     # 白名单：只保留名字含任一关键字的网格，用于单独检查某个部件的造型
     if not ONLY: return
@@ -449,6 +486,7 @@ for f in files:
     bpy.ops.import_scene.gltf(filepath=f)
     hide_objects()
     keep_only()
+    solidify_arcs()
     materials(); camera(); lights(); world(); ground_shadow(); render_settings()
     name = os.path.basename(f).replace(".glb", ".png")
     bpy.context.scene.render.filepath = os.path.join(OUT, name)

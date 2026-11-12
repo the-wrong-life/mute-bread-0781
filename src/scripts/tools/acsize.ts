@@ -50,10 +50,11 @@ export function mountAcSize() {
         text = `所需最小截面 ${fmt(r.required, 4)} mm²，超出 630 mm² 常用序列`;
         return;
       }
-      const verdict = r.percent <= r.limitPercent ? '通过' : '仍超标';
+      const pass = r.percent <= r.limitPercent + 8 * Number.EPSILON * Math.max(r.percent, r.limitPercent);
+      const verdict = pass ? '通过' : '仍超标';
       result.textContent = `需 ${fmt(r.required, 3)} mm² → 选用 ${r.selected} mm² · ${fmt(r.drop, 4)} V · ${fmt(r.percent, 3)}% · ${verdict}`;
       detail.textContent = `${base}；R′ ${fmt(r.rKm, 4)} Ω/km；选用截面压降 ${fmt(r.drop, 4)} V，占 ${fmt(r.percent, 3)}%（限值 ${fmt(r.limitPercent, 3)}%）。`;
-      status.textContent = r.percent <= r.limitPercent ? '计算完成，所选标准截面满足允许压降' : '计算完成，所选截面仍超过允许压降，请复核输入';
+      status.textContent = pass ? '计算完成，所选标准截面满足允许压降' : '计算完成，所选截面仍超过允许压降，请复核输入';
       text = `最小截面 ${fmt(r.required, 3)} mm²，选用 ${r.selected} mm²，压降 ${fmt(r.drop, 4)} V（${fmt(r.percent, 3)}%，${verdict}）`;
     } catch (error) {
       const message = error instanceof Error ? error.message : '无法计算';

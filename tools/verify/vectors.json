@@ -1010,5 +1010,43 @@
   "tolerance": {
     "rel": 1e-9,
     "abs": 1e-12
+  },
+  "regressionInputs": {
+    "jsonReject": [
+      "9007199254740993",
+      "1e400",
+      "1e-400",
+      "{\"a\":9007199254740993,\"a\":1}"
+    ],
+    "jsonAccept": [
+      "  {\"n\":[0.1,1e2,-0,1.25],\"a\":{\"b\":true}}  ",
+      "{\"x\":1,\"x\":2}",
+      "1e+3"
+    ],
+    "dcOverflow": {
+      "voltage": "1",
+      "current": "0",
+      "length": "1",
+      "area": "1e-300",
+      "rho": "1e300",
+      "kind": "dc2"
+    },
+    "upsOverflow": {
+      "capacity": "100",
+      "voltage": "12",
+      "dod": "90",
+      "efficiency": "90",
+      "load": "1e-320"
+    },
+    "acBoundary": {
+      "system": "ac1",
+      "voltage": "100",
+      "current": "10",
+      "length": "100",
+      "rho": "0.0175",
+      "pf": "1",
+      "x": "0",
+      "limit": "0.7"
+    }
   }
 }

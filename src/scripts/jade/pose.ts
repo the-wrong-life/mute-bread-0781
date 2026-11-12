@@ -18,13 +18,16 @@ export const GAP = 0.16;
 
 /** 蛇环基准半径：球半径 1.0。1.10 时蛇身与球赤道几乎共面，正面读成"套在球外的呼啦圈"；
  * 抬到 1.17 让蛇身内沿（1.17−0.078=1.092）仍浮在球面之外，前后关系才读得出来（§31 倾角扫描）。 */
-export const BASE_RADIUS = 1.17;
+export const BASE_RADIUS = 1.24;
 
 // §35：0.25π 时蛇头在环上的切线是 (-0.707, 0.707, 0)，一半朝镜头 →
 // 正面只看到头的横截面（圆），这正是"金蛋"观感的来源。
 // 90° 处切线为 (-1, 0, 0)，纯画面内方向，吻部、眼窝、上颌线都能侧读。
 // 改 END_ANGLE 只是整体旋转蛇环，头尾相对关系（缺口 GAP）不变，衔尾仍成立。
-const END_ANGLE = Math.PI * 0.5;
+// §43 §2：用户要求"蛇首放在参考图的右上方、尾尖在左下咬合"。
+// π/2 让颈端在正上方（头读成球顶的金色端帽）；改 π/4 把颈端移到右上 45°，
+// 缺口随之落在右上方，尾尖从左上方向下收细进入口中。
+const END_ANGLE = Math.PI * 0.25;
 const SWEEP = Math.PI * 2 - GAP;
 const SQUASH_Y = 0.965;
 
@@ -40,7 +43,13 @@ export function snakeRadius(u: number): number {
   // 旧值 0.024→0.128（颈部 0.128）粗了近一倍，这正是"金属软管/呼啦圈"观感的来源之一。
   // §31：620 px 下 0.078 颈部在球径 2.0 上只有 24 px，鳞片与头身过渡全糊；提到 0.092（占球径 4.6%，
   // 球径 494 px 对应 23 px 粗 ≈ 参考图量测 34 px 的 0.68 倍），仍保留尾尖 0.020 的收细。
-  return 0.020 + 0.072 * Math.pow(t, 0.5);
+  // §41：参考图的蛇是粗壮的"金铜鳞蛇"（灰模里我方读成细带），颈径提到 0.112 R，
+  // 尾尖仍收细到 0.020 以便衔入口中。
+  // §42：回看四栏对照，蛇在 640 px 下读成"香蕉/叶子"的主因不是材质，而是**比例**：
+  // 头被 heads=1.50 放大到 0.99 R（几乎等于球半径），蛇身颈径 0.112 R 也比参考的
+  // 0.069 R 粗 60%。参考图量测：蛇身直径 34 px / 球径 494 px = 6.9% D → 半径 0.069 R。
+  // 现在回到 0.014→0.075（颈部），并把默认 heads 降到 0.55（头长约 0.36 R）。
+  return 0.014 + 0.061 * Math.pow(t, 0.45);
 }
 
 /** 时间相位：把秒换成 0–1 的循环相位。 */
@@ -87,7 +96,34 @@ export function snakePoint(u: number, time: number, out = new THREE.Vector3()): 
   const tilt = 0.035 * Math.sin(Math.PI * 2 * ph);
   const ct = Math.cos(tilt);
   const st = Math.sin(tilt);
-  return out.set(x, y * ct - z * st, y * st + z * ct);
+  const p = out.set(x, y * ct - z * st, y * st + z * ct);
+
+  // §44 衔尾约束：尾段（u 小）向嘴内锚点收拢，权重 (1-u/L)^2 平滑衰减到 0，
+  // 因此不会在过渡处出现折角，颈端（u=1）完全不受影响。
+  // 校正量每帧由 build-jade.ts 在头部姿态确定后写入，管体与鳞片共用这条路径，
+  // 所以两者永远不会一先一后地脱开。
+  if (u < TAIL_LOCK_LEN) {
+    const w = 1 - u / TAIL_LOCK_LEN;
+    p.addScaledVector(tailLockDelta, w * w);
+  }
+  return p;
+}
+
+/**
+ * 衔尾约束：尾部被拉向蛇口的总偏移量（serpent 局部坐标）。
+ *
+ * 之所以用"整体偏移 + 平方衰减"而不是重算一条贝塞尔：管体、鳞片、切向全部经由 snakePoint
+ * 取样，只要偏移写进这一个函数，三者自动保持一致，不需要各自再实现一遍尾部过渡。
+ */
+const tailLockDelta = new THREE.Vector3();
+const TAIL_LOCK_LEN = 0.16;
+
+export function setTailLockTarget(dx: number, dy: number, dz: number): void {
+  tailLockDelta.set(dx, dy, dz);
+}
+
+export function clearTailLock(): void {
+  tailLockDelta.set(0, 0, 0);
 }
 
 /** 切向：中心差分，比单侧差分稳定。 */
@@ -208,10 +244,14 @@ export function snakeCurveAt(time: number, steps = 320): THREE.CatmullRomCurve3 
 // 第 26 轮：40×18 在 620 px 下每片约 15×31 px，整条蛇读成「竹节管」（对照 s1-base）。
 // 参照真蛇的可见鳞列数（正视约 6–9 列、沿身长每 8–10 px 一片），行数提到 110、
 // 列数 22，屏幕上一片约 6×7 px，才读得出「细鳞」而不是「分节」。
-export const SCALE_ROWS = 110;
-export const SCALE_COLS = 22;
-export const SCALE_SEG_A = 3;
-export const SCALE_SEG_B = 3;
+// §43：110×22 且每片仅 3×3 面，片缘是**硬直矩形**，在 520 px 下糊成"编织金属网"
+// （Blender 特写实测 close1out，见 _work/nova-night/close1out/frame-000.png）。
+// 片形比密度更关键：降到 70×14 让每片约 9×11 px，同时把片内网格提到 6×6，
+// 横向收边那段代码才有足够顶点把片缘做成弧面——"椭圆隆起"才读成鳞，"矩形硬边"读成编织。
+export const SCALE_ROWS = 70;
+export const SCALE_COLS = 14;
+export const SCALE_SEG_A = 6;
+export const SCALE_SEG_B = 6;
 const SCALE_VERTS = (SCALE_SEG_A + 1) * (SCALE_SEG_B + 1);
 export const SCALE_VERT_COUNT = SCALE_ROWS * SCALE_COLS * SCALE_VERTS;
 
@@ -281,9 +321,13 @@ export function updateSnakeScales(positions: Float32Array, normals: Float32Array
     // 片长必须大于行距，后缘才能压住下一行；片宽同理要大于环向步距，两侧才不留缝
     // 覆瓦系数不能大：2.05 让每片后缘抬起近半个行距，叠成竹节台阶（s1-base 实测）。
     // 1.35 仍保证后缘压住下一行，但台阶高度只剩行距的 35%。
-    const plateLen = rowStep * (1.35 - 0.15 * (1 - u));
+    // §44：1.35 时后缘抬起超过半个行距，整条蛇读成瓦楞；1.22 只留 22% 的浅搭。
+    const plateLen = rowStep * (1.22 - 0.10 * (1 - u));
 
-    const plateWid = arcStep * 1.45;
+    // §44 平面轮廓：旧版 across 宽度沿长度恒定，6×6 面片的边界就是矩形，特写读成"编织网"。
+    // 现在基准宽度加大（1.95 步距）再乘一个沿长度变化的水滴形因子：
+    // 前缘 0.58（贴身）、中后段 ~1.0（最宽）、尾端 0.20（收成尖），片与片之间自然形成圆角轮廓。
+    const plateWid = arcStep * 1.95;
     const amp = r * 0.05;
     for (let j = 0; j < SCALE_COLS; j += 1) {
       const stagger = (i % 2) * 0.5;
@@ -298,9 +342,11 @@ export function updateSnakeScales(positions: Float32Array, normals: Float32Array
         const rise = 0.05 + 0.95 * Math.pow(ua, 1.6);
         const lift = amp * lead * rise;
         const along = (ua - 0.5) * plateLen;
+        // 水滴轮廓因子：前缘 0.58 → 峰 ~1.0（约 40% 片长处）→ 尾端 0.20
+        const hwF = 0.58 + 0.42 * Math.sin(Math.PI * Math.pow(ua, 0.55)) - 0.38 * Math.pow(ua, 3);
         for (let b = 0; b <= SCALE_SEG_B; b += 1) {
           const vb = b / SCALE_SEG_B;
-          const across = (vb - 0.5) * plateWid;
+          const across = (vb - 0.5) * plateWid * hwF;
           // 横向收边：两侧压低，片才有隆起的弧面
           const edge = Math.sin(Math.PI * vb) ** 0.6;
           v.copy(centre).addScaledVector(tan, along).addScaledVector(wdir, across).addScaledVector(dir, lift * edge);

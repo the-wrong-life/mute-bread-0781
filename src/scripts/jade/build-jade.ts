@@ -15,6 +15,8 @@ import {
   ringSwing,
   kernelPulse,
   bodyFloat,
+  setTailLockTarget,
+  clearTailLock,
   type SnakeTubeTargets,
 } from './pose';
 
@@ -198,6 +200,48 @@ export function buildJadeModel(options: { quality?: 'high' | 'low' } = {}): Jade
   shell.scale.y = qnum('ysh', 1);
   root.add(shell);
 
+  // 1a-0. §2（m16361）弧片玉壳：外层不再是整球，而是数片有实体厚度的纵向"玉瓣"，
+  // 正面（+Z，即镜头方向）留出开口直接看到内珠与玉轴。厚度由 Blender 端 Solidify 生成
+  // （render-loop.py 的 NOVA_ARC_THICK，默认 0.028），这样网页端仍是单层几何、开销不变。
+  const arcMat = new THREE.MeshPhysicalMaterial({
+    // §42：参考图球壳本体是暖白/象牙色，青绿只沉积在厚边与下缘。整球做成青绿就会读成
+  // 薄荷玻璃摆件；改为象牙底壳 + 短衰减距离的深青绿吸收色，让厚处（Solidify 侧壁）自然发绿。
+  color: new THREE.Color('#ddd6c2'),
+    roughness: 0.09,
+    metalness: 0,
+    transmission: 0.62,
+    thickness: 0.28,
+    ior: 1.45,
+    clearcoat: 0.5,
+    clearcoatRoughness: 0.12,
+    attenuationColor: new THREE.Color('#3f6b52'),
+    attenuationDistance: 0.55,
+  });
+  arcMat.name = 'mat-arc-jade';
+  arcMat.side = THREE.DoubleSide;
+  // §43：1.60（92°）让整球读成"半开的蛋壳"，上半球与正面同时缺失；0.95（54°）仍偏大，
+// 后续收到 0.58（33°）：只留一个正面观察窗，球壳在其余方向闭合，与参考图"完整玻璃球"一致。
+const arcGap = qnum('agap', 0.58);
+  const arcCount = Math.max(2, Math.round(qnum('acount', 4)));
+  const arcSpan = (Math.PI * 2 - arcGap) / arcCount;
+  const arcStartTheta = qnum('at0', 0.12) * Math.PI;
+  const arcLenTheta = qnum('at1', 0.78) * Math.PI;
+  const arcs = new THREE.Group();
+  arcs.name = 'arc-shells';
+  for (let i = 0; i < arcCount; i += 1) {
+    const phiStart = Math.PI / 2 + arcGap / 2 + i * arcSpan;
+    const geo = new THREE.SphereGeometry(0.995, hi ? 96 : 48, hi ? 64 : 32, phiStart, arcSpan, arcStartTheta, arcLenTheta);
+    const m = new THREE.Mesh(geo, arcMat);
+    m.name = 'arc-shell-' + i;
+    m.castShadow = true;
+    m.receiveShadow = true;
+    arcs.add(m);
+  }
+  arcs.scale.y = qnum('ysh', 1);
+  root.add(arcs);
+  // 玻璃壳可见性交给 URL（默认保留作为弧片之间的"薄玻璃层"，?glass=0 可关）。
+  shell.visible = qnum('glass', 1) > 0.5;
+
   // 1a. 内层玉球（结构按参考图实测比例：内球直径约为外球 0.84，球心一颗亮珠）：
   // 旧版把"瓷胎"放在 0.988，与外玻璃壳几乎重合，两层球在画面上叠成一颗"奶白球"，
   // 内部结构全被它吃掉。参考图明显是"外玻璃壳 R=1.0 + 内层玉球 R≈0.84"两层。
@@ -283,11 +327,12 @@ export function buildJadeModel(options: { quality?: 'high' | 'low' } = {}): Jade
   const strutMat = new THREE.MeshPhysicalMaterial({
     // 第 13 轮：原 #bcd9c6 + emissive 0.12 在玻璃球里被打成"荧光白线"，
     // 参考图的梁是实心玉色，所以压深底色、去掉自发光、降低透射让梁有体积。
-    color: new THREE.Color('#7f9c68'),
-    roughness: 0.26,
+    // §43：玉瓣要比旧"白梁"更沉、更有玉肉感——旧 #7f9c68 在强光下被打成荧光线。
+    color: new THREE.Color('#5f8a67'),
+    roughness: 0.22,
     metalness: 0,
-    transmission: 0.18,
-    thickness: 0.12,
+    transmission: 0.32,
+    thickness: 0.22,
     ior: 1.5,
     clearcoat: 0.2,
     emissive: new THREE.Color('#c8dcb4'),
@@ -298,38 +343,31 @@ export function buildJadeModel(options: { quality?: 'high' | 'low' } = {}): Jade
   // 贴在球面上的浮雕，所以半径要抬到与瓷胎齐平，让梁有一半露在外面。
   // 第 26 轮：壳改成 Alpha 薄壁（NOVA_SHELL_ALPHA）之后，0.806 的梁深埋在内层玉胎里，
   // 从外面只剩几根淡线；抬到 0.90 让它贴住玻璃壳内侧，才是参考图"梁在壳内"的层次。
-  const STRUT_R = 0.90;
-  // 参考图球内是 6 道成组的宽弧梁（不是 4 道细线）：数量与截面都要按"梁"的尺度给。
-  const STRUT_MERIDIANS = 6;
-  // 0.020 在 560² 下只有 2–3 px，和玻璃壳的高光抢亮度时整片读成白色网格；
-  // 加到 0.030（≈4–5 px）才有"梁"的厚度感。
-  // 参考图的球面是"细缝状分瓣"（玻璃灯笼的瓣缝），不是 5 px 宽的白梁；
-  // 0.034 在我们的灯位下被打成白线，读成线框笼子。收到 0.011 并压暗底色才对。
-  // 0.011 在 alpha 半透壳下几乎看不见，读成"空壳"；0.016 才像梁又不至于变成笼子。
-  // §32：0.016 在 520 px 下只有 2 px 宽，整组"浑天仪梁"读成划过球面的细丝，
-// 与参考图里成组的宽弧梁差得远。0.028 让梁在球径 494 px 时约 7 px，才看得出是结构件。
-const STRUT_TUBE = hi ? 0.028 : 0.030;
-  for (let i = 0; i < STRUT_MERIDIANS; i += 1) {
-    const meridian = new THREE.Mesh(
-      new THREE.TorusGeometry(STRUT_R, STRUT_TUBE, hi ? 10 : 6, hi ? 120 : 64),
+  const STRUT_R = 0.905;
+  // §43 §1：把"白色细梁"换成"贴球面侧后方的厚玉弧瓣"。
+  // 依据：6 道细圆环在 520 px 下读成白色线框笼，正是用户点名要去掉的"抢眼白梁"；
+  // 参考图的球内是几片厚玉瓣（球面分瓣），正面中央还留出看内珠的通路。
+  // 做法：直接用球面片（SphereGeometry 的 phi/theta 区间）铺在背面与两侧，
+  // 厚度交给 render-loop.py 的 Solidify（片名含 arc-shell，复用 ARC_THICK）。
+  // §43 二次修正：5 片在中景读成"竖条百叶窗"，把内珠切成条纹。
+  // 参考图球内只是少数几片弧形玉片，所以减到 3 片、加宽正面缺口到 0.95 rad（约 54°）。
+  const PANEL_COUNT = 3;
+  const FRONT_GAP = 0.95;
+  const PANEL_SPAN = Math.PI * 2 - FRONT_GAP * 2;
+  for (let i = 0; i < PANEL_COUNT; i += 1) {
+    const phiStart = Math.PI / 2 + FRONT_GAP + (i * PANEL_SPAN) / PANEL_COUNT;
+    // 片间留 0.22 rad 缝，读成"分瓣"而不是整块壳
+    const phiLen = PANEL_SPAN / PANEL_COUNT - 0.22;
+    const panel = new THREE.Mesh(
+      new THREE.SphereGeometry(STRUT_R, hi ? 48 : 24, hi ? 64 : 32,
+        phiStart, phiLen, 0.62, 1.72),
       strutMat,
     );
-    meridian.name = 'lattice-meridian-' + i;
-    meridian.rotation.y = (i / STRUT_MERIDIANS) * Math.PI;
-    lattice.add(meridian);
+    panel.name = 'arc-shell-panel-' + i;
+    lattice.add(panel);
   }
-  // 三道纬线把球面切成密集方格，读成"法拉第笼"；参考图是稀疏的长方形开窗，故回到两道。
-  for (const lat of [-0.52, 0.52]) {
-    const ringR = Math.sqrt(Math.max(STRUT_R * STRUT_R - lat * lat, 0.01));
-    const latitude = new THREE.Mesh(
-      new THREE.TorusGeometry(ringR, STRUT_TUBE * 0.9, hi ? 10 : 6, hi ? 120 : 64),
-      strutMat,
-    );
-    latitude.name = 'lattice-latitude';
-    latitude.rotation.x = Math.PI / 2;
-    latitude.position.y = lat;
-    lattice.add(latitude);
-  }
+  // §43：原 6 道 meridian 圆环 + 2 道纬线全部删除（读成白色线框笼，正是要修掉的"抢眼白梁"），
+  // 内层改为上面 5 片贴球面的厚玉弧瓣；侧后支撑由弧瓣自身承担，正面中央保持通透。
   root.add(lattice);
 
   // 2. 暖白内核
@@ -372,9 +410,14 @@ const STRUT_TUBE = hi ? 0.028 : 0.030;
   // 0.17 → 0.22：和参考图并排后发现参考珠径约球径 22%，0.17 显得像一颗小豆。
   // 参考图网格标尺（670 px 版）复测：珠径 110 px / 外球径 494 px ≈ 0.222 D → 半径 0.222 R。
   // 上一版把"直径占比"当成了半径，0.29 让珠涨到球径的 58%，比参考大一圈。
-  const pearl = new THREE.Mesh(new THREE.SphereGeometry(0.222, hi ? 64 : 32, hi ? 48 : 24), pearlMat);
+  // §41：按参考图裁片 refcrop-b.png 重新目视量测，中心暖白球直径约为玻璃球径的 40%，
+  // 即半径 0.40 R（此前 0.222 是按 670 px 缩略图量出的 22% D，偏小，珠在 520 px 下像颗小豆）。
+  // §42：1440 主图实测，0.40 R 的珍珠在球心占去三分之一、边缘是硬白圆盘，压过了参考图里
+  // 那颗偏暖、半透、有柔和光晕的内珠。降到 0.30 R（珠径约球径 30%），配合 KERNEL 2.4 柔化光晕。
+  // §43 §1：压到 0.26，给"上、下两段玉轴"让出可见长度（0.30 时轴上段被珠顶吃掉大半）。
+  const pearl = new THREE.Mesh(new THREE.SphereGeometry(0.26, hi ? 64 : 32, hi ? 48 : 24), pearlMat);
   pearl.name = 'jade-pearl';
-  pearl.position.set(0, 0.06, 0);
+  pearl.position.set(0, 0.02, 0);
   pearl.renderOrder = 4;
   root.add(pearl);
 
@@ -489,11 +532,13 @@ const STRUT_TUBE = hi ? 0.028 : 0.030;
   // 这里给一个只作用于蛇组的等比缩放，用于把环压回贴球面；头部随组缩放，故用 heads 单独回补。
   serpent.scale.setScalar(qnum('srad', 1.0));
   serpent.rotation.set(SERPENT_TILT, qnum('spin', 0.0), 0.0);
-  serpent.position.set(0, qnum('shift', 0.0), qnum('depth', 0.0));
+  // §41：参考图的蛇盘在球体外缘**上缘**，不是赤道。默认给 0.20 R 的上移。
+  serpent.position.set(0, qnum('shift', 0.20), qnum('depth', 0.0));
 
-  // §39：参考图的主体是纵向玉瓶（高:宽 ≈ 1.2:1）。正球无论怎么调材质都读成"西方天文仪"；
-  // 纵向拉伸会把金环、蛇轨、内梁一起变成椭圆，器物比例才对。
-  root.scale.set(1, qnum('ys', 1.20), 1);
+  // §41 更正：参考图装置 bbox 为 660x630（宽高比 1.048，接近正方），此前"纵向玉瓶 1.2:1"
+  // 来自对照脚本把 983x615 裁片强制 resize 成 520x520 的失真。默认恢复 1.0，
+  // 仍保留 ?ys= 用于实验，但不再作为造型前提。
+  root.scale.set(1, qnum('ys', 1.0), 1);
   const curve = snakeCurveAt(0);
   // t=0 是尾端（收细到 0.022 以便入口），t=1 是颈端（0.108，与头部颈径衔接）。
   // 管体用固定拓扑 + 每帧原地重算顶点：Frenet 帧在曲率近零处会翻转，
@@ -621,6 +666,13 @@ const STRUT_TUBE = hi ? 0.028 : 0.030;
   // 球+锥的组装做不到这一点（上一版读成"鸭嘴/勺头"），这里改为沿 +X 轴放样的楔形头。
   const head = new THREE.Group();
   head.name = 'serpent-head';
+  // §44 衔尾锚点：嘴内一点点（吻端内侧），每帧头部姿态定下后取它的世界坐标，
+  // 反算回 serpent 局部空间作为尾尖目标点。放在嘴内而不是吻端外侧，
+  // 是为了让尾尖"伸进嘴里"而不是"顶着嘴唇"。
+  const mouthAnchor = new THREE.Object3D();
+  mouthAnchor.name = 'serpent-mouth-anchor';
+  mouthAnchor.position.set(0.255, 0, -0.010);
+  head.add(mouthAnchor);
   const tip = snakePoint(1, 0);
   const fwd = snakeTangent(1, 0);
 
@@ -660,6 +712,7 @@ const STRUT_TUBE = hi ? 0.028 : 0.030;
   // 目的不是改造型，而是让吻部、双眼与嘴线在正面视角里同时可见。
   head.rotateY(qnum('heady', 0));
   head.rotateZ(qnum('headz', 0));
+  head.rotateX(qnum('headr', 0));
 
   const headMat = new THREE.MeshPhysicalMaterial({
     // 高金属度 + 低粗糙把蛇头渲成抛光铜蛋，压掉一切结构；降到 0.42/0.36 让
@@ -686,19 +739,19 @@ const STRUT_TUBE = hi ? 0.028 : 0.030;
   // "扁上颌 + 张开的下颌"这一对真实结构，因此这里把上颌压扁（h 减到 0.082）
   // 并单独造一块向下张开的下颌，让吻部之间留出真正的开口。
   const headSections: HeadSection[] = [
-    // §37：把吻部再拉长、宽度再收窄，使长宽比从 3.1:1 提到 4.6:1。
-    // §36 的 0.150 × 0.082 加上下颌与颈部后，轮廓仍读成"鹅卵石"。
-    // §38：4.6:1 的扁片从顶面看就是一片"金叶子"——扁头只在侧面轮廓里成立。
-    // 恢复高度到宽度的 ~0.78，保留拉长的吻部，让侧面读成楔形、顶面读成药丸而非薄片。
-    { x: -0.30, w: 0.078, h: 0.062, cy: 0.020 },
-    { x: -0.22, w: 0.100, h: 0.078, cy: 0.022 },
-    { x: -0.13, w: 0.116, h: 0.090, cy: 0.025 },
-    { x: -0.04, w: 0.118, h: 0.094, cy: 0.026 },
-    { x: 0.05, w: 0.110, h: 0.086, cy: 0.024 },
-    { x: 0.13, w: 0.096, h: 0.074, cy: 0.020 },
-    { x: 0.20, w: 0.078, h: 0.060, cy: 0.016 },
-    { x: 0.255, w: 0.058, h: 0.046, cy: 0.012 },
-    { x: 0.285, w: 0.038, h: 0.030, cy: 0.008 },
+    // §41：蛇头在所有旧版本里都读成"金蛋/胶囊"，根因是截面自始至终是椭圆、且长宽比只有 2.5:1。
+    // 参考图的蛇首辨识度来自三件事：**尖吻**（前端迅速收到一点）、**脊背**（头顶不是圆弧而是脊线）、
+    // **后脑展开**（眼后比吻部宽）。这里把前端 3 段压成接近圆锥，最大宽度段放到眼后，
+    // 长宽比提到 2.75:1 但轮廓是"箭头"而不是"胶囊"。
+    { x: -0.36, w: 0.030, h: 0.026, cy: 0.030 },
+    { x: -0.29, w: 0.066, h: 0.058, cy: 0.032 },
+    { x: -0.19, w: 0.100, h: 0.086, cy: 0.034 },
+    { x: -0.08, w: 0.120, h: 0.100, cy: 0.032 },
+    { x: 0.02, w: 0.122, h: 0.098, cy: 0.028 },
+    { x: 0.12, w: 0.108, h: 0.086, cy: 0.022 },
+    { x: 0.20, w: 0.088, h: 0.068, cy: 0.016 },
+    { x: 0.26, w: 0.064, h: 0.048, cy: 0.010 },
+    { x: 0.30, w: 0.040, h: 0.030, cy: 0.006 },
   ];
   // 下颌：比上颌更薄更短，铰点在 x=-0.05，向下张开 JAW_GAPE 弧度。
   const jawSections: HeadSection[] = [
@@ -802,12 +855,15 @@ const STRUT_TUBE = hi ? 0.028 : 0.030;
   // 眼位与法线都算在 x=0.02 处的截面上，θ=0.66 rad 让眼睛落在头侧上方
   // 眼位必须跟着 headSections 插值重算，否则眼球会浮在头外（上一版就浮过）。
   // x=0.03 落在 (−0.02, 0.148/0.116/0.012) 与 (0.05, 0.138/0.110/0.008) 之间，t=0.714。
-  const eyeX = 0.03;
+  // §42：眼位原来在 x=0.03，即头部最宽的后脑处；而蛇的吻端在 x=-0.36。
+  // 眼睛长在后脑正是读不出是蛇的核心原因——侧面看只有一块光滑楔形。
+  // 改到吻后方 x=-0.20（截面 w≈0.096），并把 θ 从 1.02 放到 1.28（更靠近侧面中线）。
+  const eyeX = -0.20;
   const eyeSec = sampleHead(headSections, eyeX);
   const eyeH = eyeSec.h;
   const eyeW = eyeSec.w;
   const eyeCy = eyeSec.cy;
-  const theta = 1.02;
+  const theta = 1.28;
   for (const side of [1, -1]) {
     const ey = eyeCy + Math.cos(theta) * eyeH;
     const ez = Math.sin(theta) * eyeW * side;
@@ -815,18 +871,18 @@ const STRUT_TUBE = hi ? 0.028 : 0.030;
     const pos = new THREE.Vector3(eyeX, ey, ez);
 
     // 眼组必须小而深：0.048 的窝 + 0.034 的眼球从 1.35 倍焦距看是"贴在头侧的蜗牛壳"
-    const socket = new THREE.Mesh(new THREE.SphereGeometry(0.030, 24, 18), socketMat);
+    const socket = new THREE.Mesh(new THREE.SphereGeometry(0.038, 24, 18), socketMat);
     socket.name = 'serpent-eye-socket-' + (side > 0 ? 'l' : 'r');
     socket.position.copy(pos).addScaledVector(n, -0.022);
     head.add(socket);
 
-    const eye = new THREE.Mesh(new THREE.SphereGeometry(0.024, 26, 20), eyeMat);
+    const eye = new THREE.Mesh(new THREE.SphereGeometry(0.030, 26, 20), eyeMat);
     eye.name = 'serpent-eye-' + (side > 0 ? 'l' : 'r');
     eye.position.copy(pos).addScaledVector(n, 0.001);
     head.add(eye);
 
     // 竖瞳：沿法线前移的扁椭球，给眼球一个明确的视觉中心
-    const pupil = new THREE.Mesh(new THREE.SphereGeometry(0.011, 18, 14), socketMat);
+    const pupil = new THREE.Mesh(new THREE.SphereGeometry(0.013, 18, 14), socketMat);
     pupil.name = 'serpent-pupil-' + (side > 0 ? 'l' : 'r');
     pupil.position.copy(pos).addScaledVector(n, 0.019);
     pupil.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), n);
@@ -834,10 +890,11 @@ const STRUT_TUBE = hi ? 0.028 : 0.030;
     head.add(pupil);
 
     // 眉脊：参考图蛇首有明显的眉弓，缺了它头就只是一个光滑楔形
-    const brow = new THREE.Mesh(new THREE.SphereGeometry(0.021, 20, 14), headMat);
+    // §41：眉弓从 0.021 加到 0.030——520 px 下 0.021 只有 2 px，等于没有。
+    const brow = new THREE.Mesh(new THREE.SphereGeometry(0.030, 20, 14), headMat);
     brow.name = 'serpent-brow-' + (side > 0 ? 'l' : 'r');
-    brow.position.set(0.004, eyeCy + eyeH * 0.58, eyeW * 0.40 * side);
-    brow.scale.set(1.7, 0.45, 1.0);
+    brow.position.set(eyeX + 0.014, eyeCy + eyeH * 0.52, eyeW * 0.44 * side);
+    brow.scale.set(1.6, 0.42, 1.05);
     brow.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), n);
     head.add(brow);
 
@@ -859,11 +916,14 @@ const STRUT_TUBE = hi ? 0.028 : 0.030;
   const axis = new THREE.Group();
   axis.name = 'jade-axis';
   // 参考图玉轴宽约 22 px / 452 px ≈ 0.049 直径 → 半径 0.024；旧 0.042 透过内球读成一条粗绿条。
-  const shaftGeo = new THREE.CylinderGeometry(0.026, 0.026, 2.44, hi ? 32 : 16);
+  // §43 §1：0.026 在 520 px 下只有 3 px，被珍珠一挡就看不出"轴"；加粗到 0.042（约 5 px）并压低透射，
+  // 让上、下两段轴在珠上下各有清楚的一段硬边。
+  // §43：2.44 让轴顶穿出球面 0.22、在画面里读成"天线"；收到 1.86（±0.93）让轴只在球内。
+  const shaftGeo = new THREE.CylinderGeometry(0.042, 0.042, 1.86, hi ? 32 : 16);
   const shaftMat = new THREE.MeshPhysicalMaterial({
     color: new THREE.Color('#e2eee4'),
     roughness: 0.16,
-    transmission: 0.72,
+    transmission: 0.50,
     thickness: 0.4,
     ior: 1.5,
     metalness: 0,
@@ -880,8 +940,9 @@ const STRUT_TUBE = hi ? 0.028 : 0.030;
     envMapIntensity: 2.2,
   });
   goldMat.name = 'mat-gold';
-  for (const y of [1.1, -1.1]) {
-    const collar = new THREE.Mesh(new THREE.CylinderGeometry(0.072, 0.072, 0.09, hi ? 32 : 16), goldMat);
+  // §43：1.1 在球半径 1.0 之外 → 轴上金箍浮在球顶成"天线帽"，收到 0.86 才在球内。
+  for (const y of [0.86, -0.86]) {
+    const collar = new THREE.Mesh(new THREE.CylinderGeometry(0.068, 0.068, 0.08, hi ? 32 : 16), goldMat);
     collar.name = 'axis-collar-' + (y > 0 ? 'top' : 'bottom');
     collar.position.y = y;
     axis.add(collar);
@@ -934,9 +995,12 @@ const STRUT_TUBE = hi ? 0.028 : 0.030;
   ringMat.side = THREE.DoubleSide;
   const copperRing = new THREE.Mesh(bandGeo, ringMat);
   copperRing.name = 'copper-ring';
-  // 环面相对像平面倾斜 49°：投影短长轴比 = cos(49°) ≈ 0.66，正面是清楚的斜向椭圆。
-  // 曾试 25°/30°（比值 0.91/0.87）投影接近正圆，与「清楚斜向椭圆」的验收不符。
-  copperRing.rotation.set(Math.PI / 2 - 0.855, 0.0, -0.18);
+  // §41：参考图的主环是**横穿球体赤道的宽金带**（水平偏斜约 -11°，正面看是被球遮住前后的椭圆带），
+  // 不是竖直的"提梁"。旧值 π/2-0.855 让环面接近竖直，与蛇环一起读成壶把手。
+  // 现在环面基本水平（π/2-0.19 ≈ 水平偏 11°），绕 Z 再压 -0.18 形成构图倾斜。
+  // §43 §1：用户要求"主铜环斜过球体中段"——旧值只偏 11°，读成水平腰带。
+  // 现在绕 X 压到 0.34 rad、绕 Z 再斜 0.26，环面真正斜跨球体中段，正视图是明显斜椭圆。
+  copperRing.rotation.set(Math.PI / 2 - 0.34, 0.12, -0.26);
   copperRing.scale.set(1, 1, 1);
   copperRing.castShadow = true;
   root.add(copperRing);
@@ -945,7 +1009,11 @@ const STRUT_TUBE = hi ? 0.028 : 0.030;
   // 用同一截面几何克隆，只换姿态（第二道绕 Y 再转 ~60°，形成交叉）。
   const copperRing2 = new THREE.Mesh(bandGeo, ringMat);
   copperRing2.name = 'copper-ring-2';
-  copperRing2.rotation.set(Math.PI / 2 - 0.72, 0.0, 1.05);
+  // §41：次环改为接近竖直（与水平主环正交交叉），才读成浑天仪的"双环交扣"，
+  // 而不是两条平行提手；绕 Y 转 0.55 让它在球前偏右，形成前后穿插。
+  // §43 §1：次环"退到后方"——沿 -Z（远离镜头）后移，同时加大倾斜，形成前后两层而不是双提手。
+  copperRing2.rotation.set(0.42, 0.80, 0.46);
+  copperRing2.position.z = -0.42;
   copperRing2.castShadow = true;
   root.add(copperRing2);
 
@@ -1217,21 +1285,13 @@ const STRUT_TUBE = hi ? 0.028 : 0.030;
   const pSideV = new THREE.Vector3();
   const basis = new THREE.Matrix4();
 
+  // 每帧复用的临时量：衔尾计算每帧都要做，不能在里面 new Vector3
+  const _mouthWorld = new THREE.Vector3();
+  const _mouthLocal = new THREE.Vector3();
+  const _tailNow = new THREE.Vector3();
+
   function updatePose(time: number) {
-    // 1) 蛇身顶点原地重算（拓扑不变，无新显存分配）
-    updateSnakeTube(tubeTarget, time);
-    const posAttr = bodyGeo.getAttribute('position') as THREE.BufferAttribute;
-    const norAttr = bodyGeo.getAttribute('normal') as THREE.BufferAttribute;
-    posAttr.needsUpdate = true;
-    norAttr.needsUpdate = true;
-    bodyGeo.computeBoundingSphere();
-
-    // 1b) 甲片跟着同一套取样走：否则蛇身一动，鳞片还留在上一帧的管面上
-    updateSnakeScales(scalePos, scaleNor, time);
-    (scaleGeo.getAttribute('position') as THREE.BufferAttribute).needsUpdate = true;
-    (scaleGeo.getAttribute('normal') as THREE.BufferAttribute).needsUpdate = true;
-    scaleGeo.computeBoundingSphere();
-
+    // 1) 颈端姿态先行：衔尾约束要用到头部最终姿态，所以头部必须先定下来
     // 2) 颈端姿态：颈部与蛇头必须跟着同一套取样走，否则动起来就脱开
     snakePoint(1, time, pTip);
     snakeTangent(1, time, pFwd);
@@ -1249,8 +1309,37 @@ const STRUT_TUBE = hi ? 0.028 : 0.030;
     // （k1/k2/k3 差异实测 0.09–0.12%）。转角必须在这里叠加，而不是只在建模时设置一次。
     head.rotateY(headYaw(time) + qnum('heady', 0));
     head.rotateZ(qnum('headz', 0));
+    // §41：绕自身长轴（局部 X）滚转。要让蛇头"侧脸朝镜头"必须靠 roll；用 heady=π/2
+    // 会把长轴转到侧向，视觉上就是横穿蛇身的一片叶子（s4 特写已验证）。
+    head.rotateX(qnum('headr', 0));
 
-    // 3) 铜环缓慢摆转（幅度小，始终可辨认是环）
+    // 2b) 衔尾：头部姿态定了之后，取嘴内锚点的世界坐标，反算回 serpent 局部空间，
+    // 与当前尾尖求差，写入 pose 的 tail-lock 通道。必须在更新管体/鳞片之前算完，
+    // 否则这一帧的蛇身还是用上一帧的校正量画的（尾部会有一帧抖动）。
+    clearTailLock();
+    root.updateMatrixWorld(true);
+    head.updateWorldMatrix(true, false);
+    mouthAnchor.getWorldPosition(_mouthWorld);
+    _mouthLocal.copy(_mouthWorld);
+    serpent.worldToLocal(_mouthLocal);
+    snakePoint(0, time, _tailNow);
+    setTailLockTarget(_mouthLocal.x - _tailNow.x, _mouthLocal.y - _tailNow.y, _mouthLocal.z - _tailNow.z);
+
+    // 3) 蛇身顶点原地重算（拓扑不变，无新显存分配）——此时 snakePoint 已带衔尾校正
+    updateSnakeTube(tubeTarget, time);
+    const posAttr = bodyGeo.getAttribute('position') as THREE.BufferAttribute;
+    const norAttr = bodyGeo.getAttribute('normal') as THREE.BufferAttribute;
+    posAttr.needsUpdate = true;
+    norAttr.needsUpdate = true;
+    bodyGeo.computeBoundingSphere();
+
+    // 3b) 甲片跟着同一套取样走：否则蛇身一动，鳞片还留在上一帧的管面上
+    updateSnakeScales(scalePos, scaleNor, time);
+    (scaleGeo.getAttribute('position') as THREE.BufferAttribute).needsUpdate = true;
+    (scaleGeo.getAttribute('normal') as THREE.BufferAttribute).needsUpdate = true;
+    scaleGeo.computeBoundingSphere();
+
+    // 4) 铜环缓慢摆转（幅度小，始终可辨认是环）
     const swing = ringSwing(time);
     copperRing.rotation.set(RING_BASE_X + swing * 0.35, 0, RING_BASE_Z + swing);
     // 4) 内核柔和明暗（不做闪烁）

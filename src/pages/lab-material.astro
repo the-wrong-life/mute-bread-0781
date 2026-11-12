@@ -2,7 +2,7 @@
 import NovaShell from '../layouts/NovaShell.astro';
 ---
 <NovaShell title="材质试验台" description="玉材质参数对比" active="/lab">
-  <main class="wrap">
+  <div class="wrap">
     <h1>玉材质 A/B</h1>
     <div class="row">
       <div class="cell" data-v="0"><canvas></canvas><p>A 去 sheen 高透</p></div>
@@ -10,7 +10,7 @@ import NovaShell from '../layouts/NovaShell.astro';
       <div class="cell" data-v="2"><canvas></canvas><p>C 无内壳</p></div>
       <div class="cell" data-v="3"><canvas></canvas><p>D 玻璃+强clearcoat</p></div>
     </div>
-  </main>
+  </div>
 </NovaShell>
 <style>
   .wrap{padding:32px;max-width:1200px;margin:0 auto}

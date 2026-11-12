@@ -49,7 +49,29 @@ function locateJsonError(text:string):number {
 }
 export function parseJson(text:string):JsonResult {
   if(new TextEncoder().encode(text).length>1024*1024) return {ok:false,message:'输入超过 1 MB，请缩短后再处理。',offset:null,line:null,column:null};
-  try { return {ok:true,value:JSON.parse(text)}; } catch(error) {
+  try {
+    const value = JSON.parse(text);
+    // 校验数字的十进制数值能否经 Number 往返，避免格式化时静默改值。
+    const canonical = (raw:string) => {
+      const match = raw.match(/^(-?)(\d+)(?:\.(\d+))?(?:[eE]([+-]?\d+))?$/)!;
+      let digits = (match[2] + (match[3] ?? '')).replace(/^0+/, '');
+      if (!digits) return '0';
+      let exponent = BigInt(match[4] ?? '0') - BigInt((match[3] ?? '').length);
+      const trailing = digits.match(/0+$/)?.[0].length ?? 0;
+      if (trailing) { digits = digits.slice(0, -trailing); exponent += BigInt(trailing); }
+      return match[1] + digits + 'e' + exponent;
+    };
+    const token = /"(?:[^"\\]|\\.)*"|-?(?:0|[1-9]\d*)(?:\.\d+)?(?:[eE][+-]?\d+)?/g;
+    for (const match of text.matchAll(token)) {
+      if (match[0][0] === '"') continue;
+      const n = Number(match[0]);
+      if (!Number.isFinite(n) || canonical(match[0]) !== canonical(String(n))) {
+        const offset = match.index!; const before = text.slice(0, offset);
+        return {ok:false, message:'数字超出可无损表示的范围，请改用字符串。', offset, line:before.split('\n').length, column:offset-before.lastIndexOf('\n')};
+      }
+    }
+    return {ok:true,value};
+  } catch(error) {
     const message=error instanceof Error?error.message:'无法解析 JSON';
     const pos=message.match(/position (\d+)/i), lineCol=message.match(/line (\d+) column (\d+)/i);
     let offset:number|null=pos?Number(pos[1]):null;
@@ -106,6 +128,7 @@ export function dcVoltageDrop(p: { voltage: string; current: string; length: str
   const resistance = (rho * loopLength) / area;
   const drop = current * resistance;
   const percent = (drop / voltage) * 100;
+  if (![loopLength, resistance, drop, percent, voltage - drop].every(Number.isFinite)) throw new Error('计算结果溢出，请检查输入范围。');
   if (percent >= 100) throw new Error('计算压降已达到或超过电源电压，请检查输入是否合理。');
   return { drop, percent, endVoltage: voltage - drop, resistance, loopLength };
 }
@@ -149,6 +172,7 @@ export function upsRuntime(p: { capacity: string; voltage: string; dod: string; 
   const usableWh = nominalWh * (dod / 100);
   const deliveredWh = usableWh * (efficiency / 100);
   const hours = deliveredWh / load;
+  if (![nominalWh, usableWh, deliveredWh, hours, hours * 60].every(Number.isFinite)) throw new Error('计算结果溢出，请检查输入范围。');
   return { nominalWh, usableWh, deliveredWh, minutes: hours * 60, hours };
 }
 
@@ -355,9 +379,9 @@ export function acCableDrop(p: {
   const factor = p.system === 'ac3' ? Math.sqrt(3) : 2;
   const drop = factor * current * (rKm * pf + xKm * sinPhi) * (length / 1000);
   const percent = (drop / voltage) * 100;
-  if (!Number.isFinite(drop) || !Number.isFinite(percent)) throw new Error('计算结果溢出，请检查输入范围。');
+  if (![rKm, drop, percent].every(Number.isFinite)) throw new Error('计算结果溢出，请检查输入范围。');
   if (percent >= 100) throw new Error('计算压降已达到或超过线电压，请检查输入是否合理。');
-  return { drop, percent, endVoltage: voltage - drop, rKm, xKm, sinPhi, limitPercent, pass: percent <= limitPercent, factor };
+  return { drop, percent, endVoltage: voltage - drop, rKm, xKm, sinPhi, limitPercent, pass: percent <= limitPercent + 8 * Number.EPSILON * Math.max(percent, limitPercent), factor };
 }
 
 
@@ -367,7 +391,7 @@ export const AC_STANDARD_SECTIONS = [1.5, 2.5, 4, 6, 10, 16, 25, 35, 50, 70, 95,
 
 export interface AcSizeResult {
   /** 达到允许压降所需的最小理论截面（mm²） */
-  required: number;
+  required: number | null;
   /** 在标准序列中向上取一档后的截面（mm²）；序列上限仍不满足时为 null */
   selected: number | null;
   /** 选用截面的实际压降（V）；无解时为 0 */
@@ -422,17 +446,21 @@ export function acCableSize(p: {
   const limitVolts = (voltage * limitPercent) / 100;
   if (limitVolts <= 0) throw new Error('允许压降为 0，无法反算截面。');
   const reactiveDrop = factor * current * (xKm * sinPhi) * (length / 1000);
+  if (![limitVolts, reactiveDrop].every(Number.isFinite)) throw new Error('计算结果溢出，请检查输入范围。');
   const target = limitVolts - reactiveDrop;
   if (target <= 0) {
     return {
-      required: Infinity, selected: null, drop: 0, percent: 0,
+      required: null, selected: null, drop: 0, percent: 0,
       limitVolts, limitPercent, reactiveDrop, rKm: 0, reactiveLimited: true, factor,
     };
   }
   const required = current > 0 ? (factor * current * rho * pf * length) / target : 0;
   if (!Number.isFinite(required)) throw new Error('计算结果溢出，请检查输入范围。');
   // 向上取一档：所需截面小于最小档位时按最小档位给值，便于直接下单
-  const selected: number | null = AC_STANDARD_SECTIONS.find((s) => s >= required) ?? null;
+  const selected: number | null = AC_STANDARD_SECTIONS.find((s) => {
+    const candidate = factor * current * ((rho * 1000 / s) * pf + xKm * sinPhi) * (length / 1000) / voltage * 100;
+    return Number.isFinite(candidate) && candidate <= limitPercent + 8 * Number.EPSILON * Math.max(candidate, limitPercent);
+  }) ?? null;
   if (selected === null) {
     return {
       required, selected: null, drop: 0, percent: 0,
@@ -442,6 +470,6 @@ export function acCableSize(p: {
   const rKm = (rho * 1000) / selected;
   const drop = factor * current * (rKm * pf + xKm * sinPhi) * (length / 1000);
   const percent = (drop / voltage) * 100;
-  if (!Number.isFinite(drop) || !Number.isFinite(percent)) throw new Error('计算结果溢出，请检查输入范围。');
+  if (![rKm, drop, percent].every(Number.isFinite)) throw new Error('计算结果溢出，请检查输入范围。');
   return { required, selected, drop, percent, limitVolts, limitPercent, reactiveDrop, rKm, reactiveLimited: false, factor };
 }
