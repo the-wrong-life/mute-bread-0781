@@ -49,6 +49,31 @@ const links = [
     <footer><span>DIY 工程实验室</span><span>工程想法 → 可验证现实</span><span>© 2026 DIY 工程实验室</span></footer>
   </body>
 </html>
+<script>
+  const skip = document.querySelector<HTMLAnchorElement>('.skip-link');
+  const main = document.querySelector<HTMLElement>('#main-content');
+  skip?.addEventListener('click', () => main?.focus());
+
+  const menu = document.querySelector<HTMLDetailsElement>('.navigation');
+  const trigger = menu?.querySelector<HTMLElement>('summary');
+  const panel = menu?.querySelector<HTMLElement>('#primary-navigation');
+  if (menu && trigger && panel) {
+    const syncMenu = (focusFirst = false) => {
+      trigger.setAttribute('aria-expanded', String(menu.open));
+      panel.hidden = !menu.open;
+      if (menu.open && focusFirst) panel.querySelector<HTMLAnchorElement>('a')?.focus();
+    };
+    syncMenu();
+    menu.addEventListener('toggle', () => syncMenu(menu.open && document.activeElement === trigger));
+    menu.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape' && menu.open) {
+        menu.open = false;
+        syncMenu();
+        trigger.focus();
+      }
+    });
+  }
+</script>
 <style>
   :global(html){background:#f4f0e6;color:#202923}
   :global(body){margin:0;min-width:320px;background:#f4f0e6;font-family:ui-sans-serif,system-ui,"Noto Sans CJK SC",sans-serif}

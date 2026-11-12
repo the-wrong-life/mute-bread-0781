@@ -59,57 +59,66 @@ const {
       try { return window.localStorage.getItem('yuheng-motion'); } catch { return null; }
     })();
 
+    const staticSrcSet = img.getAttribute('srcset') || '';
+    let pending: HTMLImageElement | null = null;
+    const cancelLoad = () => {
+      if (!pending) return;
+      pending.onload = null;
+      pending.onerror = null;
+      pending.src = '';
+      pending = null;
+    };
     const showStatic = () => {
-      if (img.dataset.mode === 'static') return;
+      cancelLoad();
       img.dataset.mode = 'static';
+      img.srcset = staticSrcSet;
       img.src = staticSrc;
-      img.srcset = '';
       btn.textContent = '播放动作';
       btn.setAttribute('aria-pressed', 'false');
       fig.dataset.anim = 'off';
     };
     const showAnim = () => {
-      if (img.dataset.mode === 'anim') return;
-      img.dataset.mode = 'anim';
-      img.srcset = '';
-      img.src = animSrc;
-      btn.textContent = '暂停动作';
-      btn.setAttribute('aria-pressed', 'true');
-      fig.dataset.anim = 'on';
-    };
-
-    const allowed = () => !reduce.matches && !weakNet && stored !== 'paused';
-
-    // 上次手动暂停过：直接以静态态呈现，按钮文案与状态必须一致，不能只留默认文案
-    if (stored === 'paused') showStatic();
-    // 弱网/省流量时不自动播放，也要把按钮文案同步成"播放动作"
-    else if (weakNet || reduce.matches) showStatic();
-
-    // 只有在"省流量/2G/3G"时彻底不提供切换按钮；仅下行偏慢（<1 Mbps）时保留按钮，让用户自己决定要不要看动画。
-    const wide = window.matchMedia('(min-width: 900px)');
-    btn.hidden = reduce.matches || lightNet;
-    if (!btn.hidden && !weakNet && wide.matches) {
-      // 宽屏下立即开始取，让动画图尽早成为 LCP 候选，而不是等 idle 之后才发起请求。
+      if (reduce.matches || lightNet || img.dataset.mode === 'anim' || pending) return;
       const pre = new Image();
-      pre.fetchPriority = 'high';
-      pre.onload = () => { if (allowed()) showAnim(); };
+      pending = pre;
+      pre.onload = () => {
+        if (pending !== pre) return;
+        pending = null;
+        if (reduce.matches || lightNet) return;
+        img.dataset.mode = 'anim';
+        img.srcset = '';
+        img.src = animSrc;
+        btn.textContent = '暂停动作';
+        btn.setAttribute('aria-pressed', 'true');
+        fig.dataset.anim = 'on';
+      };
+      pre.onerror = () => { if (pending === pre) showStatic(); };
       pre.src = animSrc;
-    }
-
-    btn.addEventListener('click', () => {
-      const playing = img.dataset.mode === 'anim';
-      if (playing) {
-        showStatic();
-        stored = 'paused';
-        try { window.localStorage.setItem('yuheng-motion', 'paused'); } catch { /* 隐私模式下忽略 */ }
-      } else {
-        showAnim();
-        stored = 'playing';
-        try { window.localStorage.setItem('yuheng-motion', 'playing'); } catch { /* 隐私模式下忽略 */ }
-      }
+    };
+    img.addEventListener('error', () => {
+      if (img.dataset.mode === 'anim') showStatic();
     });
 
-    reduce.addEventListener('change', () => { if (reduce.matches) showStatic(); });
+    showStatic();
+    const wide = window.matchMedia('(min-width: 900px)');
+    btn.hidden = reduce.matches || lightNet;
+    if (!btn.hidden && !weakNet && wide.matches && stored !== 'paused') showAnim();
+
+    btn.addEventListener('click', () => {
+      if (img.dataset.mode === 'anim' || pending) {
+        showStatic();
+        stored = 'paused';
+      } else {
+        stored = 'playing';
+        showAnim();
+      }
+      try { window.localStorage.setItem('yuheng-motion', stored); } catch { /* 隐私模式下忽略 */ }
+    });
+
+    reduce.addEventListener('change', () => {
+      btn.hidden = reduce.matches || lightNet;
+      if (reduce.matches) showStatic();
+    });
   }
 </script>
 
@@ -159,7 +168,7 @@ const {
   @media (prefers-reduced-motion: reduce) {
     .yuheng-art { animation: none; }
   }
-  .yuheng[data-anim='on'] .yuheng-art { animation: none; }
+  .yuheng[data-anim] .yuheng-art { animation: none; }
   .yuheng-caption {
     display: flex;
     align-items: center;
