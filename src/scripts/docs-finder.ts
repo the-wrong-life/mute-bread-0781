@@ -11,18 +11,17 @@ export function mountDocsFinder(): void {
   if (entries.length === 0) return;
 
   const localText: Record<string, string> = {};
-  const localRows: Row[] = [];
   for (const el of entries) {
     const slug = el.dataset.slug ?? '';
     const text = (el.textContent ?? '').toLowerCase();
     localText[slug] = text;
-    localRows.push({ slug, text });
   }
 
   let indexRows: Row[] | null = null;
   let indexPromise: Promise<void> | null = null;
 
   function loadIndex(): Promise<void> {
+    if (indexRows) return Promise.resolve();
     if (indexPromise) return indexPromise;
     indexPromise = fetch('/docs-index.json', { credentials: 'omit' })
       .then((res) => {
@@ -31,11 +30,14 @@ export function mountDocsFinder(): void {
       })
       .then((data) => {
         indexRows = data.map((item) => ({ slug: item.slug, text: String(item.text ?? '') }));
+        if (counter) delete counter.dataset.searchMode;
       })
       .catch(() => {
-        indexRows = localRows.slice();
+        indexRows = null;
+        if (counter) counter.dataset.searchMode = 'fallback';
       })
       .then(() => {
+        indexPromise = null;
         apply();
       });
     return indexPromise;
@@ -66,6 +68,7 @@ export function mountDocsFinder(): void {
         tokens.length || wanted
           ? '显示 ' + shown + ' / 共 ' + entries.length + ' 篇'
           : entries.length + ' 篇文档';
+      if (counter.dataset.searchMode === 'fallback') counter.textContent += '（全文索引加载失败，当前仅搜索列表内容；可重试）';
     }
     if (emptyHint) emptyHint.hidden = shown !== 0;
   }
@@ -78,7 +81,7 @@ export function mountDocsFinder(): void {
       window.clearTimeout(timer);
       timer = window.setTimeout(apply, 150);
     });
-    query.addEventListener('focus', () => { void loadIndex(); }, { once: true });
+    query.addEventListener('focus', () => { void loadIndex(); });
   }
   if (kindSelect) kindSelect.addEventListener('change', apply);
   // 首屏不主动取索引：等 focus 或输入再加载，节省 13.7 KB 与一次往返（实测首屏请求数为 0）。
