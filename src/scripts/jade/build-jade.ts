@@ -11,13 +11,11 @@ import {
   buildScaleUv,
   SCALE_VERT_COUNT,
   snakeRadius,
-  headYaw,
   ringSwing,
   kernelPulse,
-  bodyFloat,
-  setTailLockTarget,
-  clearTailLock,
   type SnakeTubeTargets,
+  type TailHermite,
+  TAIL_LOCK_LEN,
 } from './pose';
 
 // URL 调参读在模块顶层：buildJade 内部多处要读（壳层纵向缩放、蛇环姿态、头部转角），
@@ -43,6 +41,7 @@ export interface JadeParts {
   relief: THREE.Mesh;
   /** 按时间求值并原地更新全部运动部件。网页预览与导出共用同一姿态函数（见 pose.ts）。 */
   updatePose: (time: number) => void;
+  getTailDiagnostics: (time: number) => { dist: number; angleMouth: number; angleJoint: number; minRadius: number; selfIntersection: boolean };
 }
 
 /** 变半径管：沿曲线生成半径渐变的蛇身 */
@@ -706,7 +705,7 @@ const arcGap = qnum('agap', 0.58);
   // 按球径 620 px 折算应有 75–90 px，此处取 1.18（头长 0.465×1.18≈0.55 世界单位 ≈ 球径的 27%，
   // 但实际可见轮廓只有吻端到颈环约 0.30 ≈ 15%）。
   // §34：尺度与转角全部走 URL，便于一次构建后扫多组姿态（不必反复改文件）。
-  head.scale.setScalar(qnum('heads', 1.18));
+  head.scale.set(0.606, 0.656, 0.656);
   // §33：正视图里蛇头沿环切线平放，只能看到头背与眉骨，读成"金蛋/棒状端帽"。
   // 加两个可用 URL 覆盖的转角：heady 绕局部"上"轴转脸、headz 抬/压吻部。
   // 目的不是改造型，而是让吻部、双眼与嘴线在正面视角里同时可见。
@@ -775,7 +774,7 @@ const arcGap = qnum('agap', 0.58);
 
   // 张口：下颌绕铰点向下转 JAW_GAPE。开口必须是几何实体，否则正面只有一条暗线，
   // 小尺寸下仍读成药丸（§35 的 m1/m2/m3 三图即此）。
-  const JAW_GAPE = qnum('gape', 0.34);
+  const JAW_GAPE = Math.PI * 27 / 180;
   const jawPivot = new THREE.Group();
   jawPivot.name = 'serpent-jaw-pivot';
   jawPivot.position.set(-0.05, 0, 0);
@@ -783,7 +782,7 @@ const arcGap = qnum('agap', 0.58);
   lowerJaw.name = 'serpent-lower-jaw';
   lowerJaw.position.set(0.06, 0.006, 0);
   jawPivot.add(lowerJaw);
-  jawPivot.rotation.x = JAW_GAPE;
+  jawPivot.rotation.z = -JAW_GAPE;
   head.add(jawPivot);
 
   const seamMat = new THREE.MeshStandardMaterial({
@@ -876,7 +875,7 @@ const arcGap = qnum('agap', 0.58);
     socket.position.copy(pos).addScaledVector(n, -0.022);
     head.add(socket);
 
-    const eye = new THREE.Mesh(new THREE.SphereGeometry(0.030, 26, 20), eyeMat);
+    const eye = new THREE.Mesh(new THREE.SphereGeometry(0.045, 26, 20), eyeMat);
     eye.name = 'serpent-eye-' + (side > 0 ? 'l' : 'r');
     eye.position.copy(pos).addScaledVector(n, 0.001);
     head.add(eye);
@@ -910,7 +909,10 @@ const arcGap = qnum('agap', 0.58);
   }
 
     serpent.add(head);
-  root.add(serpent);
+  const serpentOrbit = new THREE.Group();
+  serpentOrbit.name = 'serpent-orbit';
+  serpentOrbit.add(serpent);
+  root.add(serpentOrbit);
 
   // 4. 竖直玉轴
   const axis = new THREE.Group();
@@ -1003,7 +1005,10 @@ const arcGap = qnum('agap', 0.58);
   copperRing.rotation.set(Math.PI / 2 - 0.34, 0.12, -0.26);
   copperRing.scale.set(1, 1, 1);
   copperRing.castShadow = true;
-  root.add(copperRing);
+  const outerRotation = new THREE.Group();
+  outerRotation.name = 'outer-rotation';
+  root.add(outerRotation);
+  outerRotation.add(copperRing);
 
   // 5b. 第二道金环：参考图是"双环交扣"的浑天仪结构，单环读成手镯。
   // 用同一截面几何克隆，只换姿态（第二道绕 Y 再转 ~60°，形成交叉）。
@@ -1015,7 +1020,22 @@ const arcGap = qnum('agap', 0.58);
   copperRing2.rotation.set(0.42, 0.80, 0.46);
   copperRing2.position.z = -0.42;
   copperRing2.castShadow = true;
-  root.add(copperRing2);
+  outerRotation.add(copperRing2);
+
+  // 河图板面局部 Z 为自转轴，整体挂在主铜环上。
+  const hetu = new THREE.Group();
+  hetu.name = 'hetu-board';
+  hetu.position.set(0.65, 0.68, 0.035);
+  copperRing.add(hetu);
+  const board = new THREE.Mesh(new THREE.BoxGeometry(0.20, 0.20, 0.018), ringMat);
+  hetu.add(board);
+  const hetuDotGeo = new THREE.SphereGeometry(0.012, 8, 6);
+  const hetuDotMat = new THREE.MeshStandardMaterial({ color: 0x182421, roughness: 0.55 });
+  for (let x = -1; x <= 1; x += 1) for (let y = -1; y <= 1; y += 1) {
+    const dot = new THREE.Mesh(hetuDotGeo, hetuDotMat);
+    dot.position.set(x * 0.052, y * 0.052, 0.014);
+    hetu.add(dot);
+  }
 
   // 5b2. 环面菱形浮雕：参考图的金环满布菱形网格纹，纯金属面在 520 px 下会读成"光滑手镯"。
   // 用压扁的八面体排成两行，形成可辨的菱形颗粒，而不引入贴图依赖。
@@ -1288,9 +1308,23 @@ const arcGap = qnum('agap', 0.58);
   // 每帧复用的临时量：衔尾计算每帧都要做，不能在里面 new Vector3
   const _mouthWorld = new THREE.Vector3();
   const _mouthLocal = new THREE.Vector3();
+  const hermite = { p0: new THREE.Vector3(), m0: new THREE.Vector3(), p1: new THREE.Vector3(), m1: new THREE.Vector3() };
   const _tailNow = new THREE.Vector3();
+  const _naturalMinus = new THREE.Vector3();
+  const _naturalPlus = new THREE.Vector3();
+  const tailProbe = new THREE.Vector3();
+  const tailTangent = new THREE.Vector3();
+  const axisLocal = new THREE.Vector3();
+  const minRadiusPoint = new THREE.Vector3();
+  let currentMouthAxis = new THREE.Vector3(1, 0, 0);
+  const desiredFwd = new THREE.Vector3();
+  const serpentWorldQ = new THREE.Quaternion();
 
   function updatePose(time: number) {
+    const angle = time * Math.PI * 2 / 8;
+    outerRotation.rotation.y = angle;
+    serpentOrbit.rotation.y = -angle;
+    hetu.rotation.z = angle;
     // 1) 颈端姿态先行：衔尾约束要用到头部最终姿态，所以头部必须先定下来
     // 2) 颈端姿态：颈部与蛇头必须跟着同一套取样走，否则动起来就脱开
     snakePoint(1, time, pTip);
@@ -1298,35 +1332,36 @@ const arcGap = qnum('agap', 0.58);
     neck.quaternion.setFromUnitVectors(AXIS_Z, pFwd.clone().negate());
     neck.position.copy(pTip).addScaledVector(pFwd, -0.045);
 
+    root.updateMatrixWorld(true);
+    serpent.getWorldQuaternion(serpentWorldQ);
+    desiredFwd.set(-0.62, -0.55, 0.55).normalize().applyQuaternion(serpentWorldQ.invert());
+    desiredFwd.multiplyScalar(0.7).addScaledVector(pFwd, 0.3).normalize();
     pUp.copy(pTip).normalize();
-    pUpV.copy(pUp).sub(pFwd.clone().multiplyScalar(pUp.dot(pFwd))).normalize();
-    pSideV.crossVectors(pFwd, pUpV).normalize();
+    pUpV.copy(pUp).addScaledVector(desiredFwd, -pUp.dot(desiredFwd)).normalize();
+    pSideV.crossVectors(desiredFwd, pUpV).normalize();
     head.position.copy(pTip).addScaledVector(pFwd, 0.019);
-    head.quaternion.setFromRotationMatrix(basis.makeBasis(pFwd, pUpV, pSideV));
-    // 头颈轻微摆动：绕本地上轴小角度转头，幅度 0.10 rad，不破坏衔尾
-    // §35 修复：这一行原先直接覆盖了 build 阶段用 URL 设的 heady/headz —— 因为 updatePose(0)
-    // 在建模末尾无条件调用，用户传 ?heady=1.57 也会被重置回 0，三张对照图因此几乎像素相同
-    // （k1/k2/k3 差异实测 0.09–0.12%）。转角必须在这里叠加，而不是只在建模时设置一次。
-    head.rotateY(headYaw(time) + qnum('heady', 0));
-    head.rotateZ(qnum('headz', 0));
-    // §41：绕自身长轴（局部 X）滚转。要让蛇头"侧脸朝镜头"必须靠 roll；用 heady=π/2
-    // 会把长轴转到侧向，视觉上就是横穿蛇身的一片叶子（s4 特写已验证）。
-    head.rotateX(qnum('headr', 0));
+    head.quaternion.setFromRotationMatrix(basis.makeBasis(desiredFwd, pUpV, pSideV));
 
     // 2b) 衔尾：头部姿态定了之后，取嘴内锚点的世界坐标，反算回 serpent 局部空间，
     // 与当前尾尖求差，写入 pose 的 tail-lock 通道。必须在更新管体/鳞片之前算完，
     // 否则这一帧的蛇身还是用上一帧的校正量画的（尾部会有一帧抖动）。
-    clearTailLock();
     root.updateMatrixWorld(true);
     head.updateWorldMatrix(true, false);
     mouthAnchor.getWorldPosition(_mouthWorld);
-    _mouthLocal.copy(_mouthWorld);
-    serpent.worldToLocal(_mouthLocal);
-    snakePoint(0, time, _tailNow);
-    setTailLockTarget(_mouthLocal.x - _tailNow.x, _mouthLocal.y - _tailNow.y, _mouthLocal.z - _tailNow.z);
+    hermite.p0.copy(_mouthWorld);
+    serpent.worldToLocal(hermite.p0);
+    const mouthAxis = new THREE.Vector3(1, 0, 0).transformDirection(mouthAnchor.matrixWorld);
+    currentMouthAxis.copy(mouthAxis).applyQuaternion(serpentWorldQ.clone().invert()).normalize();
+    snakePoint(TAIL_LOCK_LEN, time, hermite.p1);
+    const chord = hermite.p0.distanceTo(hermite.p1);
+    const tangentLength = chord * (chord < 0.05 ? 0.7 : 0.5);
+    hermite.m0.copy(currentMouthAxis).multiplyScalar(tangentLength);
+    snakePoint(TAIL_LOCK_LEN - 0.01, time, _naturalMinus);
+    snakePoint(TAIL_LOCK_LEN + 0.01, time, _naturalPlus);
+    hermite.m1.subVectors(_naturalPlus, _naturalMinus).normalize().multiplyScalar(tangentLength);
 
-    // 3) 蛇身顶点原地重算（拓扑不变，无新显存分配）——此时 snakePoint 已带衔尾校正
-    updateSnakeTube(tubeTarget, time);
+    // 3) 蛇身顶点与鳞片共用 Hermite 尾段
+    updateSnakeTube(tubeTarget, time, hermite);
     const posAttr = bodyGeo.getAttribute('position') as THREE.BufferAttribute;
     const norAttr = bodyGeo.getAttribute('normal') as THREE.BufferAttribute;
     posAttr.needsUpdate = true;
@@ -1334,27 +1369,53 @@ const arcGap = qnum('agap', 0.58);
     bodyGeo.computeBoundingSphere();
 
     // 3b) 甲片跟着同一套取样走：否则蛇身一动，鳞片还留在上一帧的管面上
-    updateSnakeScales(scalePos, scaleNor, time);
+    updateSnakeScales(scalePos, scaleNor, time, hermite);
     (scaleGeo.getAttribute('position') as THREE.BufferAttribute).needsUpdate = true;
     (scaleGeo.getAttribute('normal') as THREE.BufferAttribute).needsUpdate = true;
     scaleGeo.computeBoundingSphere();
 
-    // 4) 铜环缓慢摆转（幅度小，始终可辨认是环）
     const swing = ringSwing(time);
-    copperRing.rotation.set(RING_BASE_X + swing * 0.35, 0, RING_BASE_Z + swing);
-    // 4) 内核柔和明暗（不做闪烁）
-    const kp = kernelPulse(time);
-    kernel.scale.setScalar(kp);
-    glow.scale.setScalar(kp * 1.02);
-    kernelMat.emissiveIntensity = 1.5 * kp;
+    copperRing.rotation.set(Math.PI / 2 - 0.34 + swing * 0.35, 0.12, -0.26 + swing);
+    kernelMat.emissiveIntensity = 1.5 * kernelPulse(time);
+  }
 
-    // 5) 整体轻微悬浮
-    root.position.y = bodyFloat(time);
+  function getTailDiagnostics(time: number) {
+    updatePose(time);
+    snakePoint(0, time, tailProbe, hermite);
+    const p0 = hermite.p0;
+    snakePoint(0.004, time, tailTangent, hermite);
+    tailTangent.sub(tailProbe).normalize();
+    let angleMouth = THREE.MathUtils.radToDeg(Math.acos(THREE.MathUtils.clamp(tailTangent.dot(currentMouthAxis), -1, 1)));
+    const joint = snakePoint(TAIL_LOCK_LEN, time, new THREE.Vector3());
+    const inside = snakePoint(TAIL_LOCK_LEN - 0.00001, time, new THREE.Vector3(), hermite);
+    const outside = snakePoint(TAIL_LOCK_LEN + 0.00001, time, new THREE.Vector3());
+    const left = joint.clone().sub(inside).normalize();
+    const right = outside.sub(joint).normalize();
+    const angleJoint = THREE.MathUtils.radToDeg(left.angleTo(right));
+    let minRadius = Infinity;
+    const curvePoints: THREE.Vector3[] = [];
+    const center = new THREE.Vector3();
+    for (let i = 0; i <= 40; i += 1) {
+      const point = snakePoint(TAIL_LOCK_LEN * i / 40, time, new THREE.Vector3(), hermite);
+      curvePoints.push(point);
+      minRadius = Math.min(minRadius, point.distanceTo(center));
+    }
+    let selfIntersection = false;
+    const naturalPoints = Array.from({ length: 61 }, (_, i) => snakePoint(TAIL_LOCK_LEN + (1 - TAIL_LOCK_LEN) * i / 60, time));
+    for (let i = 0; i < curvePoints.length; i += 1) {
+      const ui = TAIL_LOCK_LEN * i / 40;
+      for (let j = 0; j < naturalPoints.length; j += 1) {
+        const uj = TAIL_LOCK_LEN + (1 - TAIL_LOCK_LEN) * j / 60;
+        if (Math.abs(ui - uj) <= 0.06) continue;
+        if (curvePoints[i].distanceTo(naturalPoints[j]) < 2 * Math.min(snakeRadius(ui), snakeRadius(uj))) selfIntersection = true;
+      }
+    }
+    return { dist: tailProbe.distanceTo(p0), angleMouth, angleJoint, minRadius, selfIntersection };
   }
 
   updatePose(0);
 
-  return { root, shell, kernel, serpent, axis, copperRing, baseBadge, tablet, stars, relief, updatePose };
+  return { root, shell, kernel, serpent, axis, copperRing, baseBadge, tablet, stars, relief, updatePose, getTailDiagnostics };
 }
 
 export function jadePartNames(parts: JadeParts): string[] {

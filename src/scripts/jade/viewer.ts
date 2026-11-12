@@ -13,6 +13,7 @@ export interface JadeViewerHandle {
   isPaused: () => boolean;
   /** 按指定时间求值姿态，用于逐帧导出与离线渲染对齐 */
   poseAt: (time: number) => void;
+  getTailDiagnostics: (time: number) => ReturnType<JadeParts["getTailDiagnostics"]>;
   loopSeconds: number;
 }
 
@@ -373,5 +374,5 @@ export function mountJadeViewer(root: HTMLElement): JadeViewerHandle | null {
   }
 
   root.dataset.renderer = 'ready';
-  return { dispose, exportGLB, setQuality, orbitTo, setPaused, isPaused, poseAt: (time: number) => parts.updatePose(time), loopSeconds: LOOP_SECONDS };
+  return { dispose, exportGLB, setQuality, orbitTo, setPaused, isPaused, poseAt: (time: number) => parts.updatePose(time), getTailDiagnostics: parts.getTailDiagnostics, loopSeconds: LOOP_SECONDS };
 }
