@@ -25,7 +25,7 @@ function run(tool, args) {
     case 'dcVoltageDrop': return dcVoltageDrop({ voltage: args[0], current: args[1], length: args[2], area: args[3], rho: args[4], kind: args[5] });
     case 'upsRuntime': return upsRuntime({ capacity: args[0], voltage: args[1], dod: args[2], efficiency: args[3], load: args[4] });
     case 'bendAllowance': return bendAllowance({ thickness: args[0], radius: args[1], angle: args[2], k: args[3], legA: num(args[4]) === undefined ? undefined : args[4], legB: num(args[5]) === undefined ? undefined : args[5] });
-    case 'supplyCurrent': return supplyCurrent({ phase: args[0], input: args[1], value: args[2], voltage: args[3], pf: args[4] });
+    case 'supplyCurrent': return supplyCurrent({ phase: args[0], input: args[1], value: args[2], voltage: args[3], pf: args[4], basis: args[5] ?? undefined, efficiency: args[6] ?? undefined });
     case 'cabinetThermal': return cabinetThermal({ loss: args[0], area: args[1], ambient: args[2], inside: args[3], k: args[4], safety: args[5] });
     case 'acCableSize': return acCableSize({ system: args[0], voltage: args[1], current: args[2], length: args[3], rho: args[4], pf: args[5], x: args[6], limit: args[7] });
   case 'conduitFill': return conduitFill({ diameter: args[0], diaA: args[1], countA: args[2], diaB: args[3] ?? '', countB: args[4] ?? '' });

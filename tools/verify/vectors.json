@@ -374,6 +374,34 @@
       "note": "cosφ=1，无功为 0"
     },
     {
+      "id": "ss1",
+      "tool": "supplyCurrent",
+      "args": [
+        "three",
+        "kw",
+        "7.5",
+        "380",
+        "0.85",
+        "shaft",
+        "88.8"
+      ],
+      "note": "三相轴功率 7.5 kW、η 88.8%、cosφ 0.85，与电机回路案例同口径"
+    },
+    {
+      "id": "ss2",
+      "tool": "supplyCurrent",
+      "args": [
+        "single",
+        "kw",
+        "1.5",
+        "220",
+        "0.9",
+        "shaft",
+        "85"
+      ],
+      "note": "单相轴功率 1.5 kW、η 85%"
+    },
+    {
       "id": "c1",
       "tool": "cabinetThermal",
       "args": [
@@ -938,6 +966,48 @@
         "0.85"
       ],
       "match": "12 V"
+    },
+    {
+      "id": "ess1",
+      "tool": "supplyCurrent",
+      "args": [
+        "three",
+        "kw",
+        "7.5",
+        "380",
+        "0.85",
+        "shaft",
+        "0"
+      ],
+      "match": "必须大于 0"
+    },
+    {
+      "id": "ess2",
+      "tool": "supplyCurrent",
+      "args": [
+        "three",
+        "kw",
+        "7.5",
+        "380",
+        "0.85",
+        "shaft",
+        "120"
+      ],
+      "match": "大于 100"
+    },
+    {
+      "id": "ess3",
+      "tool": "supplyCurrent",
+      "args": [
+        "three",
+        "kva",
+        "50",
+        "380",
+        "0.85",
+        "shaft",
+        "88.8"
+      ],
+      "match": "轴功率基准只适用于有功功率输入"
     },
     {
       "id": "e20",

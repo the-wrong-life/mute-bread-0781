@@ -85,12 +85,14 @@ import NovaShell from '../layouts/NovaShell.astro';
       <div class="heading"><span class="number">07</span><div><h2 id="supply-title">电源容量与电流</h2><p>按相制、线电压与功率因数换算视在功率和线电流，用于选线、选断路器与 UPS 容量估算。</p><p class="tool-link"><a href="/docs/motor-branch-case-7k5/">查看算例（三相 7.5 kW 电机回路） →</a></p></div></div>
       <div class="unit-grid">
         <label for="supply-phase">相制<select id="supply-phase"><option value="three" selected>三相（线电压）</option><option value="single">单相</option></select></label>
+        <label for="supply-basis">输入基准<select id="supply-basis"><option value="line" selected>电网侧有功（已含效率）</option><option value="shaft">轴功率（机械输出，需效率）</option></select></label>
         <label for="supply-input">输入量<select id="supply-input"><option value="kw" selected>有功功率 P（kW）</option><option value="kva">视在功率 S（kVA）</option></select></label>
         <label for="supply-value"><span id="supply-value-label">有功功率 P kW</span><input id="supply-value" type="text" inputmode="decimal" autocomplete="off" placeholder="例如 15" aria-invalid="false" /></label>
         <label for="supply-voltage">线电压 V<input id="supply-voltage" type="text" inputmode="decimal" autocomplete="off" value="380" aria-invalid="false" /></label>
         <label for="supply-pf">功率因数 cosφ<input id="supply-pf" type="text" inputmode="decimal" autocomplete="off" value="0.85" aria-invalid="false" /></label>
+        <label for="supply-eff" id="supply-eff-wrap" hidden>效率 η %<input id="supply-eff" type="text" inputmode="decimal" autocomplete="off" value="88.8" aria-invalid="false" /></label>
       </div>
-      <p id="supply-note" class="note">公式：S = P ÷ cosφ；三相 I = S × 1000 ÷（√3 × U），单相 I = S × 1000 ÷ U；无功 Q = S × sinφ。三相按线电压、负载三相对称估算；直接输入视在功率时功率因数只影响有功与无功拆分。选线仍需按敷设方式、环境温度、成组系数与保护整定查表核对，本工具不能替代。</p>
+      <p id="supply-note" class="note">公式：S = P ÷ cosφ；三相 I = S × 1000 ÷（√3 × U），单相 I = S × 1000 ÷ U；无功 Q = S × sinφ。选「轴功率」时先把机械输出按效率折算到电网侧：P = P_out ÷（η/100），此时输出里的「有功」就是电网侧有功。三相按线电压、负载三相对称估算；直接输入视在功率时功率因数只影响有功与无功拆分。选线仍需按敷设方式、环境温度、成组系数与保护整定查表核对，本工具不能替代。</p>
       <div class="result" aria-live="polite"><span id="supply-status">等待输入</span><output id="supply-result">—</output></div>
       <p id="supply-detail" class="status"></p>
       <div class="actions"><button type="button" id="supply-example">填入示例</button><button type="button" id="supply-copy">复制结果</button><span id="supply-copy-status" role="status"></span></div>

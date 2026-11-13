@@ -234,6 +234,8 @@ export function bendAllowance(p: { thickness: string; radius: string; angle: str
  *  仅用于选型前期估算，不替代载流量、保护整定与短路校验。 */
 export type SupplyPhase = 'single' | 'three';
 export type SupplyInput = 'kw' | 'kva';
+/** 输入基准：line = 电网侧有功（已含效率）；shaft = 机械轴功率，需按效率折算到电网侧。 */
+export type SupplyBasis = 'line' | 'shaft';
 export interface SupplyResult {
   /** 线电流 A */
   current: number;
@@ -244,7 +246,7 @@ export interface SupplyResult {
   /** 无功功率 kvar */
   reactive: number;
 }
-export function supplyCurrent(p: { phase: SupplyPhase; input: SupplyInput; value: string; voltage: string; pf: string }): SupplyResult {
+export function supplyCurrent(p: { phase: SupplyPhase; input: SupplyInput; value: string; voltage: string; pf: string; basis?: SupplyBasis; efficiency?: string }): SupplyResult {
   const value = parsePositive(p.value, p.input === 'kw' ? '有功功率' : '视在功率');
   const voltage = parsePositive(p.voltage, '电压');
   const pf = parsePositive(p.pf, '功率因数');
@@ -253,7 +255,17 @@ export function supplyCurrent(p: { phase: SupplyPhase; input: SupplyInput; value
   if (voltage < 12) throw new Error('电压低于 12 V，请确认单位是否为 V。');
   if (voltage > 1000) throw new Error('电压超过 1000 V，超出本工具的低压估算范围。');
   if (value > 1e6) throw new Error('功率超过 1e6，请确认单位是否为 kW 或 kVA。');
-  const apparent = p.input === 'kw' ? value / pf : value;
+  // 轴功率基准：把机械输出折算到电网侧有功，再做 S 与 I 的换算（与「直流/交流压降」案例口径一致）。
+  let lineActive = value;
+  if (p.basis === 'shaft') {
+    if (p.input === 'kva') throw new Error('轴功率基准只适用于有功功率输入，请改选「有功功率 P」。');
+    const eff = parsePositive(p.efficiency ?? '', '效率');
+    if (eff <= 1) throw new Error('效率应填百分比数值（例如 88.8），不要填小数。');
+    if (eff > 100) throw new Error('效率不能大于 100%。');
+    if (eff < 30) throw new Error('效率低于 30%，请确认是否误填。');
+    lineActive = value / (eff / 100);
+  }
+  const apparent = p.input === 'kw' ? lineActive / pf : value;
   const active = apparent * pf;
   const reactive = apparent * Math.sqrt(Math.max(0, 1 - pf * pf));
   const divisor = p.phase === 'three' ? Math.sqrt(3) * voltage : voltage;

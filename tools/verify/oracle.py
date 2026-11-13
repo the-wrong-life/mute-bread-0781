@@ -101,8 +101,14 @@ def bend(thickness, radius, angle, k, leg_a=None, leg_b=None):
     return {'allowance': allowance, 'setback': setback, 'deduction': deduction, 'flat': flat}
 
 
-def supply(phase, given, value, voltage, pf):
-    apparent = value / pf if given == 'kw' else value
+def supply(phase, given, value, voltage, pf, basis='line', efficiency=None):
+    # basis='shaft' 时 value 是机械轴功率，先按效率折算到电网侧有功，再做 S 与 I 的换算
+    line_active = value
+    if basis == 'shaft':
+        if given == 'kva':
+            raise ValueError('轴功率基准只适用于有功功率输入')
+        line_active = value / (efficiency / 100.0)
+    apparent = line_active / pf if given == 'kw' else value
     active = apparent * pf
     reactive = apparent * math.sqrt(max(0.0, 1.0 - pf * pf))
     divisor = math.sqrt(3.0) * voltage if phase == 'three' else voltage
@@ -208,7 +214,9 @@ def evaluate(case):
         legs = [None if x is None else float(x) for x in a[4:6]]
         return bend(float(a[0]), float(a[1]), float(a[2]), float(a[3]), *legs)
     if tool == 'supplyCurrent':
-        return supply(a[0], a[1], float(a[2]), float(a[3]), float(a[4]))
+        basis = a[5] if len(a) > 5 and a[5] is not None else 'line'
+        eff = float(a[6]) if len(a) > 6 and a[6] is not None else None
+        return supply(a[0], a[1], float(a[2]), float(a[3]), float(a[4]), basis, eff)
     if tool == 'cabinetThermal':
         return cabinet(*(float(x) for x in a))
     if tool == 'acCableDrop':
