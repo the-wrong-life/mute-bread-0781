@@ -36,7 +36,7 @@ import NovaShell from '../layouts/NovaShell.astro';
       <div class="actions"><button type="button" id="dc-example">填入示例</button><button type="button" id="dc-copy">复制结果</button><span id="dc-copy-status" role="status"></span></div>
     </section>
     <section id="ups" class="tool" aria-labelledby="ups-title">
-      <div class="heading"><span class="number">05</span><div><h2 id="ups-title">UPS 备用时间</h2><p>按电池容量、组电压、放电深度与逆变效率估算满载可撑多久。</p></div></div>
+      <div class="heading"><span class="number">05</span><div><h2 id="ups-title">UPS 备用时间</h2><p>按电池容量、组电压、放电深度与逆变效率估算满载可撑多久。</p><p class="tool-link"><a href="/docs/ups-backup-case-24v/">查看算例（24 V 应急负载 30/60 分钟） →</a></p></div></div>
       <div class="unit-grid">
         <label for="ups-capacity">电池容量 Ah<input id="ups-capacity" type="text" inputmode="decimal" autocomplete="off" placeholder="例如 100" aria-invalid="false" /></label>
         <label for="ups-voltage">电池组电压<select id="ups-voltage"><option value="12">12 V</option><option value="24" selected>24 V</option><option value="48">48 V</option><option value="custom">自定义</option></select></label>
