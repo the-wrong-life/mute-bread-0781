@@ -116,6 +116,21 @@ def supply(phase, given, value, voltage, pf, basis='line', efficiency=None):
     return {'current': current, 'apparent': apparent, 'active': active, 'reactive': reactive}
 
 
+INSULATION_MAX = {'pvc': 70.0, 'xlpe': 90.0}
+
+
+def cable_derate(insulation, iz0, ambient, ref, group):
+    """载流量温度/成组修正：k = sqrt((θmax − θamb)/(θmax − θref)) · k_group。
+
+    与实现独立：θmax 先由绝缘映射取得，再算温度系数并乘成组系数。
+    """
+    t_max = INSULATION_MAX[insulation]
+    factor = ((t_max - ambient) / (t_max - ref)) ** 0.5
+    k = factor * group
+    return {'tMax': t_max, 'kTemp': factor, 'k': k, 'iz': iz0 * k,
+            'deratePercent': (1.0 - k) * 100.0, 'belowRef': ambient < ref}
+
+
 def cabinet(loss, area, ambient, inside, k, safety):
     delta_t = inside - ambient
     natural = k * area * delta_t
@@ -217,6 +232,8 @@ def evaluate(case):
         basis = a[5] if len(a) > 5 and a[5] is not None else 'line'
         eff = float(a[6]) if len(a) > 6 and a[6] is not None else None
         return supply(a[0], a[1], float(a[2]), float(a[3]), float(a[4]), basis, eff)
+    if tool == 'cableDerate':
+        return cable_derate(a[0], *(float(x) for x in a[1:5]))
     if tool == 'cabinetThermal':
         return cabinet(*(float(x) for x in a))
     if tool == 'acCableDrop':

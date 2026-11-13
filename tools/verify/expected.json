@@ -636,6 +636,78 @@
     "pass": true,
     "maxCount": 4
    }
+  },
+  {
+   "id": "dr1",
+   "tool": "cableDerate",
+   "expected": {
+    "tMax": 70.0,
+    "kTemp": 0.8660254037844386,
+    "k": 0.8660254037844386,
+    "iz": 35.50704155516198,
+    "deratePercent": 13.397459621556141,
+    "belowRef": false
+   }
+  },
+  {
+   "id": "dr2",
+   "tool": "cableDerate",
+   "expected": {
+    "tMax": 90.0,
+    "kTemp": 0.8660254037844386,
+    "k": 0.8660254037844386,
+    "iz": 49.363448015713,
+    "deratePercent": 13.397459621556141,
+    "belowRef": false
+   }
+  },
+  {
+   "id": "dr3",
+   "tool": "cableDerate",
+   "expected": {
+    "tMax": 70.0,
+    "kTemp": 1.0,
+    "k": 1.0,
+    "iz": 41.0,
+    "deratePercent": 0.0,
+    "belowRef": false
+   }
+  },
+  {
+   "id": "dr4",
+   "tool": "cableDerate",
+   "expected": {
+    "tMax": 70.0,
+    "kTemp": 0.8660254037844386,
+    "k": 0.6928203230275509,
+    "iz": 28.40563324412959,
+    "deratePercent": 30.71796769724491,
+    "belowRef": false
+   }
+  },
+  {
+   "id": "dr5",
+   "tool": "cableDerate",
+   "expected": {
+    "tMax": 90.0,
+    "kTemp": 1.0408329997330663,
+    "k": 1.0408329997330663,
+    "iz": 104.08329997330664,
+    "deratePercent": -4.083299973306631,
+    "belowRef": true
+   }
+  },
+  {
+   "id": "dr6",
+   "tool": "cableDerate",
+   "expected": {
+    "tMax": 70.0,
+    "kTemp": 0.7453559924999299,
+    "k": 0.7453559924999299,
+    "iz": 18.633899812498246,
+    "deratePercent": 25.46440075000701,
+    "belowRef": false
+   }
   }
  ],
  "spec": "用例由 tools/verify/oracle.py 独立实现生成期望值；verify-tools.mjs 只做比对，不参与推导。约定：未填边 A/B 时展开长记 0；电弧/载流量等现场条件不在本工具范围。"

@@ -569,3 +569,46 @@ export function conduitFill(p: {
     total, pass: fillPercent <= limitPercent + 8 * Number.EPSILON * Math.max(fillPercent, limitPercent), maxCount,
   };
 }
+
+/** 电缆载流量修正：环境温度 + 成组/敷设修正。
+ *  k_temp = √[(θ_max − θ_amb) / (θ_max − θ_ref)]，I_z = I_z0 · k_temp · k_group。
+ *  θ_max 取绝缘额定导体温度（PVC 70 ℃、XLPE/EPR 90 ℃），θ_ref 为基准环境温度（空气 30 ℃、埋地 20 ℃，
+ *  必须与所查载流量表一致）。成组与敷设系数涉及标准表格，本工具不内置表值，由用户查表后填入。
+ *  环境温度高于基准时公式与标准表基本一致；低于基准时公式偏乐观（PVC 25 ℃ 公式 1.061、表约 1.03）。 */
+export type InsulationType = 'pvc' | 'xlpe';
+export interface DerateResult {
+  /** 导体最高工作温度 ℃ */
+  tMax: number;
+  /** 温度修正系数 */
+  kTemp: number;
+  /** 综合修正系数 */
+  k: number;
+  /** 修正后载流量 A */
+  iz: number;
+  /** 相对基准载流量的变化百分比（正数为降额） */
+  deratePercent: number;
+  /** 环境温度是否低于基准温度（此时系数大于 1，需查表核实） */
+  belowRef: boolean;
+}
+export function cableDerate(p: { insulation: InsulationType; iz0: string; ambient: string; ref: string; group: string }): DerateResult {
+  const tMax = p.insulation === 'xlpe' ? 90 : 70;
+  const iz0 = parsePositive(p.iz0, '基准载流量');
+  const ambient = parseNumber(p.ambient, '环境温度');
+  const ref = parseNumber(p.ref, '基准环境温度');
+  const group = parsePositive(p.group, '成组与敷设修正系数');
+  if (iz0 > 100000) throw new Error('基准载流量超过 100000 A，请确认单位是否为 A。');
+  if (ambient < -60 || ambient > 150) throw new Error('环境温度应在 -60 至 150 ℃ 之间。');
+  if (ref < -60 || ref > 150) throw new Error('基准环境温度应在 -60 至 150 ℃ 之间。');
+  if (group > 1) throw new Error('成组与敷设修正系数不得大于 1：修正只会降低载流量，低于基准温度请改基准温度而不是填大于 1 的系数。');
+  if (group < 0.1) throw new Error('成组与敷设修正系数低于 0.1，请确认是否误填。');
+  if (ambient >= tMax) throw new Error('环境温度 ' + ambient + ' ℃ 已不低于导体最高工作温度 ' + tMax + ' ℃，此时载流量为零，不能按本公式修正。');
+  if (ref >= tMax) throw new Error('基准环境温度 ' + ref + ' ℃ 应低于导体最高工作温度 ' + tMax + ' ℃。');
+  const kTemp = Math.sqrt((tMax - ambient) / (tMax - ref));
+  const k = kTemp * group;
+  const iz = iz0 * k;
+  const deratePercent = (1 - k) * 100;
+  for (const v of [kTemp, k, iz, deratePercent]) {
+    if (!Number.isFinite(v)) throw new Error('计算结果溢出，请检查输入范围。');
+  }
+  return { tMax, kTemp, k, iz, deratePercent, belowRef: ambient < ref };
+}

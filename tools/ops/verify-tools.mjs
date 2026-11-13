@@ -9,6 +9,7 @@ import {
   acCableDrop,
   acCableSize,
   conduitFill,
+  cableDerate,
 } from '../../src/scripts/tools/logic.ts';
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -29,6 +30,7 @@ function run(tool, args) {
     case 'cabinetThermal': return cabinetThermal({ loss: args[0], area: args[1], ambient: args[2], inside: args[3], k: args[4], safety: args[5] });
     case 'acCableSize': return acCableSize({ system: args[0], voltage: args[1], current: args[2], length: args[3], rho: args[4], pf: args[5], x: args[6], limit: args[7] });
   case 'conduitFill': return conduitFill({ diameter: args[0], diaA: args[1], countA: args[2], diaB: args[3] ?? '', countB: args[4] ?? '' });
+  case 'cableDerate': return cableDerate({ insulation: args[0], iz0: args[1], ambient: args[2], ref: args[3], group: args[4] });
   case 'acCableDrop': return acCableDrop({ system: args[0], voltage: args[1], current: args[2], length: args[3], area: args[4], rho: args[5], pf: args[6], x: args[7], limit: args[8] });
     default: throw new Error('未知工具 ' + tool);
   }
