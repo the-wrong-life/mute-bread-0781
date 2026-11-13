@@ -115,8 +115,11 @@ const journals = [
     gap: 0 clamp(24px, 4vw, 64px);
   }
   .hero-intro { grid-area: intro; align-self: center; min-width: 0; }
-  .eyebrow { margin: 0; color: #52735e; font: 11px/1.5 ui-monospace, monospace; letter-spacing: .14em; overflow-wrap: anywhere; }
-  .hero .eyebrow { color: #4f7a63; }
+  .eyebrow { margin: 0; color: #3f604c; font: 11px/1.5 ui-monospace, monospace; letter-spacing: .14em; overflow-wrap: anywhere; }
+  /* §46：11px 小字对纸底 #ede5dd 的对比度原为 4.12–4.38（低于 WCAG AA 4.5），
+     像素实测见 _work/nova-b-maint/night-audit-20261113.md。改用与项目页返回链接同档的
+     #3f604c（实测约 5.6:1），色相不变。 */
+  .hero .eyebrow { color: #3f604c; }
   h1, h2, .card-title, .domains a { font-family: "Songti SC", "Noto Serif CJK SC", SimSun, serif; }
   h1 { margin: 26px 0 15px; font-size: clamp(44px, 5vw, 76px); font-weight: 500; line-height: 1.2; }
   .english { margin: 0; color: #4d6b58; font: italic clamp(13px, 1.15vw, 17px)/1.5 Georgia, serif; letter-spacing: .06em; overflow-wrap: anywhere; }
