@@ -154,8 +154,8 @@ const journals = [
   .domains { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); border-top: 1px solid #bcb5a7; }
   .domains a { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 16px; min-width: 0; min-height: 92px; padding: 16px 20px 16px 0; border-bottom: 1px solid #bcb5a7; color: #202923; font-size: clamp(17px, 1.5vw, 22px); text-decoration: none; overflow-wrap: anywhere; }
   .domains a + a { padding-left: 20px; border-left: 1px solid #d8d1c3; }
-  .number { color: #52735e; font: 11px/1.5 ui-monospace, monospace; letter-spacing: .05em; }
-  .arrow, .card-bottom span { color: #8f6438; }
+  .number { color: #3f604c; /* 渐变最暗端点下 4.14:1 -> 5.50:1（B 线 a11y-report.md） */ font: 11px/1.5 ui-monospace, monospace; letter-spacing: .05em; }
+  .arrow, .card-bottom span { color: #7d5730; } /* 4.40:1 -> 4.88:1（B 线像素实测，见 _work/nova-b-maint/a11y-report.md） */
   .cards { display: grid; gap: 18px; }
   .three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
