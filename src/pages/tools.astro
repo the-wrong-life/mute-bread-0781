@@ -82,7 +82,7 @@ import NovaShell from '../layouts/NovaShell.astro';
       <p class="note">去重区分大小写；未勾选去除首尾空白时，保留原始空格，但纯空白行仍会删除。</p><p id="text-status" class="status" role="status">等待输入</p><label for="text-output">输出结果<textarea id="text-output" rows="8" readonly></textarea></label><div class="actions"><button type="button" id="text-copy">复制结果</button><span id="text-copy-status" role="status"></span></div>
     </section>
     <section id="supply" class="tool" aria-labelledby="supply-title">
-      <div class="heading"><span class="number">07</span><div><h2 id="supply-title">电源容量与电流</h2><p>按相制、线电压与功率因数换算视在功率和线电流，用于选线、选断路器与 UPS 容量估算。</p></div></div>
+      <div class="heading"><span class="number">07</span><div><h2 id="supply-title">电源容量与电流</h2><p>按相制、线电压与功率因数换算视在功率和线电流，用于选线、选断路器与 UPS 容量估算。</p><p class="tool-link"><a href="/docs/motor-branch-case-7k5/">查看算例（三相 7.5 kW 电机回路） →</a></p></div></div>
       <div class="unit-grid">
         <label for="supply-phase">相制<select id="supply-phase"><option value="three" selected>三相（线电压）</option><option value="single">单相</option></select></label>
         <label for="supply-input">输入量<select id="supply-input"><option value="kw" selected>有功功率 P（kW）</option><option value="kva">视在功率 S（kVA）</option></select></label>
