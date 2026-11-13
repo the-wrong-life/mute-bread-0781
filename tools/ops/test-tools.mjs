@@ -1,8 +1,16 @@
 // 工具箱纯函数测试：不启动浏览器，直接用 Node 的类型剥离运行 TS 源文件。
-import assert from 'node:assert/strict';
-import { convertUnit, dcVoltageDrop, upsRuntime, tidyLines, parseJson } from '../../src/scripts/tools/logic.ts';
+import base from 'node:assert/strict';
+import { convertUnit, dcVoltageDrop, upsRuntime, cabinetThermal, tidyLines, parseJson } from '../../src/scripts/tools/logic.ts';
 
 let pass = 0;
+// 断言计数改为真实统计：每次断言调用加一，避免手写数字与实际条数脱节。
+const assert = new Proxy(base, {
+  get(target, key) {
+    const value = target[key];
+    if (typeof value !== 'function') return value;
+    return (...args) => { pass += 1; return value.apply(target, args); };
+  },
+});
 const near = (a, b, eps = 1e-9) => assert.ok(Math.abs(a - b) < eps, `期望 ${b}，实际 ${a}`);
 const throws = (fn, re) => assert.throws(fn, re);
 
@@ -47,5 +55,19 @@ assert.equal(tidyLines('b\na', true, true).text, 'a\nb');
 assert.equal(parseJson('{"a":1}').ok, true);
 assert.equal(parseJson('{a:1}').ok, false);
 
-pass = 28;
+// 5. 机柜散热：与 tools/verify/expected.json 的 c5–c9 同输入，数值必须与独立实现一致
+const cab = (a, b, c, d, e, f) => cabinetThermal({ loss: a, area: b, ambient: c, inside: d, k: e, safety: f });
+const main = cab('500', '3.0', '35', '45', '5.5', '1.25');
+near(main.deltaT, 10); near(main.natural, 165); near(main.airflowBase, 156); near(main.airflow, 195);
+assert.equal(main.passiveOk, false);
+const edge = cab('165', '3.0', '35', '45', '5.5', '1.25');
+assert.equal(edge.passiveOk, true); near(edge.airflow, 64.35, 1e-9);
+const wide = cab('500', '9.1', '35', '45', '5.5', '1.25');
+near(wide.natural, 500.5, 1e-12); assert.equal(wide.passiveOk, true);
+near(cab('500', '3.0', '35', '55', '5.5', '1.25').airflow, 97.5, 1e-12);
+throws(() => cab('500', '3.0', '45', '45', '5.5', '1.25'), /必须高于环境温度/);
+throws(() => cab('500', '3.0', '35', '45', '0.5', '1.25'), /换热系数/);
+throws(() => cab('500', '3.0', '35', '45', '5.5', '4'), /安全系数/);
+throws(() => cab('300000', '3.0', '35', '45', '5.5', '1.25'), /200 kW/);
+
 console.log(`PASS ${pass} 项断言`);

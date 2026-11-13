@@ -96,7 +96,7 @@ import NovaShell from '../layouts/NovaShell.astro';
       <div class="actions"><button type="button" id="supply-example">填入示例</button><button type="button" id="supply-copy">复制结果</button><span id="supply-copy-status" role="status"></span></div>
     </section>
     <section id="cabinet" class="tool" aria-labelledby="cabinet-title">
-      <div class="heading"><span class="number">08</span><div><h2 id="cabinet-title">电气柜热损耗与散热</h2><p>按柜体表面自然散热与强制通风两种路径，判断是否需要风机以及需要多大风量。</p></div></div>
+      <div class="heading"><span class="number">08</span><div><h2 id="cabinet-title">电气柜热损耗与散热</h2><p>按柜体表面自然散热与强制通风两种路径，判断是否需要风机以及需要多大风量。</p><p class="tool-link"><a href="/docs/cabinet-thermal">查看公式推导与常数来源 →</a> · <a href="/docs/cabinet-thermal-case-500w">可复算案例：500 W 柜 →</a></p></div></div>
       <div class="unit-grid">
         <label for="cabinet-loss">柜内总损耗 P W<input id="cabinet-loss" type="text" inputmode="decimal" autocomplete="off" placeholder="例如 500" aria-invalid="false" /></label>
         <label for="cabinet-area">有效散热面积 A m²<input id="cabinet-area" type="text" inputmode="decimal" autocomplete="off" placeholder="例如 3.2" aria-invalid="false" /></label>
