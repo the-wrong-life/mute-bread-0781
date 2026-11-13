@@ -10,9 +10,9 @@ export function getStaticPaths() {
 }
 const { doc } = Astro.props;
 ---
-<NovaShell title={doc.title} description={doc.summary} active="/docs">
+<NovaShell title={doc.title} description={doc.summary} active="/docs/">
   <article class="article">
-    <a class="back" href="/docs">← 返回文档列表</a>
+    <a class="back" href="/docs/">← 返回文档列表</a>
     <header><p class="eyebrow">知识库 / {doc.kind}</p><h1>{doc.title}</h1><p class="lead">{doc.summary}</p><p class="updated">更新于 <time datetime={doc.updated}>{doc.updated}</time></p></header>
     <nav class="toc" aria-label="本文目录"><h2>本文目录</h2><ol>{doc.sections.map((section, i) => <li><a href={`#section-${i + 1}`}>{section.heading}</a></li>)}</ol></nav>
     <div class="content">

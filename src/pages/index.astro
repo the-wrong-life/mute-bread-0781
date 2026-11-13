@@ -5,10 +5,10 @@ import { projects as allProjects } from '../data/projects';
 import { docs as allDocs } from '../data/docs';
 
 const domains = [
-  { number: '01', title: '船舶电气', href: '/marine' },
-  { number: '02', title: '机械设计', href: '/mechanical' },
-  { number: '03', title: 'AI 工程', href: '/ai' },
-  { number: '04', title: '工程工具', href: '/tools' },
+  { number: '01', title: '船舶电气', href: '/marine/' },
+  { number: '02', title: '机械设计', href: '/mechanical/' },
+  { number: '03', title: 'AI 工程', href: '/ai/' },
+  { number: '04', title: '工程工具', href: '/tools/' },
 ];
 // 首页只引用真实存在的档案，避免出现"待补充"占位卡片
 const projects = allProjects.slice(0, 3).map((item) => ({
@@ -22,8 +22,8 @@ const documents = allDocs.slice(0, 3).map((item) => ({
   href: '/docs/' + item.slug + '/',
 }));
 const journals = [
-  { title: '研究日志', note: '按提交记录整理', href: '/blog' },
-  { title: '从想法到实验', note: '方法笔记', href: '/blog' },
+  { title: '研究日志', note: '按提交记录整理', href: '/blog/' },
+  { title: '从想法到实验', note: '方法笔记', href: '/blog/' },
 ];
 ---
 
@@ -41,7 +41,7 @@ const journals = [
         </div>
       </div>
       <p class="hero-lede">以工程方法探索想法，让每一次创造都有迹可循。</p>
-      <a class="button primary" href="/projects">进入实验室 <span aria-hidden="true">→</span></a>
+      <a class="button primary" href="/projects/">进入实验室 <span aria-hidden="true">→</span></a>
       <div class="hero-side">
         <p class="eyebrow">探索领域 / 01</p>
         <nav class="domains" aria-label="工程领域入口">
@@ -86,7 +86,7 @@ const journals = [
     <section class="section closing" aria-labelledby="closing-title">
       <p class="eyebrow">从想法，到现实</p>
       <h2 id="closing-title">让问题成为探索的起点。</h2>
-      <a class="button primary" href="/projects">进入项目中心 <span aria-hidden="true">→</span></a>
+      <a class="button primary" href="/projects/">进入项目中心 <span aria-hidden="true">→</span></a>
     </section>
   </div>
 </NovaShell>

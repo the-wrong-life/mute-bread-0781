@@ -10,9 +10,9 @@ const { project, index } = Astro.props;
 const previous = index > 0 ? projects[index - 1] : undefined;
 const next = index < projects.length - 1 ? projects[index + 1] : undefined;
 ---
-<NovaShell title={project.title} description={project.subtitle} active="/projects">
+<NovaShell title={project.title} description={project.subtitle} active="/projects/">
   <div class="page">
-    <a class="back" href="/projects">← 返回项目中心</a>
+    <a class="back" href="/projects/">← 返回项目中心</a>
     <header class="intro"><p class="eyebrow">项目档案 / {String(index + 1).padStart(2, '0')}</p><h1>{project.title}</h1><p class="subtitle">{project.subtitle}</p><div class="meta"><span>{project.domain}</span><span class="status">{project.status}</span><span>档案整理：{project.updated}</span></div><ul class="tags" aria-label="技术与方法">{project.stack.map(item => <li>{item}</li>)}</ul></header>
     <div class="content">
       <section class="block"><p class="section-number">01</p><div><h2>要解决的问题</h2><p>{project.problem}</p></div></section>

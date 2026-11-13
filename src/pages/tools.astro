@@ -1,7 +1,7 @@
 ---
 import NovaShell from '../layouts/NovaShell.astro';
 ---
-<NovaShell title="工程工具箱" description="单位换算、直流与交流压降、UPS 备用时间、电源容量、柜内散热、穿管填充率与折弯展开等工程计算，均在浏览器本地完成并经独立验证。" active="/tools">
+<NovaShell title="工程工具箱" description="单位换算、直流与交流压降、UPS 备用时间、电源容量、柜内散热、穿管填充率与折弯展开等工程计算，均在浏览器本地完成并经独立验证。" active="/tools/">
   <div class="page">
     <header class="hero"><p class="eyebrow">ENGINEERING TOOLBOX / 工程工具箱</p><h1>让细节<br /><em>有据可循。</em></h1><p class="lead">十一个轻量工具：七个电气与管路计算、一个钣金展开、两个数据处理，以及单位换算。输入仅在当前浏览器处理，不会通过工具上传。</p></header>
     <nav class="tool-nav" aria-label="工具目录"><a href="#units">单位换算</a><a href="#drop">直流压降</a><a href="#acdrop">交流压降</a><a href="#acsize">按压降选截面</a><a href="#ups">UPS 备用时间</a><a href="#supply">电源容量</a><a href="#cabinet">柜内散热</a><a href="#bend">折弯展开</a><a href="#cfill">穿管填充</a><a href="#json">JSON 校验</a><a href="#text">文本整理</a></nav>
@@ -51,7 +51,7 @@ import NovaShell from '../layouts/NovaShell.astro';
       <div class="actions"><button type="button" id="ups-example">填入示例</button><button type="button" id="ups-copy">复制结果</button><span id="ups-copy-status" role="status"></span></div>
     </section>
     <section id="bend" class="tool" aria-labelledby="bend-title">
-      <div class="heading"><span class="number">06</span><div><h2 id="bend-title">钣金折弯展开</h2><p>按中性层系数计算折弯扣除；填写两边边长可同时得到展开长度。</p><p class="tool-link"><a href="/docs/bend-allowance">查看截面图与公式 →</a></p></div></div>
+      <div class="heading"><span class="number">06</span><div><h2 id="bend-title">钣金折弯展开</h2><p>按中性层系数计算折弯扣除；填写两边边长可同时得到展开长度。</p><p class="tool-link"><a href="/docs/bend-allowance/">查看截面图与公式 →</a></p></div></div>
       <div class="unit-grid">
         <label for="bend-thickness">料厚 T mm<input id="bend-thickness" type="text" inputmode="decimal" autocomplete="off" placeholder="例如 2" aria-invalid="false" /></label>
         <label for="bend-radius">内侧半径 R mm<input id="bend-radius" type="text" inputmode="decimal" autocomplete="off" placeholder="例如 2" aria-invalid="false" /></label>
@@ -96,7 +96,7 @@ import NovaShell from '../layouts/NovaShell.astro';
       <div class="actions"><button type="button" id="supply-example">填入示例</button><button type="button" id="supply-copy">复制结果</button><span id="supply-copy-status" role="status"></span></div>
     </section>
     <section id="cabinet" class="tool" aria-labelledby="cabinet-title">
-      <div class="heading"><span class="number">08</span><div><h2 id="cabinet-title">电气柜热损耗与散热</h2><p>按柜体表面自然散热与强制通风两种路径，判断是否需要风机以及需要多大风量。</p><p class="tool-link"><a href="/docs/cabinet-thermal">查看公式推导与常数来源 →</a> · <a href="/docs/cabinet-thermal-case-500w">可复算案例：500 W 柜 →</a></p></div></div>
+      <div class="heading"><span class="number">08</span><div><h2 id="cabinet-title">电气柜热损耗与散热</h2><p>按柜体表面自然散热与强制通风两种路径，判断是否需要风机以及需要多大风量。</p><p class="tool-link"><a href="/docs/cabinet-thermal/">查看公式推导与常数来源 →</a> · <a href="/docs/cabinet-thermal-case-500w/">可复算案例：500 W 柜 →</a></p></div></div>
       <div class="unit-grid">
         <label for="cabinet-loss">柜内总损耗 P W<input id="cabinet-loss" type="text" inputmode="decimal" autocomplete="off" placeholder="例如 500" aria-invalid="false" /></label>
         <label for="cabinet-area">有效散热面积 A m²<input id="cabinet-area" type="text" inputmode="decimal" autocomplete="off" placeholder="例如 3.2" aria-invalid="false" /></label>
@@ -111,7 +111,7 @@ import NovaShell from '../layouts/NovaShell.astro';
       <div class="actions"><button type="button" id="cabinet-example">填入示例</button><button type="button" id="cabinet-copy">复制结果</button><span id="cabinet-copy-status" role="status"></span></div>
     </section>
     <section id="acdrop" class="tool" aria-labelledby="acdrop-title">
-      <div class="heading"><span class="number">09</span><div><h2 id="acdrop-title">交流电缆压降</h2><p>按 ΔU = k·I·(R′·cosφ + X′·sinφ)·L 估算低压交流线路压降，并按允许值判定是否通过。</p><p class="tool-link"><a href="/docs/ac-cable-drop">查看公式推导与适用范围 →</a></p></div></div>
+      <div class="heading"><span class="number">09</span><div><h2 id="acdrop-title">交流电缆压降</h2><p>按 ΔU = k·I·(R′·cosφ + X′·sinφ)·L 估算低压交流线路压降，并按允许值判定是否通过。</p><p class="tool-link"><a href="/docs/ac-cable-drop/">查看公式推导与适用范围 →</a></p></div></div>
       <div class="unit-grid">
         <label for="ac-system">系统型式<select id="ac-system"><option value="ac3" selected>三相（线电压）</option><option value="ac1">单相两线</option></select></label>
         <label for="ac-voltage">线电压 V<input id="ac-voltage" type="text" inputmode="decimal" autocomplete="off" placeholder="例如 400" aria-invalid="false" /></label>
@@ -131,7 +131,7 @@ import NovaShell from '../layouts/NovaShell.astro';
       <div class="actions"><button type="button" id="ac-example">填入示例</button><button type="button" id="ac-copy">复制结果</button><span id="ac-copy-status" role="status"></span></div>
     </section>
     <section id="acsize" class="tool" aria-labelledby="acsize-title">
-      <div class="heading"><span class="number">10</span><div><h2 id="acsize-title">按压降选截面</h2><p>给定允许压降，反算所需最小导体截面，并在常用标准截面序列中向上取一档，给出该档的实际压降。</p><p class="tool-link"><a href="/docs/ac-cable-drop">公式推导与适用范围见交流压降一页 →</a></p></div></div>
+      <div class="heading"><span class="number">10</span><div><h2 id="acsize-title">按压降选截面</h2><p>给定允许压降，反算所需最小导体截面，并在常用标准截面序列中向上取一档，给出该档的实际压降。</p><p class="tool-link"><a href="/docs/ac-cable-drop/">公式推导与适用范围见交流压降一页 →</a></p></div></div>
       <div class="unit-grid">
         <label for="asz-system">系统型式<select id="asz-system"><option value="ac3" selected>三相（线电压）</option><option value="ac1">单相两线</option></select></label>
         <label for="asz-voltage">线电压 V<input id="asz-voltage" type="text" inputmode="decimal" autocomplete="off" placeholder="例如 400" aria-invalid="false" /></label>
@@ -150,7 +150,7 @@ import NovaShell from '../layouts/NovaShell.astro';
       <div class="actions"><button type="button" id="asz-example">填入示例</button><button type="button" id="asz-copy">复制结果</button><span id="asz-copy-status" role="status"></span></div>
     </section>
     <section id="cfill" class="tool" aria-labelledby="cfill-title">
-      <div class="heading"><span class="number">11</span><div><h2 id="cfill-title">电缆穿管填充率</h2><p>按管内径与电缆外径估算管内几何占位，并按 1 根 53%、2 根 31%、3 根及以上 40% 的常用分档判定。</p><p class="tool-link"><a href="/docs/conduit-fill-case-dn50">查看算例（DN50 混穿 5 根） →</a></p></div></div>
+      <div class="heading"><span class="number">11</span><div><h2 id="cfill-title">电缆穿管填充率</h2><p>按管内径与电缆外径估算管内几何占位，并按 1 根 53%、2 根 31%、3 根及以上 40% 的常用分档判定。</p><p class="tool-link"><a href="/docs/conduit-fill-case-dn50/">查看算例（DN50 混穿 5 根） →</a></p></div></div>
       <div class="unit-grid">
         <label for="cfill-diameter">管内径 mm<input id="cfill-diameter" type="text" inputmode="decimal" autocomplete="off" placeholder="例如 50" aria-invalid="false" /></label>
         <label for="cfill-dia-a">电缆外径 mm<input id="cfill-dia-a" type="text" inputmode="decimal" autocomplete="off" placeholder="例如 14" aria-invalid="false" /></label>
@@ -166,7 +166,7 @@ import NovaShell from '../layouts/NovaShell.astro';
     <section id="verification" class="tool" aria-labelledby="verify-title">
       <div class="heading"><span class="number">12</span><div><h2 id="verify-title">验证记录</h2><p>每个工具都经过独立参考实现、数值与拒绝用例、真实浏览器三层检查；方法与仍存在的适用边界写在知识库里。</p></div></div>
       <p class="note">当前状态（2026-11-13）：数值用例 50/50、拒绝用例 38/38、界面检查 66 项全部通过；环境为 Node v24.17.0 与系统 Chrome，未在其它浏览器引擎重复。验证通过只说明在文档列出的假设下算得对，不替代设计核算、现场测量与验收。</p>
-      <nav class="tool-nav" aria-label="验证记录"><a href="/docs/tools-verification">验证方法与已确认边界</a><a href="/docs/calculation-record">工程计算记录方法</a></nav>
+      <nav class="tool-nav" aria-label="验证记录"><a href="/docs/tools-verification/">验证方法与已确认边界</a><a href="/docs/calculation-record/">工程计算记录方法</a></nav>
     </section>
   </div>
 </NovaShell>

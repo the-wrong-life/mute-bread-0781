@@ -4,9 +4,9 @@ const { title, description = 'DIY 工程实验室 — 工程、实验与可复�
 // canonical 必须由 site + 当前路径生成，而不是硬编码：文档详情、项目详情共用一个布局。
 const canonical = new URL(Astro.url.pathname, Astro.site ?? 'https://www.token-xxo.cn').href;
 const links = [
-  { href: '/projects', label: '项目' }, { href: '/docs', label: '文档' },
-  { href: '/tools', label: '工具' }, { href: '/ai', label: 'AI' },
-  { href: '/blog', label: '札记' }, { href: '/about', label: '关于' }
+  { href: '/projects/', label: '项目' }, { href: '/docs/', label: '文档' },
+  { href: '/tools/', label: '工具' }, { href: '/ai/', label: 'AI' },
+  { href: '/blog/', label: '札记' }, { href: '/about/', label: '关于' }
 ];
 ---
 <!doctype html>

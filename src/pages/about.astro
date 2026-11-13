@@ -7,10 +7,10 @@ const fields = [
   { title: '工程工具', text: '关注可复用的小工具与清晰的使用范围。' },
 ];
 ---
-<NovaShell title="关于" description="了解 DIY 工程实验室的方向与站点用途。" active="/about">
+<NovaShell title="关于" description="了解 DIY 工程实验室的方向与站点用途。" active="/about/">
   <div class="page"><header class="intro"><p class="eyebrow">实验室 / 关于</p><h1>工程始于<br />可验证的想法。</h1><p>这里是整理工程想法、资料、方法与工具的站点。内容以可追溯的依据和明确的验证状态为原则，逐步完善。</p></header>
     <section aria-labelledby="fields-title"><h2 id="fields-title">关注领域</h2><div class="fields">{fields.map((field) => <article><h3>{field.title}</h3><p>{field.text}</p></article>)}</div></section>
-    <section class="contents" aria-labelledby="contents-title"><h2 id="contents-title">站点内容</h2><ul><li><a href="/projects">项目</a><span>项目档案与资料逐步整理，具体状态请以项目页标注为准。</span></li><li><a href="/docs">文档</a><span>方法与参考资料持续整理，适用范围与资料来源请以各篇说明为准。</span></li><li><a href="/tools">工具</a><span>提供单位换算等工程辅助工具，使用前请留意页面所列限制。</span></li></ul></section>
+    <section class="contents" aria-labelledby="contents-title"><h2 id="contents-title">站点内容</h2><ul><li><a href="/projects/">项目</a><span>项目档案与资料逐步整理，具体状态请以项目页标注为准。</span></li><li><a href="/docs/">文档</a><span>方法与参考资料持续整理，适用范围与资料来源请以各篇说明为准。</span></li><li><a href="/tools/">工具</a><span>提供单位换算等工程辅助工具，使用前请留意页面所列限制。</span></li></ul></section>
     <aside class="note">站点资料和工具不替代设备手册、适用标准与专业判断。电气和机械相关应用应进行专业验证与现场验收。</aside>
   </div>
 </NovaShell>

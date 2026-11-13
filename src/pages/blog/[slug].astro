@@ -11,7 +11,7 @@ export function getStaticPaths() {
 const { post } = Astro.props;
 const related = posts.filter((item) => item.slug !== post.slug && item.category === post.category).slice(0, 2);
 ---
-<NovaShell title={post.title} description={post.summary} active="/blog">
+<NovaShell title={post.title} description={post.summary} active="/blog/">
   <article class="article">
     <a class="back" href="/blog/">← 返回札记列表</a>
     <header>
@@ -34,7 +34,7 @@ const related = posts.filter((item) => item.slug !== post.slug && item.category 
       ))}
       <section class="sources"><h2>依据与记录</h2><ul>{post.sources.map((source) => <li><strong>{source.label}：</strong>{source.note.startsWith('https://') ? <a href={source.note}>{source.note}</a> : source.note}</li>)}</ul></section>
       {related.length > 0 && <section class="related"><h2>同类札记</h2><ul>{related.map((item) => <li><a href={`/blog/${item.slug}/`}>{item.title} →</a></li>)}</ul></section>}
-      <section class="related"><h2>继续</h2><ul><li><a href="/docs">工程知识库 →</a></li><li><a href="/projects">项目档案 →</a></li></ul></section>
+      <section class="related"><h2>继续</h2><ul><li><a href="/docs/">工程知识库 →</a></li><li><a href="/projects/">项目档案 →</a></li></ul></section>
     </div>
   </article>
 </NovaShell>

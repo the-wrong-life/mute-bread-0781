@@ -5,7 +5,7 @@ import { docs } from '../data/docs';
 const kinds = [...new Set(docs.map((d) => d.kind))];
 const searchHint = '标题、摘要、章节标题与正文关键词都会参与匹配，例如“压降”“回滚”“有效数字”。';
 ---
-<NovaShell title="工程文档" description="工程计算、资料整理与静态部署的参考文档。" active="/docs">
+<NovaShell title="工程文档" description="工程计算、资料整理与静态部署的参考文档。" active="/docs/">
   <div class="page">
     <header class="intro"><p class="eyebrow">知识库 / 参考与方法</p><h1>工程文档<span>.</span></h1><p>从单位换算到部署记录，留下可复查的依据，也写清使用边界。</p></header>
     <section class="finder" aria-label="检索文档">
@@ -15,7 +15,7 @@ const searchHint = '标题、摘要、章节标题与正文关键词都会参与
       <p class="count" id="doc-count" role="status" aria-live="polite">{docs.length} 篇文档</p>
     </section>
     <section id="doc-list" aria-label="文档列表" class="list">
-      {docs.map((doc, i) => <article class="entry" data-slug={doc.slug} data-kind={doc.kind}><span class="number" aria-hidden="true">0{i + 1}</span><div class="body"><div class="meta"><span>{doc.kind}</span><time datetime={doc.updated}>更新于 {doc.updated}</time></div><h2><a href={"/docs/" + doc.slug}>{doc.title}</a></h2><p>{doc.summary}</p></div><span class="arrow" aria-hidden="true">↗</span></article>)}
+      {docs.map((doc, i) => <article class="entry" data-slug={doc.slug} data-kind={doc.kind}><span class="number" aria-hidden="true">0{i + 1}</span><div class="body"><div class="meta"><span>{doc.kind}</span><time datetime={doc.updated}>更新于 {doc.updated}</time></div><h2><a href={"/docs/" + doc.slug + "/"}>{doc.title}</a></h2><p>{doc.summary}</p></div><span class="arrow" aria-hidden="true">↗</span></article>)}
     </section>
     <p class="empty" id="doc-empty" hidden>没有匹配的文档。换一个关键词，或把类型切回“全部类型”。</p>
   </div>

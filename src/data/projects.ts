@@ -29,7 +29,7 @@ export const projects: Project[] = [
       '待验证：ESA 预览环境的构建与页面表现尚未执行。'],
     pending: ['核实 ESA 构建环境并完成非生产预览。', '补充跨浏览器、辅助技术与性能验证；发布仍需独立审批。'],
     gaps: ['缺少 ESA 非生产预览的构建日志及页面截图。', '缺少 Firefox、WebKit 与屏幕阅读器的完整验收记录。'],
-    links: [{ label: '工程知识', href: '/docs' }, { label: '工程工具', href: '/tools' }]
+    links: [{ label: '工程知识', href: '/docs/' }, { label: '工程工具', href: '/tools/' }]
   },
   {
     slug: 'yuheng-core', title: '玉衡核心', subtitle: '程序化三维模型与离线渲染双轨',
@@ -61,7 +61,7 @@ export const projects: Project[] = [
       '在真实低性能设备、真实后台切换和浏览器往返缓存场景下测试。'
     ],
     gaps: ['缺少跨引擎（Safari / Firefox）与读屏器抽查记录。', '缺少目标设备长期性能与显存占用实测。'],
-    links: [{ label: '工程知识', href: '/docs' }, { label: '工程工具', href: '/tools' }]
+    links: [{ label: '工程知识', href: '/docs/' }, { label: '工程工具', href: '/tools/' }]
   },
   {
     slug: 'engineering-toolbox', title: '工程工具箱', subtitle: '单位换算、直流压降、UPS 备用时间、JSON 与文本整理，全部在浏览器本地运行',
@@ -80,7 +80,7 @@ export const projects: Project[] = [
     ],
     pending: ['验证键盘操作与屏幕阅读器体验。', '补充电气柜热损耗估算与钣金展开计算，公式需先经独立核对。'],
     gaps: ['缺少全部换算单位及边界值的覆盖清单。', '缺少屏幕阅读器实测记录。'],
-    links: [{ label: '工程知识', href: '/docs' }, { label: '打开工具箱', href: '/tools' }]
+    links: [{ label: '工程知识', href: '/docs/' }, { label: '打开工具箱', href: '/tools/' }]
   },
   {
     slug: 'engineering-notes', title: '工程知识与计算记录', subtitle: '先交代输入，再保留验证边界',
@@ -91,6 +91,6 @@ export const projects: Project[] = [
     results: ['已创建：现有文档索引列出了实验记录、工具说明与安全清单的内容方向。', '待验证：具体计算案例、原始测量及复现结论尚未核实。'],
     pending: ['确定首批真实案例和负责人。', '补充来源、单位、误差和适用边界，并进行专业复核。'],
     gaps: ['缺少首批计算案例的原始数据、公式来源和设备参数。', '缺少实验记录、测量截图及专业验收文件。'],
-    links: [{ label: '查看知识索引', href: '/docs' }, { label: '工程工具', href: '/tools' }]
+    links: [{ label: '查看知识索引', href: '/docs/' }, { label: '工程工具', href: '/tools/' }]
   }
 ];

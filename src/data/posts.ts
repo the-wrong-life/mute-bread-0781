@@ -87,8 +87,8 @@ export const posts: Post[] = [
     ],
     sources: [
       { label: '用例与参考实现', note: 'tools/verify/vectors.json、tools/verify/oracle.py、tools/ops/verify-tools.mjs' },
-      { label: '验证记录', note: '/docs/tools-verification' },
-      { label: '计算口径', note: '/docs/calculation-record' }
+      { label: '验证记录', note: '/docs/tools-verification/' },
+      { label: '计算口径', note: '/docs/calculation-record/' }
     ]
   },
   {
@@ -304,7 +304,7 @@ export const posts: Post[] = [
     ],
     sources: [
       { label: '布局组件', note: 'src/layouts/NovaShell.astro' },
-      { label: '部署说明', note: '/docs/seo-baseline' }
+      { label: '部署说明', note: '/docs/seo-baseline/' }
     ]
   },
   {
@@ -436,7 +436,7 @@ export const posts: Post[] = [
       }
     ],
     sources: [
-      { label: '图所在文档', note: '/docs/bend-allowance' },
+      { label: '图所在文档', note: '/docs/bend-allowance/' },
       { label: '实现位置', note: 'src/data/docs.ts 的 svg 字段与 src/pages/docs/[slug].astro 的 figure 分支' },
       { label: 'Astro 样式作用域', note: 'https://docs.astro.build/en/guides/styling/#global-styles' }
     ]

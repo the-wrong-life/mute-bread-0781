@@ -1,7 +1,7 @@
 ---
 import NovaShell from '../layouts/NovaShell.astro';
 ---
-<NovaShell title="机械设计" description="机械设计方向的关注范围、可用工具与待补资料。" active="/projects">
+<NovaShell title="机械设计" description="机械设计方向的关注范围、可用工具与待补资料。" active="/projects/">
   <div class="page">
     <header class="page-head">
       <p class="eyebrow">领域 / MECHANICAL DESIGN</p>
@@ -12,10 +12,10 @@ import NovaShell from '../layouts/NovaShell.astro';
     <section aria-labelledby="available">
       <h2 id="available">现在就能用的</h2>
       <ul class="list">
-        <li><a href="/tools#drop">直流线路压降计算器</a><p>两线制 / 单线回路，铜、退火铜、铝与自定义电阻率；含输入校验，结果与本页算例一致。已通过 21 项函数断言与浏览器实测。</p></li>
-        <li><a href="/tools#units">工程单位换算</a><p>长度、质量、压力、功率、温度与转矩换算，温度按绝对零度校验，结果可复制。</p></li>
-        <li><a href="/docs/calculation-record">工程计算记录方法</a><p>如何把一次计算写成可复核的记录：输入、假定、公式、结果与复现条件。</p></li>
-        <li><a href="/docs/unit-conversion">单位换算的边界与常见错误</a><p>温差与温度点、有效数字、马力与千瓦的区别。</p></li>
+        <li><a href="/tools/#drop">直流线路压降计算器</a><p>两线制 / 单线回路，铜、退火铜、铝与自定义电阻率；含输入校验，结果与本页算例一致。已通过 21 项函数断言与浏览器实测。</p></li>
+        <li><a href="/tools/#units">工程单位换算</a><p>长度、质量、压力、功率、温度与转矩换算，温度按绝对零度校验，结果可复制。</p></li>
+        <li><a href="/docs/calculation-record/">工程计算记录方法</a><p>如何把一次计算写成可复核的记录：输入、假定、公式、结果与复现条件。</p></li>
+        <li><a href="/docs/unit-conversion/">单位换算的边界与常见错误</a><p>温差与温度点、有效数字、马力与千瓦的区别。</p></li>
       </ul>
     </section>
 
@@ -23,7 +23,7 @@ import NovaShell from '../layouts/NovaShell.astro';
       <h2 id="state">当前状态</h2>
       <p class="case">机械与钣金方向目前<b>没有可公开的项目档案</b>，也没有上线的钣金展开或结构计算工具。这里只列出确有内容的部分，其余标为待补，不用示意图充当成果。</p>
       <ul class="list">
-        <li><a href="/tools#units">工程单位换算</a><p>长度、质量、压力、转矩等换算可用于材料与紧固件计算的前置整理。</p></li>
+        <li><a href="/tools/#units">工程单位换算</a><p>长度、质量、压力、转矩等换算可用于材料与紧固件计算的前置整理。</p></li>
         <li><a href="/projects/engineering-notes/">工程记录方法</a><p>项目档案里记录了资料分层与安全边界的做法，机械方向同样适用。</p></li>
       </ul>
     </section>
@@ -38,9 +38,9 @@ import NovaShell from '../layouts/NovaShell.astro';
     </section>
 
     <nav class="related" aria-label="相关入口">
-      <a href="/projects">项目档案 <span aria-hidden="true">→</span></a>
-      <a href="/tools">工程工具 <span aria-hidden="true">→</span></a>
-      <a href="/docs">工程知识 <span aria-hidden="true">→</span></a>
+      <a href="/projects/">项目档案 <span aria-hidden="true">→</span></a>
+      <a href="/tools/">工程工具 <span aria-hidden="true">→</span></a>
+      <a href="/docs/">工程知识 <span aria-hidden="true">→</span></a>
     </nav>
   </div>
 </NovaShell>

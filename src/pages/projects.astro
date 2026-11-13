@@ -2,7 +2,7 @@
 import NovaShell from '../layouts/NovaShell.astro';
 import { projects } from '../data/projects';
 ---
-<NovaShell title="项目中心" description="以真实记录整理的工程项目档案。" active="/projects">
+<NovaShell title="项目中心" description="以真实记录整理的工程项目档案。" active="/projects/">
   <div class="page">
     <header class="page-head"><p class="eyebrow">项目档案 / PROJECTS</p><h1>把想法，<br />变成可验证的工作。</h1><p class="lede">从问题出发，记录方案、实验与尚未补齐的资料。这里的项目持续更新，未完成的部分会如实标注。</p></header>
     <nav class="filters" aria-label="按领域筛选项目">
@@ -58,7 +58,7 @@ import { projects } from '../data/projects';
       const initial = new URL(window.location.href).searchParams.get('domain') || '';
       if (initial) apply(initial);
     </script>
-    <nav class="related" aria-label="相关入口"><a href="/docs">工程知识 <span aria-hidden="true">→</span></a><a href="/tools">工程工具 <span aria-hidden="true">→</span></a></nav>
+    <nav class="related" aria-label="相关入口"><a href="/docs/">工程知识 <span aria-hidden="true">→</span></a><a href="/tools/">工程工具 <span aria-hidden="true">→</span></a></nav>
   </div>
 </NovaShell>
 <style>

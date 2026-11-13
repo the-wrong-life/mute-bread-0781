@@ -4,7 +4,7 @@ import { posts, postCategories } from '../../data/posts';
 // 列表按日期倒序，日期相同保持数据源顺序，保证构建结果稳定。
 const ordered = posts.slice().sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0));
 ---
-<NovaShell title="研究札记" description="PROJECT NOVA 的工程札记：验证方法、渲染排错与发布流程的真实记录。" active="/blog">
+<NovaShell title="研究札记" description="PROJECT NOVA 的工程札记：验证方法、渲染排错与发布流程的真实记录。" active="/blog/">
   <div class="page">
     <header class="intro">
       <p class="eyebrow">研究记录 / 札记</p>
