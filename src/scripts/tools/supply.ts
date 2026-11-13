@@ -103,6 +103,8 @@ export function mountSupply() {
     if (!text) { copyStatus.textContent = '没有可复制的结果。'; return; }
     const pending = ++copyToken;
     const snapshot = text;
+    // 先清掉上一次的「已复制」，避免第二次请求未完成时仍显示上次的成功提示。
+    copyStatus.textContent = '复制中…';
     try {
       await navigator.clipboard.writeText(snapshot);
       // 复制是异步的：期间用户可能改输入触发重算，此时不再回写旧提示。
