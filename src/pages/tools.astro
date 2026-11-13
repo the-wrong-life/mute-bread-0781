@@ -18,7 +18,7 @@ import NovaShell from '../layouts/NovaShell.astro';
       <div class="result" aria-live="polite"><span id="unit-status">等待输入</span><output id="unit-result">—</output></div><div class="actions"><button type="button" id="unit-example">填入示例</button><button type="button" id="unit-copy">复制结果</button><span id="unit-copy-status" role="status"></span></div>
     </section>
     <section id="drop" class="tool" aria-labelledby="drop-title">
-      <div class="heading"><span class="number">04</span><div><h2 id="drop-title">直流线路压降</h2><p>按 I·ρ·L/A 估算线路压降；两线制自动把回程计入，ρ 取 20 ℃ 典型值。</p></div></div>
+      <div class="heading"><span class="number">04</span><div><h2 id="drop-title">直流线路压降</h2><p>按 I·ρ·L/A 估算线路压降；两线制自动把回程计入，ρ 取 20 ℃ 典型值。</p><p class="tool-link"><a href="/docs/dc24-drop-fuse-case/">查看算例（24 V / 10 A / 15 m 选截面与保护复核） →</a></p></div></div>
       <div class="unit-grid">
         <label for="dc-kind">回路型式<select id="dc-kind"><option value="dc2">两线制（去程+回程）</option><option value="dc1">单线回路</option></select></label>
         <label for="dc-voltage">电源电压 V<input id="dc-voltage" type="text" inputmode="decimal" autocomplete="off" placeholder="例如 24" aria-invalid="false" /></label>
