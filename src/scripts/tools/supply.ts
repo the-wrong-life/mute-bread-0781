@@ -26,6 +26,8 @@ export function mountSupply() {
 
   /** 轴功率基准下功率类型被强制为 kW；切回电网侧时恢复用户原先选的 kVA，避免单位静默改变。 */
   let lineMode: SupplyInput = 'kw';
+  /** 异步复制的令牌：重算或再次复制都会让它自增，旧 promise 的回调据此丢弃。 */
+  let copyToken = 0;
   function refreshLabel() {
     const shaft = basis.value === 'shaft';
     effWrap.hidden = !shaft;
@@ -44,6 +46,7 @@ export function mountSupply() {
   function compute() {
     text = '';
     copyStatus.textContent = '';
+    copyToken += 1;
     result.textContent = '—';
     detail.textContent = '';
     [value, voltage, pf, eff].forEach((i) => i.setAttribute('aria-invalid', 'false'));
@@ -92,14 +95,21 @@ export function mountSupply() {
   });
   [value, voltage, pf, eff].forEach((i) => i.addEventListener('input', compute));
   example.addEventListener('click', () => {
-    phase.value = 'three'; basis.value = 'line'; inputMode.value = 'kw';
+    phase.value = 'three'; basis.value = 'line'; lineMode = 'kw'; inputMode.value = 'kw';
     value.value = '15'; voltage.value = '380'; pf.value = '0.85'; eff.value = '88.8';
     refreshLabel(); compute();
   });
   copy.addEventListener('click', async () => {
     if (!text) { copyStatus.textContent = '没有可复制的结果。'; return; }
-    try { await navigator.clipboard.writeText(text); copyStatus.textContent = '已复制。'; }
-    catch { copyStatus.textContent = '浏览器拒绝访问剪贴板，请手动选择结果。'; }
+    const pending = ++copyToken;
+    const snapshot = text;
+    try {
+      await navigator.clipboard.writeText(snapshot);
+      // 复制是异步的：期间用户可能改输入触发重算，此时不再回写旧提示。
+      if (pending === copyToken) copyStatus.textContent = '已复制。';
+    } catch {
+      if (pending === copyToken) copyStatus.textContent = '浏览器拒绝访问剪贴板，请手动选择结果。';
+    }
   });
   refreshLabel();
   compute();

@@ -92,7 +92,7 @@ import NovaShell from '../layouts/NovaShell.astro';
         <label for="supply-pf">功率因数 cosφ<input id="supply-pf" type="text" inputmode="decimal" autocomplete="off" value="0.85" aria-invalid="false" /></label>
         <label for="supply-eff" id="supply-eff-wrap" hidden>效率 η %<input id="supply-eff" type="text" inputmode="decimal" autocomplete="off" value="88.8" aria-invalid="false" /></label>
       </div>
-      <p id="supply-note" class="note">公式：S = P ÷ cosφ；三相 I = S × 1000 ÷（√3 × U），单相 I = S × 1000 ÷ U；无功 Q = S × sinφ。选「轴功率」时先把机械输出按效率折算到电网侧：P = P_out ÷（η/100），此时输出里的「有功」就是电网侧有功。三相按线电压、负载三相对称估算；直接输入视在功率时功率因数只影响有功与无功拆分。选线仍需按敷设方式、环境温度、成组系数与保护整定查表核对，本工具不能替代。</p>
+      <p id="supply-note" class="note">公式：S = P ÷ cosφ；三相 I = S × 1000 ÷（√3 × U），单相 I = S × 1000 ÷ U；无功 Q = S × sinφ。选「轴功率」时先把机械输出按效率折算到电网侧：P = P_out ÷（η/100），此时输出里的「有功」就是电网侧有功。三相按线电压、负载三相对称估算；直接输入视在功率时功率因数只影响有功与无功拆分。切换「输入基准」只改变输入数字的含义，不会自动换算已有数值：原填 50（kVA）切到轴功率后会变成 50 kW 轴功率，需要自己改数字。选线仍需按敷设方式、环境温度、成组系数与保护整定查表核对，本工具不能替代。</p>
       <div class="result" aria-live="polite"><span id="supply-status">等待输入</span><output id="supply-result">—</output></div>
       <p id="supply-detail" class="status"></p>
       <div class="actions"><button type="button" id="supply-example">填入示例</button><button type="button" id="supply-copy">复制结果</button><span id="supply-copy-status" role="status"></span></div>
