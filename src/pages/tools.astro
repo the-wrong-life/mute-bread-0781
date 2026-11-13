@@ -174,14 +174,14 @@ import NovaShell from '../layouts/NovaShell.astro';
         <label for="carry-ref">基准环境温度 ℃<input id="carry-ref" type="text" inputmode="decimal" autocomplete="off" value="30" placeholder="例如 30" aria-invalid="false" /></label>
         <label for="carry-group">成组与敷设修正系数<input id="carry-group" type="text" inputmode="decimal" autocomplete="off" value="1" placeholder="例如 0.8" aria-invalid="false" /></label>
       </div>
-      <p id="carry-note" class="note">k<sub>temp</sub> = √[(θ<sub>max</sub> − θ<sub>amb</sub>) / (θ<sub>max</sub> − θ<sub>ref</sub>)]，I<sub>z</sub> = I<sub>z0</sub> · k<sub>temp</sub> · k<sub>group</sub>。θ<sub>ref</sub> 必须与所查载流量表的基准一致（空气敷设常用 30 ℃、埋地常用 20 ℃）。<strong>成组与敷设系数涉及标准表格，本工具不内置表值</strong>，请按制造商表或 IEC 60364-5-52 附录 B 查得后填入，且不大于 1。环境温度高于基准时公式与标准表基本一致；低于基准时公式偏乐观（PVC 25 ℃：公式 1.061、表约 1.03），应直接查表。</p>
+      <p id="carry-note" class="note">k<sub>temp</sub> = √[(θ<sub>max</sub> − θ<sub>amb</sub>) / (θ<sub>max</sub> − θ<sub>ref</sub>)]，I<sub>z</sub> = I<sub>z0</sub> · k<sub>temp</sub> · k<sub>group</sub>。θ<sub>ref</sub> 必须与所查载流量表的基准一致（空气敷设常用 30 ℃、埋地常用 20 ℃）。<strong>成组与敷设系数涉及标准表格，本工具不内置表值</strong>，请按制造商表或 IEC 60364-5-52 附录 B 查得后填入，且不大于 1。公式是简化热平衡近似（只按温差比开方，假设其它散热条件不变），不能替代标准表：高于基准温度时按公式折算只作量级参考，低于基准温度时公式会给出大于 1 的系数（PVC 25 ℃ 约 1.061），此时应直接查表。载流量数值以制造商表或 IEC 60364-5-52 附录 B 为准。</p>
       <div class="result" aria-live="polite"><span id="carry-status">等待输入</span><output id="carry-result">—</output></div>
       <p id="carry-detail" class="status"></p>
       <div class="actions"><button type="button" id="carry-example">填入示例</button><button type="button" id="carry-copy">复制结果</button><span id="carry-copy-status" role="status"></span></div>
     </section>
     <section id="verification" class="tool" aria-labelledby="verify-title">
       <div class="heading"><span class="number">13</span><div><h2 id="verify-title">验证记录</h2><p>每个工具都经过独立参考实现、数值与拒绝用例、真实浏览器三层检查；方法与仍存在的适用边界写在知识库里。</p></div></div>
-      <p class="note">当前状态（2026-11-14，含 12 号载流量修正）：数值用例 64/64、拒绝用例 46/46、界面检查 66 项全部通过；环境为 Node v24.17.0 与系统 Chrome，未在其它浏览器引擎重复。验证通过只说明在文档列出的假设下算得对，不替代设计核算、现场测量与验收。</p>
+      <p class="note">当前状态（2026-11-14，含 12 号载流量修正）：数值用例 64/64、拒绝用例 46/46（Node v24.17.0，期望值由独立参考实现 tools/verify/oracle.py 生成）；界面行为另用 Playwright 脚本抽查：既有工具的 66 项断言由仓库外脚本 _work/nova-tools-ui.mjs 覆盖（该脚本不含 12 号工具）；12 号工具的示例值、成组系数、绝缘切换、四类拒绝与复制反馈是开发期一次性临时脚本实测，脚本未入库，因此不构成回归门禁。两者均在系统 Chrome 下执行，未在其它浏览器引擎与屏幕阅读器上重复。验证通过只说明在文档列出的假设下算得对，不替代设计核算、现场实测与专业验收。</p>
       <nav class="tool-nav" aria-label="验证记录"><a href="/docs/tools-verification/">验证方法与已确认边界</a><a href="/docs/calculation-record/">工程计算记录方法</a></nav>
     </section>
   </div>

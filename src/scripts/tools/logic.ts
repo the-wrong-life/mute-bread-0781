@@ -574,7 +574,8 @@ export function conduitFill(p: {
  *  k_temp = √[(θ_max − θ_amb) / (θ_max − θ_ref)]，I_z = I_z0 · k_temp · k_group。
  *  θ_max 取绝缘额定导体温度（PVC 70 ℃、XLPE/EPR 90 ℃），θ_ref 为基准环境温度（空气 30 ℃、埋地 20 ℃，
  *  必须与所查载流量表一致）。成组与敷设系数涉及标准表格，本工具不内置表值，由用户查表后填入。
- *  环境温度高于基准时公式与标准表基本一致；低于基准时公式偏乐观（PVC 25 ℃ 公式 1.061、表约 1.03）。 */
+ *  这是简化热平衡近似（只按温差比开方，假设其它散热条件不变），不能替代标准表：高于基准温度时按公式折算只作量级参考；
+ *  低于基准温度时公式给出大于 1 的系数（PVC 25 ℃ 约 1.061），应直接查表。 */
 export type InsulationType = 'pvc' | 'xlpe';
 export interface DerateResult {
   /** 导体最高工作温度 ℃ */
