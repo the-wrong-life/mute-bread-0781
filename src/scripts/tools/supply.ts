@@ -24,11 +24,18 @@ export function mountSupply() {
   let text = '';
   const fmt = (n: number, digits = 4) => Number(n.toPrecision(digits)).toString();
 
+  /** 轴功率基准下功率类型被强制为 kW；切回电网侧时恢复用户原先选的 kVA，避免单位静默改变。 */
+  let lineMode: SupplyInput = 'kw';
   function refreshLabel() {
     const shaft = basis.value === 'shaft';
     effWrap.hidden = !shaft;
     inputMode.disabled = shaft;
-    if (shaft) { inputMode.value = 'kw'; }
+    if (shaft) {
+      if (inputMode.value !== 'kw') lineMode = inputMode.value as SupplyInput;
+      inputMode.value = 'kw';
+    } else if (lineMode === 'kva') {
+      inputMode.value = 'kva';
+    }
     valueLabel.textContent = shaft
       ? '轴功率 P_out kW'
       : inputMode.value === 'kva' ? '视在功率 S kVA' : '有功功率 P kW';
@@ -36,6 +43,7 @@ export function mountSupply() {
 
   function compute() {
     text = '';
+    copyStatus.textContent = '';
     result.textContent = '—';
     detail.textContent = '';
     [value, voltage, pf, eff].forEach((i) => i.setAttribute('aria-invalid', 'false'));
@@ -77,7 +85,11 @@ export function mountSupply() {
 
   phase.addEventListener('change', compute);
   basis.addEventListener('change', () => { refreshLabel(); compute(); });
-  inputMode.addEventListener('change', () => { refreshLabel(); compute(); });
+  inputMode.addEventListener('change', () => {
+    if (basis.value !== 'shaft') lineMode = inputMode.value as SupplyInput;
+    refreshLabel();
+    compute();
+  });
   [value, voltage, pf, eff].forEach((i) => i.addEventListener('input', compute));
   example.addEventListener('click', () => {
     phase.value = 'three'; basis.value = 'line'; inputMode.value = 'kw';

@@ -304,6 +304,16 @@
    }
   },
   {
+   "id": "ss3",
+   "tool": "supplyCurrent",
+   "expected": {
+    "current": 14.8955177809501,
+    "apparent": 9.803921568627452,
+    "active": 8.333333333333334,
+    "reactive": 5.164536153359187
+   }
+  },
+  {
    "id": "c1",
    "tool": "cabinetThermal",
    "expected": {

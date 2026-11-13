@@ -402,6 +402,20 @@
       "note": "单相轴功率 1.5 kW、η 85%"
     },
     {
+      "id": "ss3",
+      "tool": "supplyCurrent",
+      "args": [
+        "three",
+        "kw",
+        "7.5",
+        "380",
+        "0.85",
+        "shaft",
+        "90"
+      ],
+      "note": "三相轴功率 7.5 kW、η 90%、cosφ 0.85：与电机回路案例完全同参数，应与案例 14.90 A 一致"
+    },
+    {
       "id": "c1",
       "tool": "cabinetThermal",
       "args": [
@@ -672,9 +686,7 @@
         "3"
       ],
       "note": "cosφ=1、X′=0 纯电阻边界，与 a5 应得同一压降 3.7333 V"
-    }
-
-,
+    },
     {
       "id": "cf1",
       "tool": "conduitFill",
@@ -1202,9 +1214,7 @@
         "5"
       ],
       "match": "线长"
-    }
-
-,
+    },
     {
       "id": "ecf1",
       "tool": "conduitFill",
