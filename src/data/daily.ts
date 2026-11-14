@@ -1,0 +1,773 @@
+/** 由 tools/ops/import-daily.mjs 自动生成，请勿手改。数据来源：daily-ideas-agent 日报的公开字段白名单；账本 tools/ops/daily-ledger.json；生成 2026-11-14T22:37:04+08:00 */
+export interface DailyRevision { at: string; note: string }
+export interface DailyItem { id: string; category: string; title: string; summary: string; detail: string; project: string; status: string; link: string; difficulty: number | null; free: boolean | null; confidence: string; risks: string }
+export interface DailyIssue { date: string; updatedAt: string; source: string; overview: string; overviewNote: string; items: DailyItem[]; revisions: DailyRevision[] }
+
+export const dailyIssues: DailyIssue[] = [
+ {
+  "date": "2026-11-14",
+  "updatedAt": "2026-11-14T22:37:04+08:00",
+  "source": "DAILY-DIY-IDEAS-2026-11-14.json",
+  "overview": "候选 48 个 → 分析成功 48 个 → 去重后新项目 5 个 → 入选 4 个，落选 1 个。",
+  "overviewNote": "今日最值得了解：mdiri-ai/SoduWork（65.5 分）",
+  "items": [
+   {
+    "id": "2026-11-14-soduwork",
+    "category": "待跟进",
+    "title": "mdiri-ai/SoduWork",
+    "summary": "一个自托管的 AI 原生多 agent/多 harness 工作引擎，面向团队和他们的 agent；用 JavaScript 实现，具体形态需要看仓库确认。",
+    "detail": "自托管一套多 agent 编排环境，定义多个角色/工具/harness，跑任务流水线；可接不同模型后端，做团队内的 agent 工作台。",
+    "project": "mdiri-ai",
+    "status": "值得跟进",
+    "link": "https://github.com/mdiri-ai/SoduWork",
+    "difficulty": 4,
+    "free": true,
+    "confidence": "需进一步实验",
+    "risks": "项目描述很泛，可能偏框架/早期；多 agent 编排的调试和权限控制复杂；作者自述能力未实测，需确认是否有可运行代码和文档。"
+   },
+   {
+    "id": "2026-11-14-esp-flutter",
+    "category": "待跟进",
+    "title": "maximagination1/ESP-FLUTTER",
+    "summary": "ESP32-C3 驱动的仿生遥控蝴蝶项目，含固件、App/遥控器 UI 和 LED 翅膀，属于开源硬件+嵌入式玩具。",
+    "detail": "可以复现扑翼机构、烧录 C++ 固件、用 App 或遥控器控制、调 LED 翅膀；能不能稳定飞是作者自述，需实测。",
+    "project": "maximagination1",
+    "status": "值得跟进",
+    "link": "https://github.com/maximagination1/ESP-FLUTTER",
+    "difficulty": 4,
+    "free": false,
+    "confidence": "官方声称未验证",
+    "risks": "飞行安全、电池/电机风险；机械结构依赖加工件；作者自述能飞未独立验证；开源许可证和物料清单需核实。"
+   },
+   {
+    "id": "2026-11-14-multimodal-threat-dataset",
+    "category": "待跟进",
+    "title": "Gosu-x/multimodal-threat-dataset",
+    "summary": "一个面向多模态网络威胁的数据集仓库，可能包含样本、标签和说明；具体规模和字段未验证。",
+    "detail": "下载后统计类别分布、字段结构，用 pandas 做清洗，或训练一个多模态威胁检测基线。",
+    "project": "Gosu-x",
+    "status": "值得跟进",
+    "link": "https://github.com/Gosu-x/multimodal-threat-dataset",
+    "difficulty": 2,
+    "free": true,
+    "confidence": "需进一步实验",
+    "risks": "数据集许可证、标签质量和真实性未知；可能包含恶意样本或敏感内容；不要在生产网络直接执行样本。"
+   },
+   {
+    "id": "2026-11-14-irori",
+    "category": "资料与研究",
+    "title": "irori-app/irori",
+    "summary": "Rust 写的跨平台原生游戏启动器，把 Epic、GOG、Amazon、itch.io、Steam 以及模拟器里的游戏聚到一个界面里启动。使用者是有多个平台账号、懒得来回切客户端的 PC 玩家。",
+    "detail": "装起来能：统一展示各平台游戏库、一键启动、管理多个账号的授权，界面比各家客户端轻。",
+    "project": "irori-app",
+    "status": "仅记录",
+    "link": "https://github.com/irori-app/irori",
+    "difficulty": 2,
+    "free": true,
+    "confidence": "官方声称未验证",
+    "risks": "这类聚合器最大的长期风险是第三方平台随时改登录与鉴权接口，非官方对接会周期性失效（Playnite 和 Lutris 都反复踩过）。另外项目 star 数不高、属于早期阶段，插件生态为零。"
+   }
+  ],
+  "revisions": [
+   {
+    "at": "2026-11-14T22:37:04+08:00",
+    "note": "首次导入 4 条"
+   }
+  ]
+ },
+ {
+  "date": "2026-11-13",
+  "updatedAt": "2026-11-14T22:37:04+08:00",
+  "source": "DAILY-DIY-IDEAS-2026-11-13.json",
+  "overview": "候选 72 个 → 分析成功 72 个 → 去重后新项目 7 个 → 入选 5 个，落选 2 个。",
+  "overviewNote": "今日最值得了解：agentes-chat/agentes-chat（76.5 分）",
+  "items": [
+   {
+    "id": "2026-11-13-agentes-chat",
+    "category": "待跟进",
+    "title": "agentes-chat/agentes-chat",
+    "summary": "一个自托管的 Slack 类产品（TypeScript），区别是频道里除了人还有 AI Agent，Agent 可以跑在 Claude、ChatGPT/Codex、Gemini、Grok 上，靠频道和私信协作。",
+    "detail": "给你一个自己家的「工作群」：拉几个 Agent 进不同频道，@它派活、看它回帖、多个 Agent 在同一个频道里互相接话；消息与凭据都在自己机器上。",
+    "project": "agentes-chat",
+    "status": "值得跟进",
+    "link": "https://github.com/agentes-chat/agentes-chat",
+    "difficulty": 3,
+    "free": true,
+    "confidence": "官方声称未验证",
+    "risks": "多服务组合的自托管项目，升级容易踩数据库迁移；频道里贴日志/URL 会把敏感信息喂给模型；各家 API 适配器质量参差（作者自述支持四家，未实测）；自托管不等于安全，鉴权与反代要自己把关。"
+   },
+   {
+    "id": "2026-11-13-kwant",
+    "category": "待跟进",
+    "title": "alexsergivan/kwant",
+    "summary": "一个自托管单二进制里的「AI bot 团队」：有空间/频道、能挂多个账号、bot 之间可以交接任务、带人工审批和定时例程。Rust 写的，定位是自托管版的团队 IM + 常驻 agent。",
+    "detail": "起一个常驻服务，把几个 agent 拉进同一个空间按角色接活，互相 handoff，关键动作走审批闸门，周期性 routine 自己跑；相当于把「一个人对着一个 chat 窗口」换成「一个班组按流程干活」。",
+    "project": "alexsergivan",
+    "status": "值得跟进",
+    "link": "https://github.com/alexsergivan/kwant",
+    "difficulty": 3,
+    "free": true,
+    "confidence": "需进一步实验",
+    "risks": "作者自述的能力未实测，多 agent handoff 在真实任务里很容易来回踢皮球或死循环，需要自己加终止条件；「替代某商业产品」是定位话术不是功能对等；项目较新，接口可能大改；star 是累计值。"
+   },
+   {
+    "id": "2026-11-13-printlab",
+    "category": "待跟进",
+    "title": "AFangTeam/PrintLab",
+    "summary": "一个围绕拓竹（Bambu Lab）3D 打印机的个人工作台/工作流仓库：用 Codex 这类编码 Agent 去驱动建模、切片、打印队列和打印记录，Python 实现，明显是 Mac 优先，仓库规模很小（累计 120 star，基本是作者自用+小圈子）。许可允许带署名的非商业修改再发布。",
+    "detail": "把「改模型脚本 → 切片参数 → 下发打印 → 记录结果」串成脚本化流水线；用 Agent 批量生成/修改 OpenSCAD 或参数化模型、批量切不同材料/层高、留一份可检索的打印台账。",
+    "project": "AFangTeam",
+    "status": "值得跟进",
+    "link": "https://github.com/AFangTeam/PrintLab",
+    "difficulty": 3,
+    "free": false,
+    "confidence": "AI推断",
+    "risks": "小仓库单人维护，接口随时会改；强依赖 Bambu Studio / Codex 的私有 CLI，版本一变就断；许可证禁止商用再发布，别往公司交付物里塞。作者宣称的自动化程度未验证。"
+   },
+   {
+    "id": "2026-11-13-tstack",
+    "category": "待跟进",
+    "title": "t3dotgg/tstack",
+    "summary": "一个知名博主把自己每天用的 Agent Skills 打包成仓库，Python 加 Markdown 为主，声明兼容 Claude Code 和 Codex。本质是「别人的提示词与工作流资产库」，不是可运行的系统。",
+    "detail": "把里面的 skill 目录拷进你的 Agent skills 目录，立刻多出一批现成能力（代码审查、提交信息、重构流程一类），也可以当作 skill 写法的参考模板。",
+    "project": "t3dotgg",
+    "status": "值得跟进",
+    "link": "https://github.com/t3dotgg/tstack",
+    "difficulty": 1,
+    "free": true,
+    "confidence": "官方声称未验证",
+    "risks": "是个人配置的集合，带强烈的个人风格与工具偏好（可能默认用某些付费 CLI 或特定目录结构）；「兼容 Codex」只有作者说法，跨 harness 的兼容性经常打折；没有版本兼容承诺，随时会变。"
+   },
+   {
+    "id": "2026-11-13-local-ai-esp32",
+    "category": "待跟进",
+    "title": "mmm1712/Local_AI_esp32",
+    "summary": "在 PC 上从零训练一个极小的语言模型，量化后烧进 ESP32-S3，配一块触摸屏做完全离线的聊天界面，推理部分是 C。作者把「训练→量化→部署→UI」整条链路都放进了一个仓库。",
+    "detail": "在你自己的板子上跑一个完全离线的玩具级 LLM 对话；改词表/tokenizer 看效果怎么变；改触摸屏 UI；实测推理耗时、PSRAM/flash 占用，摸清 MCU 上跑 transformer 的真实边界。",
+    "project": "mmm1712",
+    "status": "值得跟进",
+    "link": "https://github.com/mmm1712/Local_AI_esp32",
+    "difficulty": 3,
+    "free": false,
+    "confidence": "AI推断",
+    "risks": "玩具级模型，输出质量会明显低于预期，别指望它「能用」；强依赖特定 S3 型号的 PSRAM 容量；训练数据/权重可能未随仓库发布，要自己造；作者自述的离线运行未验证。"
+   }
+  ],
+  "revisions": [
+   {
+    "at": "2026-11-14T22:37:04+08:00",
+    "note": "首次导入 5 条"
+   }
+  ]
+ },
+ {
+  "date": "2026-11-12",
+  "updatedAt": "2026-11-14T22:37:04+08:00",
+  "source": "DAILY-DIY-IDEAS-2026-11-12.json",
+  "overview": "候选 56 个 → 分析成功 56 个 → 去重后新项目 7 个 → 入选 1 个，落选 6 个。",
+  "overviewNote": "今日最值得了解：gogoymh/auto-ontology-mcp（60.9 分）",
+  "items": [
+   {
+    "id": "2026-11-12-auto-ontology-mcp",
+    "category": "待跟进",
+    "title": "gogoymh/auto-ontology-mcp",
+    "summary": "把 NVIDIA 的 Auto Ontology（自动生成本体/语义层）和一套个人知识库封装成 MCP server，宣称不需要 LLM API key 就能让 Claude、ChatGPT 等客户端对自己的资料做语义查询。真实用户是想给个人文档库加「语义检索层」的 MCP 玩家。",
+    "detail": "把一批文档/笔记灌进去，自动生成实体-关系本体，之后通过 MCP 客户端问「某个仪表箱的检验要求在哪份文档里」这类问题；本体层可人工修正，充当检索的路由表。",
+    "project": "gogoymh",
+    "status": "值得跟进",
+    "link": "https://github.com/gogoymh/auto-ontology-mcp",
+    "difficulty": 3,
+    "free": true,
+    "confidence": "官方声称未验证",
+    "risks": "「无需 API key」的实现方式未验证，可能是本地小模型或规则，中文文档上的抽取质量存疑；NVIDIA 相关组件可能对版本/驱动有要求；自动生成的本体噪声大，需要人工校对才有用；早期项目，数据格式可能随版本变化。"
+   }
+  ],
+  "revisions": [
+   {
+    "at": "2026-11-14T22:37:04+08:00",
+    "note": "首次导入 1 条"
+   }
+  ]
+ },
+ {
+  "date": "2026-11-11",
+  "updatedAt": "2026-11-14T22:37:04+08:00",
+  "source": "DAILY-DIY-IDEAS-2026-11-11.json",
+  "overview": "候选 64 个 → 分析成功 65 个 → 去重后新项目 6 个 → 入选 6 个，落选 0 个。",
+  "overviewNote": "今日最值得了解：FlashCat-Jordan/Flashduck（70.3 分）",
+  "items": [
+   {
+    "id": "2026-11-11-flashduck",
+    "category": "待跟进",
+    "title": "FlashCat-Jordan/Flashduck",
+    "summary": "开源 ESP32-S3 桌面机器鸭：6 个舵机、一只动画单眼、宽站姿行走，两套交互系统（含语音助手），C 语言固件 + 结构件。真在用的人是 3D 打印 + 舵机机器人 DIY 圈子。",
+    "detail": "打印结构件、装 6 个舵机、烧固件，得到一只会走会眨眼、能接语音助手的桌面机器人；可以改动作序列、换掉作者的语音后端接自己的 ASR/LLM。",
+    "project": "FlashCat-Jordan",
+    "status": "值得跟进",
+    "link": "https://github.com/FlashCat-Jordan/Flashduck",
+    "difficulty": 3,
+    "free": false,
+    "confidence": "官方声称未验证",
+    "risks": "语音助手部分多半依赖作者的云服务/密钥，可能不可用或已下线；舵机长期行走易打齿，结构件需反复打印；供电不足会导致复位重启。"
+   },
+   {
+    "id": "2026-11-11-holyarrs",
+    "category": "待跟进",
+    "title": "HolyArrs/HolyArrs",
+    "summary": "Go 写的自托管单体应用，把剧集/电影/音乐这一套 *arr 系（索引器 + 订阅 + 下载分发的组合）收进一个程序、一个界面。名字就是「Holy *arr」。",
+    "detail": "一个进程管订阅、索引器、下载器对接，往下发到 qBittorrent 并回写状态；不需要分别装 Sonarr/Radarr/Lidarr 再互相对接。",
+    "project": "HolyArrs",
+    "status": "值得跟进",
+    "link": "https://github.com/HolyArrs/HolyArrs",
+    "difficulty": 3,
+    "free": true,
+    "confidence": "官方声称未验证",
+    "risks": "580 star 的小项目，索引器适配深度大概率不如 Sonarr/Prowlarr，国内 PT 站基本要自己写定义；和你现有 MoviePilot 功能重叠，两套同时指向同一个下载目录会互相抢种、误删文件；作者未提及长期维护承诺。"
+   },
+   {
+    "id": "2026-11-11-cheap-ag",
+    "category": "资料与研究",
+    "title": "muaaz9329/cheap-ag",
+    "summary": "一个 TypeScript 写的 agent 编排层，通过 MCP 接入 Claude Code 之类的客户端：把写代码的活交给便宜模型批量产出，再用测试跑通与否决定产物是否交付。仓库很新，325 个 star 更像是围观，没有生产使用证据（不确定）。",
+    "detail": "起一个 MCP server 接到客户端，让便宜模型成批改代码，本地跑测试把不合格的产物筛掉；可以拿自己的仓库做实验，看它到底改的是模型路由层还是提示词层。",
+    "project": "muaaz9329",
+    "status": "仅记录",
+    "link": "https://github.com/muaaz9329/cheap-ag",
+    "difficulty": 3,
+    "free": true,
+    "confidence": "需进一步实验",
+    "risks": "作者自述能力全部未验证；把订阅额度当 API 用大概率违反服务条款，有封号风险；仓库太新，维护和代码质量未知；325 累计 star 不代表可用"
+   },
+   {
+    "id": "2026-11-11-alma-relay",
+    "category": "资料与研究",
+    "title": "yetone/alma-relay",
+    "summary": "Alma（桌面端 AI 助手）远程访问用的中继服务：可以 Docker 自托管，也可以一键丢到 Cloudflare Workers 上。作用是在手机和家里桌面之间架一条中转通道，绕开公网 IP 和端口映射。",
+    "detail": "自建一条中继通道，让手机在外面连回桌面端的会话；Worker 版等于用 Cloudflare 的边缘网络做穿透，不用自己有公网地址。",
+    "project": "yetone",
+    "status": "仅记录",
+    "link": "https://github.com/yetone/alma-relay",
+    "difficulty": 2,
+    "free": true,
+    "confidence": "需进一步实验",
+    "risks": "强绑定 Alma 客户端，通用性差；用 Workers 做中继意味着会话流量经过第三方边缘节点，鉴权和密钥管理要自己评估；作者未说明中继是否端到端加密，若明文转发则等于把桌面控制权暴露给中继方。"
+   },
+   {
+    "id": "2026-11-11-agent-skills",
+    "category": "待跟进",
+    "title": "janestreet/agent_skills",
+    "summary": "Jane Street 放出来的一套 Agent Skills 集合，也就是 Claude Skill 那一类“提示词 + 脚本 + 触发条件”的技能包，用文件和目录组织，不是服务。真正用它的人是写 Agent 技能的人，拿来当范本或直接挂进支持的客户端。仓库没有语言标注，基本是文档/脚本混合。",
+    "detail": "clone 下来当技能库用；更实际的用法是逐份读它的 SKILL.md，看头部机构怎么划分技能边界、写触发条件、写失败处理，然后照这个结构重写你自己的 skill。",
+    "project": "janestreet",
+    "status": "值得跟进",
+    "link": "https://github.com/janestreet/agent_skills",
+    "difficulty": 1,
+    "free": true,
+    "confidence": "AI推断",
+    "risks": "内容大概率贴着 Jane Street 自己的金融数据场景，未必能直接用在你的文档/运维场景；无语言标注说明不是可执行工程；维护活跃度和是否会被删/改名不确定。"
+   },
+   {
+    "id": "2026-11-11-co-design-bench",
+    "category": "资料与研究",
+    "title": "Wiselnn/Co-Design-Bench",
+    "summary": "一个学术团队放出的「多模态协同设计→写代码」智能体评测基准：一批带图/带界面要求的设计任务 + 一套自动打分脚本。真正在用的是做 agentic coding 的研究组，拿来横向对比不同模型或 agent 框架。不是给人用的工具，是给人打分的尺子。",
+    "detail": "按它的任务格式喂入自己的模型或 agent，跑完拿到分数和失败样本；也可以把任务集换成自己的，做成回归测试。能读到的价值主要是「怎么定义一次协作编码任务算成功」这套评分口径。",
+    "project": "Wiselnn",
+    "status": "仅记录",
+    "link": "https://github.com/Wiselnn/Co-Design-Bench",
+    "difficulty": 3,
+    "free": true,
+    "confidence": "需进一步实验",
+    "risks": "论文型仓库的常见问题：绑定特定数据集与模型接口、指标偏学术、版本一变就跑不通；分数不等于「他的 skill 好不好用」。作者自述能力未实测。"
+   }
+  ],
+  "revisions": [
+   {
+    "at": "2026-11-14T22:37:04+08:00",
+    "note": "首次导入 6 条"
+   }
+  ]
+ },
+ {
+  "date": "2026-11-10",
+  "updatedAt": "2026-11-14T22:37:04+08:00",
+  "source": "DAILY-DIY-IDEAS-2026-11-10.json",
+  "overview": "候选 63 个 → 分析成功 63 个 → 去重后新项目 4 个 → 入选 4 个，落选 0 个。",
+  "overviewNote": "今日最值得了解：Kristian8606/esp32-airplay2-surround（69.8 分）",
+  "items": [
+   {
+    "id": "2026-11-10-esp32-airplay2-surround",
+    "category": "资料与研究",
+    "title": "Kristian8606/esp32-airplay2-surround",
+    "summary": "仓库没有任何描述，从名字推断是「用 ESP32 做 AirPlay 2 音频接收端，可能带多声道/环绕」。究竟是完整的 AirPlay 2 实现，还是基于 AirPlay 1(RAOP) 的改造，不确定。",
+    "detail": "如果确实是接收端，能把手机/Mac 的音频推到 ESP32 + I2S DAC 出声；「surround」部分大概率是名字里的说法，不代表真有多声道能力。",
+    "project": "Kristian8606",
+    "status": "仅记录",
+    "link": "https://github.com/Kristian8606/esp32-airplay2-surround",
+    "difficulty": 4,
+    "free": false,
+    "confidence": "需进一步实验",
+    "risks": "无 README、无描述，功能完全未验证；AirPlay 2 需要 FairPlay 认证，纯开源实现几乎不可能完整；存在只是半成品 fork 的可能。"
+   },
+   {
+    "id": "2026-11-10-airtile",
+    "category": "待跟进",
+    "title": "dbkcode331/Airtile",
+    "summary": "一套完整的 ESPHome 空气质量监测器开源硬件：ESP32 跑 ESPHome 固件，4.2 寸墨水屏显示 CO2、温湿度、VOC、NOx、光照六项，配自定义 PCB 和 3D 打印外壳，走 ESPHome 原生 API 接 Home Assistant。作者是 DIY 硬件玩家，24 star，属于「一个人从电路到外壳做完一整套」的类型。",
+    "detail": "烧进去后设备本地屏上直接显示六项读数；同时作为 ESPHome 节点被 Home Assistant 自动发现，生成实体和历史曲线，可以拿 CO2 超标触发风扇/新风/推送。YAML 可改，换传感器、换屏、加 RS485 传感器都行。",
+    "project": "dbkcode331",
+    "status": "值得跟进",
+    "link": "https://github.com/dbkcode331/Airtile",
+    "difficulty": 3,
+    "free": false,
+    "confidence": "官方声称未验证",
+    "risks": "传感器型号和仓库 YAML 强绑定，买错型号要改一堆配置；墨水屏驱动型号挑剔、刷新慢（几秒一次，别指望实时曲线）；24 star 说明复刻记录很少，PCB 版本可能只验证过作者那一版；CO2 传感器需要定期做基线校准（ABC），否则长期漂移。"
+   },
+   {
+    "id": "2026-11-10-passenger",
+    "category": "待跟进",
+    "title": "Zaneris/passenger",
+    "summary": "用 Avalonia 从零写的跨平台 C#/.NET IDE：Roslyn 驱动的编辑器、自研调试器带 Hot Reload、还有 CPU 和内存 profiler。真实用户是想在 VS/Rider 之外找一个更轻的 .NET 开发环境的人。",
+    "detail": "打开 .NET 解决方案写代码、下断点单步调试、改代码热重载、跑 CPU/内存 profile 看热点和分配。",
+    "project": "Zaneris",
+    "status": "值得跟进",
+    "link": "https://github.com/Zaneris/passenger",
+    "difficulty": 4,
+    "free": true,
+    "confidence": "需进一步实验",
+    "risks": "早期项目，调试器与 profiler 的成熟度没有大规模验证，作者自述不等于实测；跨平台上 Linux/macOS 大概率弱于 Windows；IDE 类项目迭代快，插件生态为零。"
+   },
+   {
+    "id": "2026-11-10-kinnow",
+    "category": "资料与研究",
+    "title": "DuhanJishnu/kinnow",
+    "summary": "Python 写的 Windows 桌面小工具集合（描述只有一句「🍊Quick productivity tools for windows」）。累计 2 star，单人项目；到底是 GUI 还是 CLI、有几个功能，仓库描述里都没说，需要看目录结构才能确定。",
+    "detail": "clone 下来装依赖、跑入口脚本，能得到一组 Windows 上的快捷操作（具体功能不确定）。量级对标的是「替代几个 AutoHotkey / PowerShell 小脚本」，不是平台级工具。",
+    "project": "DuhanJishnu",
+    "status": "仅记录",
+    "link": "https://github.com/DuhanJishnu/kinnow",
+    "difficulty": 2,
+    "free": true,
+    "confidence": "需进一步实验",
+    "risks": "累计 2 star、无文档，功能列表和维护状态都不确定；可能是几个单文件脚本拼起来的；Windows only，与他的 NAS/软路由体系零交集；依赖是否可装、是否有硬编码路径未验证。"
+   }
+  ],
+  "revisions": [
+   {
+    "at": "2026-11-14T22:37:04+08:00",
+    "note": "首次导入 4 条"
+   }
+  ]
+ },
+ {
+  "date": "2026-11-09",
+  "updatedAt": "2026-11-14T22:37:04+08:00",
+  "source": "DAILY-DIY-IDEAS-2026-11-09.json",
+  "overview": "候选 71 个 → 分析成功 71 个 → 去重后新项目 20 个 → 入选 8 个，落选 12 个。",
+  "overviewNote": "今日最值得了解：qybaihe/bla（74.6 分）",
+  "items": [
+   {
+    "id": "2026-11-09-bla",
+    "category": "待跟进",
+    "title": "qybaihe/bla",
+    "summary": "BLA（Blind LLM Agents），TypeScript 写的对抗性防护层，给二进制、Electron 应用、JS bundle、Python 包、WebAssembly 加「反 AI 逆向」的混淆与防护。它不是破解工具，是防守方工具。",
+    "detail": "对自己的发布产物做加固，抬高 LLM 辅助逆向的门槛；反过来也能当靶场——用现成的逆向流程去试打被 BLA 处理过的样本，评估防护到底有没有用。",
+    "project": "qybaihe",
+    "status": "值得跟进",
+    "link": "https://github.com/qybaihe/bla",
+    "difficulty": 4,
+    "free": true,
+    "confidence": "作者自述未验证",
+    "risks": "「挡得住 LLM 逆向」这个核心宣称没有独立验证，很可能只是抬高成本而非阻断；过度混淆会影响调试、性能和打包体积，可能把自家插件搞坏；先当实验靶场，别上生产。"
+   },
+   {
+    "id": "2026-11-09-wifi-sensing-kit",
+    "category": "待跟进",
+    "title": "andrisgauracs/wifi-sensing-kit",
+    "summary": "用三块 ESP32-S3 采集 WiFi 信道状态信息（CSI），把人体动作对无线信号的扰动做成数据集，再用摄像头（姿态/动作识别）自动给数据打标签，训练一个小模型，实现「只用 WiFi 判断你在干什么」。摄像头只在训练时当老师，推理时不参与。",
+    "detail": "训出 3-5 类动作（走过、坐下、挥手、跌倒之类）的 CSI 分类器并实时推理；采集→标注→训练→部署的流水线是现成的，可以换场景、换类别、换板子位置。",
+    "project": "andrisgauracs",
+    "status": "值得跟进",
+    "link": "https://github.com/andrisgauracs/wifi-sensing-kit",
+    "difficulty": 4,
+    "free": false,
+    "confidence": "官方声称未验证",
+    "risks": "1) CSI 极度依赖环境与摆放，作者 demo 的准确率不能直接迁移到金属结构多的船舱；2) 训练阶段要装摄像头，隐私与安装位置得先想清楚；3) 类别少样本少，实际是动作分类 demo，不是通用人体感知；4) 三块板之间的时间同步精度不确定，多设备数据对齐要自己验。"
+   },
+   {
+    "id": "2026-11-09-agent-autoloop",
+    "category": "待跟进",
+    "title": "KKKKhazix/agent-autoloop",
+    "summary": "TypeScript 写的命令行 Agent 后台自治循环：Agent 自己领任务、自己往下推，平时不打扰人，只在遇到拿不准的决策时通过卡片消息找人拍板。不是新模型，是 Agent 的调度与审批外壳。",
+    "detail": "把 Claude Code / Codex CLI 这类命令行 Agent 挂成常驻 worker，跑定时任务和长任务；任务状态、阻塞点、待批事项以卡片形式推到 IM；支持「无人值守跑一段 + 人在关键节点介入」的混合模式。",
+    "project": "KKKKhazix",
+    "status": "值得跟进",
+    "link": "https://github.com/KKKKhazix/agent-autoloop",
+    "difficulty": 3,
+    "free": true,
+    "confidence": "官方声称未验证",
+    "risks": "自治 Agent 会真的改文件、跑命令，必须收窄权限（只读目录、容器内跑、危险命令白名单）；审批通道配错会漏批或误批；对不同 CLI Agent 的适配深度不确定，可能只对作者自己那套工作流顺手。"
+   },
+   {
+    "id": "2026-11-09-agent-cockpit",
+    "category": "待跟进",
+    "title": "chutingyean/Agent-Cockpit",
+    "summary": "一个 JS 写的「证据链白板 + MCP server」：AI agent 做研究时，每条结论都要挂到产生它的那次 run 和那段代码上，白板上可以点开任意一条 claim 追溯来源。真实用户是需要给 agent 输出做溯源的人（研究、报告、审计场景）。",
+    "detail": "本地起一个服务，把 agent 的运行记录、结论、代码引用存成可点击的图；agent 通过 MCP 往里写，人在白板上核对每条结论的出处。",
+    "project": "chutingyean",
+    "status": "值得跟进",
+    "link": "https://github.com/chutingyean/Agent-Cockpit",
+    "difficulty": 3,
+    "free": true,
+    "confidence": "官方声称未验证",
+    "risks": "早期项目，MCP schema 和前端都可能在变；证据链只保证「可追溯」，不保证结论正确——别把它当正确性校验；作者自述能力需实测。"
+   },
+   {
+    "id": "2026-11-09-sandbox-mcp",
+    "category": "待跟进",
+    "title": "shanselman/sandbox-mcp",
+    "summary": "Scott Hanselman 写的 MCP server 加 CLI，把 Windows 自带的一次性虚拟机 Windows Sandbox 的创建、目录映射、命令注入流程自动化。真正的用户是需要反复测试安装包、注册表改动和 PowerShell 脚本的人，也包括想把「执行 Windows 命令」这一动作交给 AI agent 的人。",
+    "detail": "用一条命令启动一份干净的 Windows，把指定目录映射进去，在沙箱里运行 .ps1、.bat 或 .msi，运行结束后直接销毁并重新开始；以 MCP 模式运行时，Claude、Cursor 这类客户端可以自己启动沙箱执行命令，不会影响真机环境。",
+    "project": "shanselman",
+    "status": "值得跟进",
+    "link": "https://github.com/shanselman/sandbox-mcp",
+    "difficulty": 2,
+    "free": true,
+    "confidence": "官方声称未验证",
+    "risks": "作者自述的能力居多，没有大规模第三方实测；沙箱内的网络、USB、GPU 映射能力有限，不能替代真实机器做硬件相关验证；让 agent 在 MCP 下执行任意命令，等于把执行权限交给模型，必须限制目录和网络；Windows 家庭版没有这个功能。"
+   },
+   {
+    "id": "2026-11-09-the-trinity",
+    "category": "待跟进",
+    "title": "InfRec-Cardinal/The-Trinity",
+    "summary": "一篇论文的「官方实现」：The Trinity，讲的是多模态 Agent 的「能力驱动递归自我改进」——给 agent 建能力库，让它自己评估缺什么能力、自己补，再递归迭代。仓库是 JavaScript 写的实验代码，63 star、刚推不久，实际使用者目前应该只有论文作者和少数复现者。",
+    "detail": "如果代码完整，能跑通的是「给一个多模态 agent 配置能力集 → 执行任务 → 自评失败点 → 生成/检索新能力 → 再跑」这一整条闭环，以及论文里的对比评测。实际操作大概率是：配 API key、准备任务集、跑脚本、看分数变化。",
+    "project": "InfRec-Cardinal",
+    "status": "值得跟进",
+    "link": "https://github.com/InfRec-Cardinal/The-Trinity",
+    "difficulty": 4,
+    "free": false,
+    "confidence": "需进一步实验",
+    "risks": "新仓库、无社区验证，论文代码常见「缺权重、缺数据、脚本硬编码路径」；递归自我改进的评测高度依赖任务集与评分器，换环境后结论可能不成立；作者自述的改进幅度不能当成实测；多模态 API 的费用会随迭代轮数放大。"
+   },
+   {
+    "id": "2026-11-09-rayban-meta-god-mode",
+    "category": "待跟进",
+    "title": "GhanshyamPaunikar/rayban-meta-god-mode",
+    "summary": "给 Ray-Ban Meta 眼镜套的一层「唤醒词 + 语音助手」桥：喊 CJ 之后拾音→语音识别→LLM 解析意图→落到订车、操作电脑、控电视/智能家居、写代码这些动作上。真用的人是想给眼镜加自定义语音入口的开发者。",
+    "detail": "眼镜端拾音，手机/电脑端做 STT 与意图解析，再调用本地 shell 脚本或第三方 API（打车、Home Assistant、遥控类）。等于一条「语音→意图→执行」的编排骨架。",
+    "project": "GhanshyamPaunikar",
+    "status": "值得跟进",
+    "link": "https://github.com/GhanshyamPaunikar/rayban-meta-god-mode",
+    "difficulty": 4,
+    "free": false,
+    "confidence": "官方声称未验证",
+    "risks": "「run your Mac / 写代码」= 给语音入口开了本地命令执行面，误识别就是误执行，必须加白名单；20+ 语言与成功率无任何基准（作者自述）；依赖第三方打车/智能家居 API 的可用性与服务条款；若走非官方蓝牙协议，Meta 固件更新会直接打死。"
+   },
+   {
+    "id": "2026-11-09-earshot",
+    "category": "待跟进",
+    "title": "Leonxlnx/earshot",
+    "summary": "一个 Python 写的「给编码 Agent 装耳朵」的组件，CPU-only 可跑，主打让 Agent 能听音频、审听音频、发出声音。仓库描述很含糊，我判断它是一套音频输入/输出 + 审听流水线，挂到现有 Agent 上当工具用；真实用户是那批给 CLI/编码 Agent 加多模态输入的人，不是通用语音助手。",
+    "detail": "把一段音频（文件或麦克风流）喂进去，让 Agent 做转写/审听/摘要，再输出语音；可以作为 tool/skill 挂到已有 Agent 框架里，让 Agent 处理「听」这类任务，而不是只处理文本。",
+    "project": "Leonxlnx",
+    "status": "值得跟进",
+    "link": "https://github.com/Leonxlnx/earshot",
+    "difficulty": 2,
+    "free": true,
+    "confidence": "需进一步实验",
+    "risks": "仓库描述含糊，实际输入输出协议和依赖不确定；中文语音识别质量、噪声环境下的事件检测效果都未验证；「审听」到底是转写还是声学事件分类不清楚，必须先看代码再谈落地。"
+   }
+  ],
+  "revisions": [
+   {
+    "at": "2026-11-14T22:37:04+08:00",
+    "note": "首次导入 8 条"
+   }
+  ]
+ },
+ {
+  "date": "2026-11-07",
+  "updatedAt": "2026-11-14T22:37:04+08:00",
+  "source": "DAILY-DIY-IDEAS-2026-11-07.json",
+  "overview": "候选 53 个 → 分析成功 53 个 → 去重后新项目 7 个 → 入选 2 个，落选 5 个。",
+  "overviewNote": "今日最值得了解：liangjianshu/multimodal-image-retrieval（69.0 分）",
+  "items": [
+   {
+    "id": "2026-11-07-multimodal-image-retrieval",
+    "category": "待跟进",
+    "title": "liangjianshu/multimodal-image-retrieval",
+    "summary": "一个中文的多模态检索实战教程型仓库：把「意图识别 → Prompt 工程 → Qwen LoRA 微调 → EmbeddingGemma 2 向量化 → InfoNCE 对比学习」串成一条能跑的链，带演示数据、自有数据接入、训练评测脚本和 RAG 检索组件讲解。使用者是想自己搭以图搜图/语义搜图的人。",
+    "detail": "跑通「文字搜图」和「图搜图」：把自己的一批图片灌进去建向量库，输入一句话或一张图就能召回相似图片；能看 LoRA 微调和对比学习怎么接进检索链路；能拿它的评测脚本量召回率。",
+    "project": "liangjianshu",
+    "status": "值得跟进",
+    "link": "https://github.com/liangjianshu/multimodal-image-retrieval",
+    "difficulty": 4,
+    "free": true,
+    "confidence": "官方声称未验证",
+    "risks": "教程型仓库，代码工程质量和可复现性不确定；模型权重下载体积大、依赖版本容易打架；微调效果依赖数据质量；作者自述、未实测。"
+   },
+   {
+    "id": "2026-11-07-roblox-studio-mcp",
+    "category": "待跟进",
+    "title": "HerdBuilderEstimate/roblox-studio-mcp",
+    "summary": "一个 MCP server，把 Claude/Cursor 接到 Roblox Studio：读场景对象树、改脚本、安全地触发 playtest。真正用它的是拿 AI 辅助写 Roblox 游戏的开发者。",
+    "detail": "在 Claude 里说“把这个 Part 换个颜色”或“写个脚本挂到这个东西上”，通过 Studio 插件把改动落到场景里，还能触发一次 playtest 看结果对不对。",
+    "project": "HerdBuilderEstimate",
+    "status": "值得跟进",
+    "link": "https://github.com/HerdBuilderEstimate/roblox-studio-mcp",
+    "difficulty": 3,
+    "free": true,
+    "confidence": "官方声称未验证",
+    "risks": "强依赖 Roblox Studio 插件机制，宿主一更新就可能断；“安全”是自述，实际是把本地端口暴露给外部进程；仓库组织名像随手起的小号，维护强度存疑；对他没有真实使用场景，只值得读代码不值得部署。"
+   }
+  ],
+  "revisions": [
+   {
+    "at": "2026-11-14T22:37:04+08:00",
+    "note": "首次导入 2 条"
+   }
+  ]
+ },
+ {
+  "date": "2026-11-04",
+  "updatedAt": "2026-11-14T22:37:04+08:00",
+  "source": "DAILY-DIY-IDEAS-2026-11-04.json",
+  "overview": "候选 54 个 → 分析成功 54 个 → 去重后新项目 4 个 → 入选 3 个，落选 1 个。",
+  "overviewNote": "今日最值得了解：yzytz17/1.5-joint-module（64.2 分）",
+  "items": [
+   {
+    "id": "2026-11-04-1-5-joint-module",
+    "category": "待跟进",
+    "title": "yzytz17/1.5-joint-module",
+    "summary": "一个超低成本机器人关节：把 1.5 美元的 FOC（磁场定向控制）驱动板塞进 1503 云台电机里，再配一个 3D 打印的高减速比齿轮箱，做出『便宜但能精确控制角度』的关节模组。目标用户是做小型机械臂/四足的 DIY 机器人玩家。",
+    "detail": "装起来能干：让一个云台电机做闭环位置/速度控制，输出带减速比的力矩，用一条串口/CAN 命令让它转到指定角度；能当机械臂的一个关节、云台的一轴、或者任何需要低成本精确运动的地方。",
+    "project": "yzytz17",
+    "status": "值得跟进",
+    "link": "https://github.com/yzytz17/1.5-joint-module",
+    "difficulty": 4,
+    "free": false,
+    "confidence": "AI推断",
+    "risks": "『1.5 美元』只是驱动板 BOM 成本，整关节远不止；3D 打印齿轮箱的背隙和寿命是硬伤，重复定位精度会漂；FOC 调参对新手不友好，烧驱动板是常事；作者自述的性能指标没有第三方复现，别当标称值用。"
+   },
+   {
+    "id": "2026-11-04-global-law",
+    "category": "待跟进",
+    "title": "lexifina/global-law",
+    "summary": "把 700 多个法域的成文法律塞进 git：每个国家一个 submodule，一次修订一个 commit，commit 时间用条款生效日期。面向需要「法条可追溯到某一天版本」的开发者和法务，本质是一个法规数据集 + 版本化约定。",
+    "detail": "clone 后能把某个国家 checkout 到指定生效日期，diff 两条法条之间改了什么，也能拿它当「法规即数据」的结构样本参考。",
+    "project": "lexifina",
+    "status": "值得跟进",
+    "link": "https://github.com/lexifina/global-law",
+    "difficulty": 2,
+    "free": true,
+    "confidence": "官方声称未验证",
+    "risks": "法条收录的完整性和时效性没人担保，绝不能当法律依据；submodule 多到维护成本高，部分国家可能长期不更新；「Git for Global Law」是定位不是标准。"
+   },
+   {
+    "id": "2026-11-04-housemaxer",
+    "category": "资料与研究",
+    "title": "MaxeThis/HouseMaxer",
+    "summary": "一个人把自己公寓改造成智能家居的施工记录仓库：Home Assistant 的搭建指南、零件清单、若干配置代码，以及一批写给 AI 用的提示词。它不是能直接安装的软件，更像一份带代码的个人笔记本；38 个 star，读者基本是想照着做的 HA 新手。",
+    "detail": "照它的清单和指南，在树莓派或 NAS 容器里把 Home Assistant 跑起来，接入灯、温湿度传感器、空调，做自动化和手机面板；给 AI 的那部分提示词可以用来让大模型帮忙生成自动化 YAML，省去查文档的功夫。",
+    "project": "MaxeThis",
+    "status": "仅记录",
+    "link": "https://github.com/MaxeThis/HouseMaxer",
+    "difficulty": 2,
+    "free": true,
+    "confidence": "AI推断",
+    "risks": "仓库更像个人笔记：代码和自家实体命名绑定，复用性差，没有稳定的 API，随时可能停更。HA 每次大版本升级都可能让现有配置失效；把家电全接进 HA 之后，一旦 HA 容器挂了，所有自动化一起停，形成单点故障。不要把 HA 直接暴露到公网。"
+   }
+  ],
+  "revisions": [
+   {
+    "at": "2026-11-14T22:37:04+08:00",
+    "note": "首次导入 3 条"
+   }
+  ]
+ },
+ {
+  "date": "2026-11-03",
+  "updatedAt": "2026-11-14T22:37:04+08:00",
+  "source": "DAILY-DIY-IDEAS-2026-11-03.json",
+  "overview": "候选 54 个 → 分析成功 54 个 → 去重后新项目 15 个 → 入选 8 个，落选 7 个。",
+  "overviewNote": "今日最值得了解：jwuthri-cloud/Tracely-ai（76.5 分）",
+  "items": [
+   {
+    "id": "2026-11-03-tracely-ai",
+    "category": "待跟进",
+    "title": "jwuthri-cloud/Tracely-ai",
+    "summary": "面向 AI Agent 的「trace-native CI/CD」：采集生产环境 Agent 的 trace，给它们打分，对失败聚类，冻结点成可回放的回归测试，并在 PR 中拦截造成回退的改动。Python 实现，可自托管。定位类似 Agent 版的 Datadog + 回归测试平台。",
+    "detail": "接入你的 Agent 运行 trace 后，能看到每次调用的链路、给结果打分、把失败聚成簇、把某次失败固化成一个可重放测试，之后每次改 prompt/工具就自动跑回归，回退就挡 PR。",
+    "project": "jwuthri-cloud",
+    "status": "值得跟进",
+    "link": "https://github.com/jwuthri-cloud/Tracely-ai",
+    "difficulty": 3,
+    "free": true,
+    "confidence": "AI推断",
+    "risks": "AI Agent 的可观测性赛道很挤，项目很新（1000+ star 但生态未成熟）；回归测试的「通过/失败」判定本身依赖 LLM 打分，可能有噪声；数据量大时存储成本上升。"
+   },
+   {
+    "id": "2026-11-03-grandet",
+    "category": "待跟进",
+    "title": "hanzohanzhe/Grandet",
+    "summary": "一个「模型 API 比价 + 接入」的 Agent Skill，外加一个匿名 MCP server，背后是一张按厂商官方挂牌价整理的价格表（作者自述覆盖 1,800+ 官方渠道）。本质是给你的 AI Agent 一个能查「哪个模型现在最便宜」的工具。",
+    "detail": "在 Claude/Cursor 这类支持 MCP 的客户端里挂上它，Agent 在挑模型时能自己查价、比价，再决定调用哪家；也可以当成一个价格查询 CLI 用，做成本估算表。",
+    "project": "hanzohanzhe",
+    "status": "值得跟进",
+    "link": "https://github.com/hanzohanzhe/Grandet",
+    "difficulty": 2,
+    "free": true,
+    "confidence": "官方声称未验证",
+    "risks": "「匿名 MCP server」意味着查询请求要经过作者的服务器，虽然只是价格查询，但你要接受这个信任假设；价格表是官方挂牌价，不含中转站加价、汇率和支付门槛，跟你的实际到手价可能差很远；这种比价仓库的生命周期普遍很短。"
+   },
+   {
+    "id": "2026-11-03-mcd-saver-strategist",
+    "category": "资料与研究",
+    "title": "hujjun/mcd-saver-strategist",
+    "summary": "麦当劳点餐省钱 Skill：拉取麦当劳菜单与可用优惠券，用组合优化算出最省的点餐方案。Python 实现，社区标记为「麦门精算师」。本质上是一个优惠券组合优化器 + 麦当劳菜品数据接口。",
+    "detail": "装好后输入想吃的菜品，它枚举可用优惠券组合，输出最省的一套点法。描述称巨无霸套餐从 ¥47 降到 ¥21.9（省 53%），这个数字来自作者。",
+    "project": "hujjun",
+    "status": "仅记录",
+    "link": "https://github.com/hujjun/mcd-saver-strategist",
+    "difficulty": 2,
+    "free": true,
+    "confidence": "官方声称未验证",
+    "risks": "依赖麦当劳非官方接口，随时可能失效；优惠券规则与地区相关，通用性差；频繁抓取可能触发风控；实际省钱比例作者自述，未经独立验证。"
+   },
+   {
+    "id": "2026-11-03-axuse",
+    "category": "待跟进",
+    "title": "ctoldigital/axuse",
+    "summary": "给 AI Agent 用的「浏览器与电脑操作」MCP 服务器，主打无障碍优先：它不靠截图做视觉识别，而是把页面的 DOM 和无障碍树（accessibility tree）暴露给 Agent，让 Agent 像用读屏软件一样精确点到元素。一套 server 适配 Codex、Claude Code、OpenCode、Antigravity 等多个 harness。",
+    "detail": "装起来之后，你的 Agent 能真正操作浏览器：打开页面、按无障碍标签定位按钮、填表、点击、读取结构化内容，而不是靠猜坐标。因为走无障碍树，元素定位比纯视觉方案稳定，也不那么吃显卡。还能扩展到桌面应用层面的操作。",
+    "project": "ctoldigital",
+    "status": "值得跟进",
+    "link": "https://github.com/ctoldigital/axuse",
+    "difficulty": 4,
+    "free": true,
+    "confidence": "官方声称未验证",
+    "risks": "computer-use 类项目普遍处于「demo 惊艳、日常掉链子」阶段，成功率高度依赖目标页面；Agent 拿到浏览器控制权等于拿到你的登录态，权限边界要自己兜住；项目 758 star 且最近一次推送在 10 月底，更新节奏可能放缓；无障碍树对 canvas、自绘组件、大量 iframe 的页面基本失效。「所有 harness 通用」是作者自述，实际适配度需逐个验证。"
+   },
+   {
+    "id": "2026-11-03-kanzo",
+    "category": "待跟进",
+    "title": "emanuele-em/kanzo",
+    "summary": "一个自托管、可共享的看板（kanban），明确把「人」和「Agent」都当作用户：单个 4.5MB Rust 二进制、常驻内存 4.5MB、启动 2ms。等于给你一个极轻的任务状态机，人和 Agent 都能读写。",
+    "detail": "在 NAS 上起一个看板服务，把「待办/进行中/完成」变成 HTTP 可读写的状态；让你的 Agent（比如管 PT 做种、跑 docgen 流水线的那些脚本）自己开卡、更新卡、结卡，你在手机上看进度。",
+    "project": "emanuele-em",
+    "status": "值得跟进",
+    "link": "https://github.com/emanuele-em/kanzo",
+    "difficulty": 2,
+    "free": true,
+    "confidence": "官方声称未验证",
+    "risks": "单人早期项目，数据存储格式和鉴权很可能还会变，别把关键状态只存在里面；「可共享」通常意味着要么裸奔在局域网、要么鉴权很薄，暴露到公网前务必套 WireGuard（你已经有）；Agent 接入能力是作者自述，没实测。"
+   },
+   {
+    "id": "2026-11-03-whistle-esp32",
+    "category": "待跟进",
+    "title": "andrisgauracs/whistle-esp32",
+    "summary": "在 ESP32-S3 上完全本地跑语音识别：按住按钮说一个颜色的名字（支持 7 种语言），板子识别后点亮对应颜色 LED，全程不联网。用 C 写的，模型量化后塞进芯片。",
+    "detail": "在 ESP32-S3 上做离线关键词/短词识别（说的是哪个颜色 → 点亮哪个灯）；能当离线语音触发的 demo 底板，7 语言的模型切换。",
+    "project": "andrisgauracs",
+    "status": "值得跟进",
+    "link": "https://github.com/andrisgauracs/whistle-esp32",
+    "difficulty": 3,
+    "free": true,
+    "confidence": "官方声称未验证",
+    "risks": "1) 只认 ESP32-S3，普通 ESP32 大概率跑不动；2) 模型和词表固定，想扩词需要重训练；3) 识别在噪声环境下的准确率未知；4) 作者自述的多语言/离线能力未实测。"
+   },
+   {
+    "id": "2026-11-03-winshun",
+    "category": "待跟进",
+    "title": "LingCore/WinShun",
+    "summary": "一个 Windows 本地搜索启动器，用 C++ 写的常驻程序：双击 Ctrl 唤出输入框，按拼音或首字母搜文件名，也能对 Word/Excel/PDF 做全文检索，另外带剪贴板历史、任务栏搜索框、插件机制和一个叫 MCP 的 AI 助手接口。目标用户是被 Everything + Win+V + 开始菜单三件套折磨的 Windows 办公党。834 star、昨天还在推代码，属于活跃的个人项目而非公司产品。",
+    "detail": "装完之后能干这些活：在你那台跑 PowerShell 运维的 Windows 机器上，把整个 D 盘的船舶电气文档（检验大纲、配电技术说明书、以及 python-docx 批处理吐出来的成百上千个 docx）建一次索引，之后输入「LNG 甲板」或「dg」就能秒开对应文件，不用记路径；剪贴板历史能把 Win+V 只能存一条的毛病补上，复制十几个设备位号再逐个粘贴；插件和 MCP 接口可以让 Agent 直接查本地文件。",
+    "project": "LingCore",
+    "status": "值得跟进",
+    "link": "https://github.com/LingCore/WinShun",
+    "difficulty": 1,
+    "free": true,
+    "confidence": "官方声称未验证",
+    "risks": "C++ 闭源？不，是开源但个人主导，长期维护不确定；全盘索引会吃内存和 CPU，机械盘上首次建索引可能很久；docx/pdf 全文抽取对扫描件 PDF 无效；MCP/AI 助手部分如果走云端接口，等于把本地文档内容发出去，需要确认是本地模型还是远程 API；Windows 常驻程序需要提权做全局热键，和某些安全软件会打架。"
+   },
+   {
+    "id": "2026-11-03-rustxng",
+    "category": "待跟进",
+    "title": "sahenjp/RustXNG",
+    "summary": "用 Rust 重写的 SearXNG 类元搜索引擎，定位是「给 AI Agent 做检索与 grounding 的后端」：聚合多个搜索源，输出干净的 JSON API，可选返回网页正文文本。不是给人看的搜索页面，是给 Agent 调的工具。",
+    "detail": "装起来之后，你得到一个本地 HTTP 接口，POST 一个查询就返回结构化的搜索结果（标题、链接、摘要），可选把页面正文抓回来。你的 Agent 或脚本可以直接拿它当「联网查资料」的底座，不用去申请各家搜索 API 的 key、也不用按次付费。",
+    "project": "sahenjp",
+    "status": "值得跟进",
+    "link": "https://github.com/sahenjp/RustXNG",
+    "difficulty": 3,
+    "free": true,
+    "confidence": "官方声称未验证",
+    "risks": "元搜索的老问题一个不少：上游引擎随时改版或封 IP，稳定性靠社区补丁；结果质量参差且没有官方 SLA；抓取正文涉及目标站点条款与版权；「给 AI Agent 用」是作者定位，实际要不要限流、怎么去重得自己补。"
+   }
+  ],
+  "revisions": [
+   {
+    "at": "2026-11-14T22:37:04+08:00",
+    "note": "首次导入 8 条"
+   }
+  ]
+ },
+ {
+  "date": "2026-11-02",
+  "updatedAt": "2026-11-14T22:37:04+08:00",
+  "source": "DAILY-DIY-IDEAS-2026-11-02.json",
+  "overview": "候选 41 个 → 分析成功 41 个 → 去重后新项目 6 个 → 入选 3 个，落选 3 个。",
+  "overviewNote": "今日最值得了解：sandreialexandru/Smart-Heating-Control（68.7 分）",
+  "items": [
+   {
+    "id": "2026-11-02-smart-heating-control",
+    "category": "待跟进",
+    "title": "sandreialexandru/Smart-Heating-Control",
+    "summary": "给 Home Assistant 用的供暖控制逻辑，Python 写成，18 star，基本是作者自家暖气调度的产物。真用它的人是 HA 玩家，不是暖通集成商。具体是自定义集成还是 blueprint/自动化脚本，需要进仓库看目录结构才能定。",
+    "detail": "在 HA 里按时间表、室内温度、必要时结合室外温度去驱动温控阀或锅炉继电器，实现分区/分时段供暖，并把温度曲线记录下来。前提是家里已有可控的温控设备（TRV、继电器或 Modbus 温控器）。",
+    "project": "sandreialexandru",
+    "status": "值得跟进",
+    "link": "https://github.com/sandreialexandru/Smart-Heating-Control",
+    "difficulty": 3,
+    "free": true,
+    "confidence": "需进一步实验",
+    "risks": "小仓库，作者自述能力没经过第三方实测；HA 升级经常打断自定义组件；供暖设备协议五花八门，项目的实体命名假设很可能与他的设备对不上；控制锅炉类设备出错有实际安全后果，别直接驱动物理加热器做实验。"
+   },
+   {
+    "id": "2026-11-02-iec-p1-esphome-3phase",
+    "category": "待跟进",
+    "title": "mp3llll/iec-p1-esphome-3phase",
+    "summary": "面向以色列 IEC Kaifa 三相智能电表的 ESPHome 读表器：ESP32 从电表 P1 口（RJ11 串口）读报文，解析出实时功率、累计电量、费用送进 Home Assistant。20 star，实际用户基本在以色列本地。",
+    "detail": "ESP32 接电表 P1 口，秒级读总有功功率、分相功率和累计电量，本地解析后走 MQTT/HA 出曲线和电费估算；ESPHome 的 YAML 可以直接改引脚和报文解析逻辑。",
+    "project": "mp3llll",
+    "status": "值得跟进",
+    "link": "https://github.com/mp3llll/iec-p1-esphome-3phase",
+    "difficulty": 3,
+    "free": true,
+    "confidence": "官方声称未验证",
+    "risks": "协议强绑定以色列 Kaifa 表，国内表大概率读不出有效帧；P1 口取电和市电侧隔离必须自己把关，有触电风险；电表口可能被电力公司锁死；20 star 单人项目，长期维护不确定。"
+   },
+   {
+    "id": "2026-11-02-tokeneconomizer",
+    "category": "待跟进",
+    "title": "microsoft/TokenEconomizer",
+    "summary": "微软名下的一套「黑盒成本控制」研究代码：不改模型本身，而是在外面套一层，根据历史调用的经验对 coding agent 的请求做裁剪或分派，目标是少花 token。真正用它的多半是跑 agent 评测、关心 API 账单的团队，不是装机党。",
+    "detail": "把你的 agent 到模型 API 的调用链挂上去，跑一批固定任务，对比「用/不用」两种情况的 token 消耗和任务通过率，得到一份自己的账单对比。本质是个实验框架，不是开箱即用的省钱网关。",
+    "project": "microsoft",
+    "status": "值得跟进",
+    "link": "https://github.com/microsoft/TokenEconomizer",
+    "difficulty": 4,
+    "free": true,
+    "confidence": "官方声称未验证",
+    "risks": "研究代码常见问题：依赖锁死、示例数据缺失、接口一变就跑不动。更实际的风险是「黑盒裁剪」可能悄悄降低代码质量而你只看账单看不出；省 token 的收益也高度依赖你的任务分布，作者自述的节省比例不能当成你的实测。"
+   }
+  ],
+  "revisions": [
+   {
+    "at": "2026-11-14T22:37:04+08:00",
+    "note": "首次导入 3 条"
+   }
+  ]
+ }
+];

@@ -1,0 +1,161 @@
+---
+import NovaShell from '../../layouts/NovaShell.astro';
+import { dailyIssues } from '../../data/daily';
+
+/**
+ * §57（2026-11-14）：每日更新页。
+ * 数据来自 tools/ops/import-daily.mjs 生成的 src/data/daily.ts——
+ * 只包含日报里"当天新增、实际可公开"的字段（名称/说明/能做什么/难度/成本/置信度/风险/仓库链接）。
+ * 内部口径（value_to_me、payer、how_to_use、asset_hits、内部分数、用量）在导入时就被剔除。
+ */
+const issues = dailyIssues;
+const latest = issues[0];
+const archive = issues.slice(1);
+const categories = ['全部', ...Array.from(new Set(latest.items.map((item) => item.category)))];
+const countOf = (list: typeof latest.items) => list.reduce<Record<string, number>>((acc, item) => { acc[item.category] = (acc[item.category] || 0) + 1; return acc; }, {});
+const counts = countOf(latest.items);
+---
+
+<NovaShell title="每日更新" description="DIY 工程实验室的每日更新：项目进展、新工具与功能、资料与研究、问题修复与待跟进。" active="/daily">
+  <section class="lead" aria-labelledby="daily-title">
+    <p class="eyebrow">DAILY LOG <span class="dot" aria-hidden="true">·</span> 每日更新</p>
+    <h1 id="daily-title">每日更新</h1>
+    <p class="intro">
+      每天把当天新增、实际可公开的内容整理成条目：项目进展、新工具与功能、资料与研究、问题修复、待跟进。
+      没有内容的分类当天省略；未验证的事项在条目里标明状态，历史内容保留归档。
+    </p>
+  </section>
+
+  <div class="daily-body">
+    <article class="issue" aria-labelledby="issue-latest">
+      <header class="issue-head">
+        <div>
+          <p class="eyebrow">最新一期</p>
+          <h2 id="issue-latest"><time datetime={latest.date}>{latest.date}</time></h2>
+        </div>
+        <p class="issue-meta">
+          共 {latest.items.length} 条 · 归档页 <a href={'/daily/' + latest.date + '/'}>/daily/{latest.date}/</a><br />
+          导入时间 {latest.updatedAt} · 来源 {latest.source}
+        </p>
+      </header>
+      {latest.overview && <p class="overview">{latest.overview}</p>}
+      {latest.overviewNote && <p class="overview-note">{latest.overviewNote}</p>}
+
+      <div class="filter-bar" role="group" aria-label="按分类筛选">
+        <span class="filter-label">分类筛选</span>
+        {categories.map((cat) => (
+          <button type="button" class="filter" data-cat={cat} aria-pressed={cat === '全部' ? 'true' : 'false'}>
+            {cat}{cat !== '全部' && <span class="filter-count">{counts[cat] || 0}</span>}
+          </button>
+        ))}
+      </div>
+
+      <ul class="entries" data-daily-list>
+        {latest.items.map((item) => (
+          <li class="entry" data-category={item.category}>
+            <p class="entry-top">
+              <span class="tag">{item.category}</span>
+              <span class="status">{item.status}</span>
+              <span class="proj">{item.project}</span>
+            </p>
+            <h3 class="entry-title">
+              {item.link
+                ? <a href={item.link} rel="noopener noreferrer nofollow" target="_blank">{item.title}<span class="ext" aria-hidden="true"> ↗</span></a>
+                : item.title}
+            </h3>
+            {item.summary && <p class="summary">{item.summary}</p>}
+            {item.detail && <p class="detail">{item.detail}</p>}
+            <dl class="facts">
+              {item.difficulty !== null && <><dt>难度</dt><dd>{item.difficulty} / 5</dd></>}
+              {item.free !== null && <><dt>成本</dt><dd>{item.free ? '开源免费' : '可能需付费'}</dd></>}
+              {item.confidence && <><dt>置信度</dt><dd>{item.confidence}</dd></>}
+            </dl>
+            {item.risks && <p class="risks"><span>风险提示</span>{item.risks}</p>}
+          </li>
+        ))}
+      </ul>
+      <p class="empty-note" data-daily-empty hidden>该分类今天没有条目。</p>
+    </article>
+
+    <aside class="archive" aria-labelledby="archive-title">
+      <h2 id="archive-title">历史归档</h2>
+      <p class="archive-note">按日期倒序，每期都有可单独打开的归档页。</p>
+      <ol class="archive-list">
+        {archive.map((issue) => (
+          <li>
+            <a href={'/daily/' + issue.date + '/'}>
+              <time datetime={issue.date}>{issue.date}</time>
+              <span class="archive-count">{issue.items.length} 条</span>
+            </a>
+          </li>
+        ))}
+      </ol>
+    </aside>
+  </div>
+</NovaShell>
+
+<script>
+  import { mountDailyFilter } from '../../scripts/daily-filter';
+  mountDailyFilter();
+</script>
+
+<style>
+  .lead { max-width: 1440px; margin: 0 auto; padding: clamp(40px, 5vw, 72px) clamp(24px, 3.4vw, 49px) clamp(20px, 3vw, 32px); }
+  .eyebrow { margin: 0; color: #3f604c; font: 11px/1.6 ui-monospace, monospace; letter-spacing: .24em; }
+  .dot { margin: 0 .45em; color: #8f6438; }
+  h1, h2, h3 { font-family: "Songti SC", "Noto Serif CJK SC", SimSun, serif; }
+  h1 { margin: 14px 0 0; font-size: clamp(34px, 4.2vw, 58px); font-weight: 500; line-height: 1.2; color: #243026; }
+  .intro { max-width: 46rem; margin: 18px 0 0; color: #46564c; line-height: 1.9; }
+  .daily-body { max-width: 1440px; margin: 0 auto; padding: 0 clamp(24px, 3.4vw, 49px) clamp(56px, 7vw, 96px); display: grid; grid-template-columns: minmax(0, 1fr) minmax(220px, 280px); gap: clamp(28px, 4vw, 56px); align-items: start; }
+  .issue { min-width: 0; border-top: 1px solid #cbbfa8; padding-top: 26px; }
+  .issue-head { display: flex; justify-content: space-between; align-items: end; gap: 24px; flex-wrap: wrap; }
+  .issue-head > div, .issue-meta { min-width: 0; }
+  h2 { margin: 10px 0 0; font-size: clamp(26px, 2.6vw, 38px); font-weight: 500; color: #243026; }
+  .issue-meta { margin: 0; color: #59645b; font: 12px/1.8 ui-monospace, monospace; }
+  .issue-meta a { color: #3f604c; }
+  .overview { margin: 16px 0 0; color: #3b4d42; line-height: 1.85; }
+  .overview-note { margin: 4px 0 0; color: #7d5730; font-size: 13px; }
+  .filter-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin: 22px 0 8px; }
+  .filter-label { color: #59645b; font: 11px/1.5 ui-monospace, monospace; letter-spacing: .14em; }
+  .filter { min-height: 40px; padding: 6px 14px; border: 1px solid #cbbfa8; border-radius: 999px; background: transparent; color: #3b4d42; font: inherit; font-size: 13px; cursor: pointer; }
+  .filter:hover { border-color: #8f6438; }
+  .filter[aria-pressed="true"] { background: #243026; border-color: #243026; color: #f4f0e6; }
+  .filter-count { margin-left: 6px; color: #7d5730; font: 11px/1 ui-monospace, monospace; }
+  .filter[aria-pressed="true"] .filter-count { color: #d9cbb2; }
+  .entries { list-style: none; margin: 0; padding: 0; }
+  .entry { padding: 22px 0; border-bottom: 1px solid #ddd4c4; }
+  .entry-top { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin: 0 0 10px; }
+  .tag { padding: 3px 10px; border: 1px solid #6f8f75; border-radius: 2px; color: #33503c; background: #e6eee3; font-size: 12px; }
+  .status { color: #7d5730; font-size: 12px; }
+  .proj { margin-left: auto; color: #59645b; font: 11px/1.5 ui-monospace, monospace; }
+  .entry-title { margin: 0; font-size: clamp(19px, 1.7vw, 24px); font-weight: 500; line-height: 1.4; overflow-wrap: anywhere; }
+  .entry-title a { color: #243026; text-decoration: none; border-bottom: 1px solid #cbbfa8; }
+  .entry-title a:hover { color: #873a2d; border-bottom-color: #a74432; }
+  .ext { color: #7d5730; font-size: .8em; }
+  .summary { margin: 12px 0 0; color: #3b4d42; line-height: 1.85; }
+  .detail { margin: 8px 0 0; color: #4c5b52; line-height: 1.8; }
+  .facts { display: flex; flex-wrap: wrap; gap: 6px 18px; margin: 14px 0 0; }
+  .facts dt { color: #59645b; font: 11px/1.6 ui-monospace, monospace; letter-spacing: .1em; }
+  .facts dd { margin: 0 0 0 -10px; color: #243026; font-size: 13px; }
+  .risks { margin: 12px 0 0; padding: 10px 12px; border-left: 2px solid #b78b57; background: #f0e9dc; color: #5b4a38; font-size: 13px; line-height: 1.75; }
+  .risks span { display: inline-block; margin-right: 8px; color: #8b5a2b; font-size: 11px; letter-spacing: .12em; }
+  .empty-note { margin: 20px 0 0; color: #59645b; }
+  .archive { border-top: 1px solid #cbbfa8; padding-top: 22px; }
+  .archive h2 { font-size: 20px; margin: 0; }
+  .archive-note { margin: 8px 0 16px; color: #59645b; font-size: 13px; line-height: 1.7; }
+  .archive-list { list-style: none; margin: 0; padding: 0; }
+  .archive-list a { display: flex; justify-content: space-between; align-items: center; gap: 12px; min-height: 44px; border-bottom: 1px solid #ddd4c4; color: #243026; text-decoration: none; font-size: 14px; }
+  .archive-list a:hover { color: #873a2d; }
+  .archive-list time { font-family: ui-monospace, monospace; letter-spacing: .04em; }
+  .archive-count { color: #59645b; font-size: 12px; }
+  @media (max-width: 900px) {
+    .daily-body { grid-template-columns: minmax(0, 1fr); }
+    .archive { order: -1; }
+  }
+  @media (max-width: 640px) {
+    .issue-head { display: block; }
+    .issue-meta { margin-top: 12px; }
+    .filter { min-height: 44px; }
+    .proj { margin-left: 0; }
+  }
+</style>

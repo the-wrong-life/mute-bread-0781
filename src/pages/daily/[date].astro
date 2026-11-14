@@ -1,0 +1,135 @@
+---
+import NovaShell from '../../layouts/NovaShell.astro';
+import { dailyIssues } from '../../data/daily';
+
+/**
+ * §57：每日更新的日期归档页 /daily/<date>/。
+ * 每个有日报的日期都能单独打开；分类顺序固定，没有内容的分类不渲染。
+ */
+type Item = { id: string; category: string; title: string; summary: string; detail: string; project: string; status: string; link: string; difficulty: number | null; free: boolean | null; confidence: string; risks: string };
+type Issue = { date: string; updatedAt: string; source: string; overview: string; overviewNote: string; items: Item[]; revisions: Array<{ at: string; note: string }> };
+const issues = dailyIssues as Issue[];
+const CATEGORY_ORDER = ['项目进展', '新工具与功能', '资料与研究', '问题修复', '待跟进'];
+
+// getStaticPaths 会被 Astro 提到独立 chunk 里执行，因此必须自包含：
+// 只依赖 import 进来的数据，不引用 frontmatter 里派生的中间变量。
+export function getStaticPaths() {
+  return (dailyIssues as Issue[]).map((issue) => ({ params: { date: issue.date }, props: { issue } }));
+}
+const { issue } = Astro.props as { issue: Issue };
+const index = issues.findIndex((i) => i.date === issue.date);
+const newer = index > 0 ? issues[index - 1] : null;
+const older = index >= 0 && index < issues.length - 1 ? issues[index + 1] : null;
+const groups = CATEGORY_ORDER
+  .map((cat) => ({ cat, items: issue.items.filter((item) => item.category === cat) }))
+  .filter((group) => group.items.length > 0);
+const unknown = issue.items.filter((item) => !CATEGORY_ORDER.includes(item.category));
+---
+
+<NovaShell title={'每日更新 ' + issue.date} description={'DIY 工程实验室 ' + issue.date + ' 的每日更新归档。'} active="/daily">
+  <section class="lead" aria-labelledby="date-title">
+    <p class="eyebrow">DAILY LOG <span class="dot" aria-hidden="true">·</span> 归档</p>
+    <h1 id="date-title"><time datetime={issue.date}>{issue.date}</time></h1>
+    <p class="intro">{issue.overview}{issue.overviewNote && <><br /><span class="note">{issue.overviewNote}</span></>}</p>
+    <p class="meta-line">共 {issue.items.length} 条 · 导入时间 {issue.updatedAt} · 来源 {issue.source}</p>
+    <nav class="pager" aria-label="日期导航">
+      {newer ? <a href={'/daily/' + newer.date + '/'}>← 上一期 {newer.date}</a> : <span class="pager-empty">已是最新一期</span>}
+      <a class="pager-index" href="/daily/">返回每日更新</a>
+      {older ? <a href={'/daily/' + older.date + '/'}>下一期 {older.date} →</a> : <span class="pager-empty">已是最早一期</span>}
+    </nav>
+  </section>
+
+  <div class="daily-body">
+    <article class="issue">
+      {groups.map((group) => (
+        <section class="group" aria-labelledby={'g-' + group.cat}>
+          <h2 id={'g-' + group.cat}>{group.cat}<span class="group-count">{group.items.length}</span></h2>
+          <ul class="entries">
+            {group.items.map((item) => (
+              <li class="entry">
+                <h3 class="entry-title">
+                  {item.link
+                    ? <a href={item.link} rel="noopener noreferrer nofollow" target="_blank">{item.title}<span class="ext" aria-hidden="true"> ↗</span></a>
+                    : item.title}
+                </h3>
+                <p class="entry-status"><span class="status">{item.status}</span><span class="proj">{item.project}</span></p>
+                {item.summary && <p class="summary">{item.summary}</p>}
+                {item.detail && <p class="detail">{item.detail}</p>}
+                <dl class="facts">
+                  {item.difficulty !== null && <><dt>难度</dt><dd>{item.difficulty} / 5</dd></>}
+                  {item.free !== null && <><dt>成本</dt><dd>{item.free ? '开源免费' : '可能需付费'}</dd></>}
+                  {item.confidence && <><dt>置信度</dt><dd>{item.confidence}</dd></>}
+                </dl>
+                {item.risks && <p class="risks"><span>风险提示</span>{item.risks}</p>}
+              </li>
+            ))}
+          </ul>
+        </section>
+      ))}
+      {unknown.length > 0 && (
+        <section class="group" aria-labelledby="g-other">
+          <h2 id="g-other">其它<span class="group-count">{unknown.length}</span></h2>
+          <ul class="entries">
+            {unknown.map((item) => (
+              <li class="entry">
+                <h3 class="entry-title">{item.title}</h3>
+                <p class="summary">{item.summary}</p>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+      {issue.revisions.length > 0 && (
+        <section class="group revisions" aria-labelledby="g-rev">
+          <h2 id="g-rev">修订记录<span class="group-count">{issue.revisions.length}</span></h2>
+          <ul class="rev-list">
+            {issue.revisions.map((rev) => <li><time datetime={rev.at}>{rev.at}</time>{rev.note}</li>)}
+          </ul>
+        </section>
+      )}
+    </article>
+  </div>
+</NovaShell>
+
+<style>
+  .lead { max-width: 1440px; margin: 0 auto; padding: clamp(40px, 5vw, 72px) clamp(24px, 3.4vw, 49px) clamp(20px, 3vw, 32px); }
+  .eyebrow { margin: 0; color: #3f604c; font: 11px/1.6 ui-monospace, monospace; letter-spacing: .24em; }
+  .dot { margin: 0 .45em; color: #8f6438; }
+  h1, h2, h3 { font-family: "Songti SC", "Noto Serif CJK SC", SimSun, serif; }
+  h1 { margin: 14px 0 0; font-size: clamp(32px, 4vw, 54px); font-weight: 500; color: #243026; letter-spacing: .04em; }
+  .intro { max-width: 46rem; margin: 16px 0 0; color: #46564c; line-height: 1.9; }
+  .note { color: #7d5730; font-size: 13px; }
+  .meta-line { margin: 10px 0 0; color: #59645b; font: 12px/1.8 ui-monospace, monospace; }
+  .pager { display: flex; flex-wrap: wrap; gap: 10px 20px; align-items: center; margin-top: 20px; }
+  .pager a { display: inline-flex; align-items: center; min-height: 44px; color: #3f604c; text-decoration: none; font-size: 13px; border-bottom: 1px solid transparent; }
+  .pager a:hover { color: #873a2d; border-bottom-color: #a74432; }
+  .pager-index { color: #243026; }
+  .pager-empty { color: #7d7466; font-size: 13px; min-height: 44px; display: inline-flex; align-items: center; }
+  .daily-body { max-width: 1440px; margin: 0 auto; padding: 0 clamp(24px, 3.4vw, 49px) clamp(56px, 7vw, 96px); }
+  .issue { border-top: 1px solid #cbbfa8; padding-top: 8px; }
+  .group { padding: 22px 0 6px; }
+  .group h2 { display: flex; align-items: center; gap: 10px; margin: 0 0 6px; font-size: clamp(20px, 2vw, 26px); font-weight: 500; color: #243026; }
+  .group-count { color: #59645b; font: 12px/1 ui-monospace, monospace; }
+  .entries { list-style: none; margin: 0; padding: 0; }
+  .entry { padding: 18px 0; border-bottom: 1px solid #ddd4c4; }
+  .entry-title { margin: 0; font-size: clamp(18px, 1.6vw, 22px); font-weight: 500; line-height: 1.45; overflow-wrap: anywhere; }
+  .entry-title a { color: #243026; text-decoration: none; border-bottom: 1px solid #cbbfa8; }
+  .entry-title a:hover { color: #873a2d; border-bottom-color: #a74432; }
+  .ext { color: #7d5730; font-size: .8em; }
+  .entry-status { display: flex; flex-wrap: wrap; gap: 12px; margin: 8px 0 0; }
+  .status { color: #7d5730; font-size: 12px; }
+  .proj { margin-left: auto; color: #59645b; font: 11px/1.5 ui-monospace, monospace; }
+  .summary { margin: 10px 0 0; color: #3b4d42; line-height: 1.85; }
+  .detail { margin: 8px 0 0; color: #4c5b52; line-height: 1.8; }
+  .facts { display: flex; flex-wrap: wrap; gap: 6px 18px; margin: 12px 0 0; }
+  .facts dt { color: #59645b; font: 11px/1.6 ui-monospace, monospace; letter-spacing: .1em; }
+  .facts dd { margin: 0 0 0 -10px; color: #243026; font-size: 13px; }
+  .risks { margin: 12px 0 0; padding: 10px 12px; border-left: 2px solid #b78b57; background: #f0e9dc; color: #5b4a38; font-size: 13px; line-height: 1.75; }
+  .risks span { display: inline-block; margin-right: 8px; color: #8b5a2b; font-size: 11px; letter-spacing: .12em; }
+  .rev-list { list-style: none; margin: 8px 0 0; padding: 0; }
+  .rev-list li { display: flex; gap: 14px; flex-wrap: wrap; padding: 8px 0; border-bottom: 1px dashed #ddd4c4; color: #4c5b52; font-size: 13px; }
+  .rev-list time { color: #59645b; font-family: ui-monospace, monospace; }
+  @media (max-width: 640px) {
+    .proj { margin-left: 0; }
+  }
+</style>

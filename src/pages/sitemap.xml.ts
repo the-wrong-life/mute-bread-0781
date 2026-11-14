@@ -3,6 +3,7 @@
 import { docs } from '../data/docs';
 import { projects } from '../data/projects';
 import { posts } from '../data/posts';
+import { dailyIssues } from '../data/daily';
 
 // 站点地图在构建期生成：路由清单来自与页面完全相同的数据源，
 // 因此新增文档或项目后不需要再手工维护 sitemap。
@@ -15,6 +16,7 @@ const staticRoutes = [
   { path: '/tools/' },
   { path: '/ai/' },
   { path: '/blog/' },
+  { path: '/daily/' },
   { path: '/about/' },
   { path: '/marine/' },
   { path: '/mechanical/' }
@@ -27,6 +29,10 @@ export const GET = (): Response => {
   for (const doc of docs) entries.push({ path: `/docs/${doc.slug}/`, lastmod: doc.updated });
   for (const project of projects) entries.push({ path: `/projects/${project.slug}/`, lastmod: project.updated });
   for (const post of posts) entries.push({ path: `/blog/${post.slug}/`, lastmod: post.updated });
+  // 每日更新的每一期都单独收录，lastmod 取该期导入时间的前 10 位
+  for (const issue of dailyIssues) {
+    entries.push({ path: `/daily/${issue.date}/`, lastmod: issue.updatedAt.slice(0, 10) });
+  }
 
   const xml = [
     '<?xml version="1.0" encoding="UTF-8"?>',

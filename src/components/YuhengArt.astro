@@ -1,28 +1,43 @@
 ---
+/**
+ * 玉衡主视觉。
+ *
+ * §57（2026-11-14）：首页改为纯静态主视觉——用户要求"默认展示静态图、移除自动播放
+ * 及相关首屏资源请求"。interactive 默认 false：既不预取循环动画，也不渲染播放按钮、
+ * 不加任何 CSS 位移动画。只有显式传 interactive 的页面才有"播放动作"入口。
+ */
 interface Props {
   src?: string;
   srcSet?: string;
   alt: string;
+  /** 主标注行，如 NOVA CORE · 玉衡 */
   caption?: string;
-  /** 循环动画素材；留空则不提供动起来的能力。 */
+  /** 次标注行，参考图里位于主标注之下 */
+  captionSub?: string;
+  /** 循环动画素材；interactive 为 false 时不请求 */
   animSrc?: string;
+  interactive?: boolean;
+  showCaption?: boolean;
 }
 const {
   src = '/yuheng/yuheng-core.webp',
   srcSet = '/yuheng/yuheng-core-520.webp 520w, /yuheng/yuheng-core.webp 1040w',
   alt,
   caption = 'NOVA CORE · 玉衡',
+  captionSub = '',
   animSrc = '/yuheng/yuheng-loop.webp',
+  interactive = false,
+  showCaption = true,
 } = Astro.props;
 ---
 
-<figure class="yuheng" data-yuheng data-static-src={src} data-anim-src={animSrc}>
+<figure class="yuheng" data-yuheng data-static-src={src} data-anim-src={animSrc} data-interactive={interactive ? 'on' : 'off'}>
   <div class="yuheng-frame">
     <img
       class="yuheng-art"
       src={src}
       srcset={srcSet}
-      sizes="(max-width: 768px) 88vw, min(37.5rem, 46vw)"
+      sizes="(max-width: 860px) 92vw, min(41rem, 52vw)"
       width="1040"
       height="1040"
       alt={alt}
@@ -31,15 +46,18 @@ const {
       fetchpriority="high"
     />
   </div>
-  <figcaption class="yuheng-caption">
-    <span>{caption}</span>
-    <button class="yuheng-toggle" type="button" hidden aria-pressed="false">暂停动作</button>
-  </figcaption>
+  {showCaption && (
+    <figcaption class="yuheng-caption">
+      <span class="yuheng-caption-main">{caption}</span>
+      {captionSub && <span class="yuheng-caption-sub">{captionSub}</span>}
+      {interactive && <button class="yuheng-toggle" type="button" hidden aria-pressed="false">播放动作</button>}
+    </figcaption>
+  )}
 </figure>
 
 <script>
-  // 静态图负责 LCP；动画素材在首屏稳定后按需换上，可暂停，尊重 prefers-reduced-motion 与省流量设置。
-  const figures = Array.from(document.querySelectorAll<HTMLElement>('[data-yuheng]'));
+  // 只有 interactive 的实例才有按钮与预取逻辑；静态实例连监听都不注册。
+  const figures = Array.from(document.querySelectorAll<HTMLElement>('[data-yuheng][data-interactive="on"]'));
   for (const fig of figures) {
     const img = fig.querySelector<HTMLImageElement>('.yuheng-art');
     const btn = fig.querySelector<HTMLButtonElement>('.yuheng-toggle');
@@ -49,10 +67,7 @@ const {
 
     const reduce = window.matchMedia('(prefers-reduced-motion: reduce)');
     const conn = (navigator as unknown as { connection?: { saveData?: boolean; effectiveType?: string; downlink?: number } }).connection;
-    // 动画素材现为 16 帧摆动版约 197 KiB；3G（1.6 Mbps）仍需 1 秒以上，一并按"省流量"处理
     const lightNet = conn?.saveData === true || /(^|-)2g$|(^|-)3g$/.test(conn?.effectiveType || '');
-    // 原生实测：ESA 边缘到客户端约 40 KB/s 时，396 KB 动图要 10 s 以上才换得上来，
-    // 因此把"下行 < 1 Mbps"也视为弱网：不自动播放，但保留"播放动作"按钮由用户决定。
     const slowLink = typeof conn?.downlink === 'number' && conn.downlink < 1;
     const weakNet = lightNet || slowLink;
     let stored = (() => {
@@ -61,7 +76,6 @@ const {
 
     const staticSrcSet = img.getAttribute('srcset') || '';
     let pending: HTMLImageElement | null = null;
-    // 动图请求失败过一次后不再重试：否则每次点击都会重新发出一次注定失败的请求
     let animFailed = false;
     const cancelLoad = () => {
       if (!pending) return;
@@ -103,9 +117,9 @@ const {
     });
 
     showStatic();
-    const wide = window.matchMedia('(min-width: 900px)');
     btn.hidden = reduce.matches || lightNet;
-    if (!btn.hidden && !weakNet && wide.matches && stored !== 'paused') showAnim();
+    // 不自动播放：只有用户点过"播放"（stored 为 playing）才换图。
+    if (!btn.hidden && !weakNet && stored === 'playing') showAnim();
 
     btn.addEventListener('click', () => {
       if (img.dataset.mode === 'anim' || pending) {
@@ -131,7 +145,7 @@ const {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 0.9rem;
+    gap: 0.75rem;
   }
   .yuheng-frame {
     position: relative;
@@ -140,16 +154,16 @@ const {
     display: grid;
     place-items: center;
   }
-  /* 柔和落影：与暖白纸底的接触感，避免模型"浮空" */
+  /* 柔和落影：与暖纸底的接触感，避免模型"浮空" */
   .yuheng-frame::after {
     content: '';
     position: absolute;
     left: 50%;
-    bottom: 4%;
-    width: 62%;
-    height: 7%;
+    bottom: 3%;
+    width: 58%;
+    height: 6%;
     transform: translateX(-50%);
-    background: radial-gradient(ellipse at center, rgba(52, 74, 60, 0.30) 0%, rgba(52, 74, 60, 0.14) 45%, transparent 72%);
+    background: radial-gradient(ellipse at center, rgba(52, 74, 60, 0.26) 0%, rgba(52, 74, 60, 0.12) 45%, transparent 72%);
     filter: blur(10px);
     z-index: 0;
     pointer-events: none;
@@ -160,29 +174,29 @@ const {
     width: 100%;
     height: auto;
     display: block;
-    filter: drop-shadow(0 22px 46px rgba(45, 66, 52, 0.20));
-    animation: yuheng-float 14s ease-in-out infinite;
-    will-change: transform;
+    filter: drop-shadow(0 20px 44px rgba(45, 66, 52, 0.18));
   }
-  @keyframes yuheng-float {
-    0%, 100% { transform: translateY(0) }
-    50% { transform: translateY(-0.55rem) }
-  }
-  @media (prefers-reduced-motion: reduce) {
-    .yuheng-art { animation: none; }
-  }
-  .yuheng[data-anim] .yuheng-art { animation: none; }
   .yuheng-caption {
     display: flex;
+    flex-direction: column;
     align-items: center;
-    gap: 0.9rem;
-    font-size: 0.78rem;
-    letter-spacing: 0.22em;
+    gap: 0.3rem;
+    text-align: center;
+  }
+  .yuheng-caption-main {
+    font: 12px/1.5 ui-monospace, monospace;
+    letter-spacing: 0.2em;
     text-transform: uppercase;
-    /* #f5f1e8 底上 5.4:1，满足正文对比度；旧的 #6d7c72 只有约 3.7:1 */
-    color: #57665c;
+    color: #4b6155;
+  }
+  .yuheng-caption-sub {
+    font-family: "Songti SC", "Noto Serif CJK SC", SimSun, serif;
+    font-size: 15px;
+    letter-spacing: 0.18em;
+    color: #3b4d42;
   }
   .yuheng-toggle {
+    margin-top: 0.4rem;
     min-height: 44px;
     padding: 0 0.85rem;
     border: 1px solid rgba(52, 74, 60, 0.45);

@@ -4,11 +4,26 @@ import YuhengArt from '../components/YuhengArt.astro';
 import { projects as allProjects } from '../data/projects';
 import { docs as allDocs } from '../data/docs';
 
+/**
+ * §57（2026-11-14）：首页首屏按参考图 N07.png 逐项还原。
+ * 参考图度量（1586×992 → 1440 宽，换算 0.908）：
+ *   印章 x53 y19 h47；品牌双行 x155 y21 / y51；导航右对齐 y26
+ *   左列 eyebrow y165、大标题两行 y233/y329（字高 78）、英文 y431、说明 y476/y508、
+ *       朱红按钮 x60–325 y568–620、motto y661、底部「从想法，到现实」y878 / EXPLORE THE LAB y928
+ *   中央玉衡 x480–1110 y96–740（直径约 630），标注 y745 / y769
+ *   右列「探索领域」y178，四条 y253/342/433/523（行距约 92）
+ *   底部入口 y895：项目中心 x591、工程知识库 x≈888、工程工具箱 x1328
+ */
 const domains = [
   { number: '01', title: '船舶电气', href: '/marine/' },
   { number: '02', title: '机械设计', href: '/mechanical/' },
   { number: '03', title: 'AI 工程', href: '/ai/' },
   { number: '04', title: '工程工具', href: '/tools/' },
+];
+const entries = [
+  { title: '项目中心', href: '/projects/' },
+  { title: '工程知识库', href: '/docs/' },
+  { title: '工程工具箱', href: '/tools/' },
 ];
 // 首页只引用真实存在的档案，避免出现"待补充"占位卡片
 const projects = allProjects.slice(0, 3).map((item) => ({
@@ -21,33 +36,54 @@ const documents = allDocs.slice(0, 3).map((item) => ({
   note: item.kind + ' · 更新于 ' + item.updated,
   href: '/docs/' + item.slug + '/',
 }));
-const journals = [
-  { title: '研究日志', note: '按提交记录整理', href: '/blog/' },
-  { title: '从想法到实验', note: '方法笔记', href: '/blog/' },
-];
 ---
 
 <NovaShell title="格物致知 · 造物有成" description="DIY 工程实验室：以工程方法探索想法，让创造有迹可循。" active="/">
   <section class="hero" aria-labelledby="hero-title">
-    <div class="hero-grid">
-      <div class="hero-intro">
-        <p class="eyebrow">PROJECT NOVA · 工程实验室</p>
-        <h1 id="hero-title">格物致知<br />造物有成</h1>
-        <p class="english" lang="en">Engineering Ideas Into Reality</p>
-      </div>
-      <div class="core-stage">
-        <div class="core-breath">
-          <YuhengArt alt="玉衡：青玉球体、金铜衔尾蛇环与倾斜的铜金测量环" />
+    <div class="stage">
+      <div class="hero-left">
+        <div class="hero-left-top">
+          <p class="eyebrow">PROJECT NOVA <span class="dot" aria-hidden="true">·</span> 工程实验室</p>
+          <h1 id="hero-title"><span>格物致知</span><span>造物有成</span></h1>
+          <p class="english" lang="en">Engineering Ideas Into Reality</p>
+          <p class="lede">以工程方法探索想法，<br />让每一次创造都有迹可循。</p>
+          <a class="button primary" href="/projects/">进入实验室</a>
+          <p class="motto">探索，验证，创造</p>
         </div>
       </div>
-      <p class="hero-lede">以工程方法探索想法，让每一次创造都有迹可循。</p>
-      <a class="button primary" href="/projects/">进入实验室 <span aria-hidden="true">→</span></a>
-      <div class="hero-side">
-        <p class="eyebrow">探索领域 / 01</p>
-        <nav class="domains" aria-label="工程领域入口">
-        {domains.map((domain) => <a href={domain.href}><span class="number">{domain.number}</span><span>{domain.title}</span><span class="arrow" aria-hidden="true">↗</span></a>)}
-        </nav>
+
+      <div class="hero-core">
+        <YuhengArt
+          alt="玉衡：半透青玉球体、衔尾青玉蛇环、斜跨球心的铜金测量环与暖白内珠"
+          caption="NOVA CORE · 玉衡"
+          captionSub="生生不息，求知无尽"
+        />
       </div>
+
+      <aside class="hero-domains" aria-labelledby="domains-title">
+        <h2 class="domains-title" id="domains-title">探索领域</h2>
+        <ul class="domain-list">
+          {domains.map((domain) => (
+            <li>
+              <a href={domain.href}>
+                <span class="glyph" aria-hidden="true"></span>
+                <span class="num">{domain.number}</span>
+                <span class="name">{domain.title}</span>
+              </a>
+            </li>
+          ))}
+        </ul>
+      </aside>
+    </div>
+
+    <div class="hero-foot">
+      <div class="hero-left-foot">
+        <p class="foot-cn">从想法，到现实</p>
+        <p class="foot-en"><span>EXPLORE</span><span>THE LAB</span></p>
+      </div>
+      <nav class="entries" aria-label="主要入口">
+        {entries.map((entry) => <a href={entry.href}>{entry.title}</a>)}
+      </nav>
     </div>
   </section>
 
@@ -55,7 +91,7 @@ const journals = [
 
     <section class="section" aria-labelledby="projects-title">
       <div class="section-heading">
-        <div><p class="eyebrow">项目档案 / 02</p><h2 id="projects-title">项目精选</h2></div>
+        <div><p class="eyebrow">项目档案</p><h2 id="projects-title">项目精选</h2></div>
         <p>已建立的档案，含问题、方法与未完成事项。</p>
       </div>
       <div class="cards three">
@@ -65,7 +101,7 @@ const journals = [
 
     <section class="section" aria-labelledby="docs-title">
       <div class="section-heading">
-        <div><p class="eyebrow">工程知识 / 03</p><h2 id="docs-title">工程知识库</h2></div>
+        <div><p class="eyebrow">工程知识</p><h2 id="docs-title">工程知识库</h2></div>
         <p>已发布正文的条目，记录方法与边界条件。</p>
       </div>
       <div class="cards three">
@@ -73,141 +109,211 @@ const journals = [
       </div>
     </section>
 
-    <section class="section" aria-labelledby="journal-title">
-      <div class="section-heading">
-        <div><p class="eyebrow">研究札记 / 04</p><h2 id="journal-title">研究日志</h2></div>
-        <p>保留探索过程，也保留尚未解决的问题。</p>
-      </div>
-      <div class="cards two">
-        {journals.map((item, i) => <a class="card" href={item.href}><span class="number">0{i + 1} / 研究札记</span><span class="card-title">{item.title}</span><span class="card-bottom">{item.note}<span aria-hidden="true">↗</span></span></a>)}
-      </div>
-    </section>
-
     <section class="section closing" aria-labelledby="closing-title">
       <p class="eyebrow">从想法，到现实</p>
       <h2 id="closing-title">让问题成为探索的起点。</h2>
-      <a class="button primary" href="/projects/">进入项目中心 <span aria-hidden="true">→</span></a>
+      <a class="button primary" href="/daily/">查看每日更新 <span aria-hidden="true">→</span></a>
     </section>
   </div>
 </NovaShell>
 
 <style>
   :global(body) { background: #f4f0e6; color: #202923; }
-  /* 首屏改用暖白纸底：玉衡的通透只在浅底上成立，
-     深绿留给文字与朱砂做点缀，整体更接近参考图的"纸与玉"关系。 */
+  /* 暖纸底：参考图四角实测 (241,232,223)…(235,225,217)，中部略亮 */
   .hero {
-    --core-width: min(100%, 37.5rem);
+    display: flex;
+    flex-direction: column;
+    min-height: min(860px, calc(100vh - 77px));
     color: #1e2a23;
-    background: radial-gradient(ellipse at 66% 38%, #fdfaf3 0%, #f7f2e7 32%, #f1ece0 66%, #eae3d4 100%);
+    background: radial-gradient(ellipse at 50% 40%, #f9f4eb 0%, #f3ece1 46%, #ede5d9 100%);
     border-bottom: 1px solid #ded6c7;
   }
-  .hero-grid {
+  .stage {
+    flex: 1 1 auto;
+    width: 100%;
     max-width: 1440px;
-    min-height: min(740px, calc(100vh - 80px));
     margin: 0 auto;
-    padding: 56px clamp(24px, 5vw, 72px) 64px;
+    /* 上内边距按参考图收紧：eyebrow 目标 y≈149（1400 宽换算），原 4vh 会低约 39px */
+    padding: clamp(10px, 1.5vh, 22px) clamp(24px, 3.4vw, 49px) clamp(8px, 2vh, 24px);
     display: grid;
-    grid-template-columns: minmax(270px, .9fr) minmax(0, 1.35fr);
-    grid-template-rows: 1fr auto auto auto;
-    grid-template-areas: "intro core" "lede core" "cta core" "side side";
+    /* 参考图三列实测（1586×992 → 1440 换算 0.908）：左列文字区 51–516（宽 465）、
+       中央玉衡可见宽约 576、右列文字 950–1389。用 px 定宽比 fr 更可控：
+       左列给到 430 才能让「格物致知」每行放得下四个字（71px×4≈290，含字距仍有余量）。 */
+    grid-template-columns: minmax(0, 430px) minmax(0, 1fr) minmax(0, 232px);
+    column-gap: clamp(16px, 2.4vw, 34px);
+    justify-content: space-between;
+    /* stretch 让左列撑满 stage，底部「从想法，到现实」才会像参考图那样贴到近底部（y≈797） */
+    align-items: stretch;
+  }
+  .hero-left { display: flex; flex-direction: column; justify-content: flex-start; min-width: 0; }
+  /* 参考图左列内容比玉衡顶部低 94px（玉衡顶 55、eyebrow 149，1440 尺度） */
+  .hero-left-top { min-width: 0; padding-top: clamp(20px, 6.4vh, 58px); }
+  .eyebrow { margin: 0; color: #3f604c; font: 11px/1.6 ui-monospace, monospace; letter-spacing: .24em; overflow-wrap: anywhere; }
+  .dot { margin: 0 .45em; color: #8f6438; }
+  h1, h2, .card-title, .name, .foot-cn { font-family: "Songti SC", "Noto Serif CJK SC", SimSun, serif; }
+  h1 {
+    /* 参考图：eyebrow 底 → 标题顶约 46px（212-149-18） */
+    margin: clamp(26px, 4.2vh, 42px) 0 0;
+    font-size: clamp(38px, 4.9vw, 71px);
+    font-weight: 500;
+    line-height: 1.22;
+    letter-spacing: .02em;
+    color: #243026;
+  }
+  h1 span { display: block; }
+  .english { margin: clamp(10px, 1.6vh, 16px) 0 0; color: #4d6b58; font: italic clamp(12px, 1.05vw, 14px)/1.5 Georgia, serif; letter-spacing: .08em; overflow-wrap: anywhere; }
+  .lede { margin: clamp(16px, 2.6vh, 28px) 0 0; color: #46564c; font-size: clamp(14px, 1.15vw, 17px); line-height: 1.85; overflow-wrap: anywhere; }
+  .button {
+    display: inline-flex;
     align-items: center;
-    align-content: center;
-    gap: 0 clamp(24px, 4vw, 64px);
+    justify-content: center;
+    gap: 12px;
+    min-height: 48px;
+    padding: 12px 26px;
+    text-decoration: none;
+    font-family: "Songti SC", "Noto Serif CJK SC", SimSun, serif;
+    font-size: clamp(16px, 1.5vw, 20px);
+    letter-spacing: .1em;
   }
-  .hero-intro { grid-area: intro; align-self: center; min-width: 0; }
-  .eyebrow { margin: 0; color: #3f604c; font: 11px/1.5 ui-monospace, monospace; letter-spacing: .14em; overflow-wrap: anywhere; }
-  /* §46：11px 小字对纸底 #ede5dd 的对比度原为 4.12–4.38（低于 WCAG AA 4.5），
-     像素实测见 _work/nova-b-maint/night-audit-20261113.md。改用与项目页返回链接同档的
-     #3f604c（实测约 5.6:1），色相不变。 */
-  .hero .eyebrow { color: #3f604c; }
-  h1, h2, .card-title, .domains a { font-family: "Songti SC", "Noto Serif CJK SC", SimSun, serif; }
-  h1 { margin: 26px 0 15px; font-size: clamp(44px, 5vw, 76px); font-weight: 500; line-height: 1.2; }
-  .english { margin: 0; color: #4d6b58; font: italic clamp(13px, 1.15vw, 17px)/1.5 Georgia, serif; letter-spacing: .06em; overflow-wrap: anywhere; }
-  .hero-lede { grid-area: lede; align-self: start; max-width: 24rem; margin: 24px 0 0; color: #46564c; line-height: 1.8; overflow-wrap: anywhere; }
-  .button { display: inline-flex; align-items: center; justify-content: space-between; gap: 32px; min-height: 48px; padding: 12px 20px; text-decoration: none; font-family: "Songti SC", "Noto Serif CJK SC", SimSun, serif; }
-  .primary { background: #a74432; color: #fffaf0; }
-  .primary:hover { background: #873a2d; }
-  .hero .button { grid-area: cta; justify-self: start; align-self: start; margin-top: 26px; min-width: 220px; }
-  .hero-side { grid-area: side; min-width: 0; margin-top: 34px; }
-  .hero-side .eyebrow { margin-bottom: 12px; }
-  .side-note { display: none; }
-  .core-stage { grid-area: core; display: flex; flex-direction: column; align-items: center; justify-content: center; min-width: 0; width: 100%; }
-  .core-stage :global(.nova-shell) { max-width: 100%; }
-  /* 静态主视觉的轻量呼吸：只做极小的位移与亮度起伏，
-     不伪造三维运动；真正的旋转与蛇环动作在 /lab 实时视图里。 */
-  .core-breath { width: 100%; animation: core-breath 9s ease-in-out infinite; will-change: transform; }
-  @keyframes core-breath {
-    0%, 100% { transform: translateY(0) scale(1); filter: brightness(1); }
-    50% { transform: translateY(-6px) scale(1.008); filter: brightness(1.025); }
+  .primary {
+    /* 朱红实心 + 金线：参考图按钮 x60–325 / y568–620（约 265×52），带一圈浅金描边 */
+    background: #a74432;
+    color: #fffaf0;
+    border: 1px solid #cfa671;
+    box-shadow: inset 0 0 0 1px rgba(255, 250, 240, 0.16);
   }
-  @media (prefers-reduced-motion: reduce) { .core-breath { animation: none; } }
-  .core-stage :global(.hero-core) { aspect-ratio: 1 / 1; }
+  .primary:hover { background: #8f3a2b; border-color: #d8b987; }
+  .hero .button { align-self: flex-start; margin-top: clamp(20px, 3.2vh, 34px); min-width: 210px; }
+  .motto { margin: 12px 0 0; color: #7d5730; font-size: clamp(12px, 1.05vw, 15px); letter-spacing: .18em; }
+  .hero-left-foot { min-width: 0; }
+  .foot-cn { margin: 0; color: #243026; font-size: clamp(21px, 2.1vw, 30px); font-weight: 500; letter-spacing: .06em; }
+  .foot-en { display: flex; gap: .95em; margin: 8px 0 0; color: #4b6155; font: 11px/1 ui-monospace, monospace; letter-spacing: .34em; }
 
+  /* 参考图的玉衡比三列栅格给它的格子更宽（可见 576px 且左缘压到左列文字右侧留白区），
+     所以用负外边距让主视觉溢出格子，落在列间隙里；静态图不接收指针事件，不挡链接。 */
+  .hero-core { display: flex; justify-content: center; align-items: flex-start; min-width: 0; margin: -36px clamp(-56px, -4vw, -20px) 0; }
+  /* 显示宽 700px：素材内容占宽 73.6%、占高 81.8%，因此可见约 515×573，
+     与参考图（可见 576×626，1440 尺度）差 8%，同时保证首屏不溢出 900px。 */
+  .hero-core :global(.yuheng) { width: min(44rem, calc(100% + 90px)); max-width: none; pointer-events: none; }
+  /* 参考图的两行标注压在玉衡下缘内侧（y≈676/698），不是排在图下方，故上提叠放 */
+  .hero-core :global(.yuheng-caption) { margin-top: -82px; position: relative; z-index: 1; }
+
+  /* 参考图右列明显靠上（探索领域 y≈162，1440 尺度），不随格子垂直居中 */
+  /* 参考图右列「探索领域」在 y≈162（1440 尺度），比左列 eyebrow 低约 13px。 */
+  .hero-domains { min-width: 0; align-self: start; padding-top: clamp(48px, 7.2vh, 66px); }
+  /* 参考图：探索领域标题底 → 第一条约 46px */
+  .domains-title { margin: 0 0 clamp(24px, 5vh, 46px); font-size: clamp(15px, 1.2vw, 19px); font-weight: 500; letter-spacing: .22em; color: #243026; }
+  .domain-list { display: flex; flex-direction: column; margin: 0; padding: 0; list-style: none; }
+  .domain-list a {
+    display: grid;
+    grid-template-columns: 18px auto minmax(0, 1fr);
+    align-items: center;
+    gap: 11px;
+    /* 参考图四条行距约 82px（1440 尺度，原图 92×0.908） */
+    min-height: clamp(60px, 9vh, 82px);
+    border-bottom: 1px solid #d5cbb8;
+    color: #243026;
+    text-decoration: none;
+    overflow-wrap: anywhere;
+  }
+  .glyph { width: 16px; height: 16px; border: 1px solid #6f8f75; background: #e2ebe0; border-radius: 2px; }
+  .num { color: #4b6155; font: 11px/1 ui-monospace, monospace; letter-spacing: .06em; }
+  .name { font-size: clamp(17px, 1.5vw, 23px); letter-spacing: .06em; }
+  .domain-list a:hover .name { color: #3f604c; }
+  .domain-list a:hover .glyph { background: #cfe0cb; border-color: #4f7458; }
+
+  /* 参考图底部是一条横带：左边「从想法，到现实 / EXPLORE THE LAB」，右边三个入口（y≈870–940） */
+  .hero-foot {
+    width: 100%;
+    max-width: 1440px;
+    margin: 0 auto;
+    padding: clamp(4px, 1vh, 10px) clamp(24px, 3.4vw, 49px) clamp(18px, 2.6vh, 30px);
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: clamp(24px, 4vw, 64px);
+    flex-wrap: wrap;
+  }
+  .entries {
+    flex: 1 1 auto;
+    margin-left: clamp(24px, 13vw, 190px);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: clamp(32px, 7vw, 112px);
+    flex-wrap: wrap;
+  }
+  .entries a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    border-bottom: 1px solid transparent;
+    color: #243026;
+    text-decoration: none;
+    font-family: "Songti SC", "Noto Serif CJK SC", SimSun, serif;
+    font-size: clamp(16px, 1.55vw, 21px);
+    letter-spacing: .12em;
+  }
+  .entries a:hover { border-bottom-color: #a74432; color: #873a2d; }
 
   .paper { background: #f4f0e6; }
-  .section { max-width: 1440px; margin: 0 auto; padding: clamp(64px, 8vw, 124px) clamp(24px, 5vw, 72px); }
+  .section { max-width: 1440px; margin: 0 auto; padding: clamp(64px, 8vw, 116px) clamp(24px, 3.4vw, 49px); }
   .section + .section { border-top: 1px solid #d8d1c3; }
   .section-heading { display: flex; justify-content: space-between; align-items: end; gap: 24px; margin-bottom: 36px; }
   .section-heading > div, .section-heading > p { min-width: 0; }
-  h2 { margin: 14px 0 0; font-size: clamp(32px, 3.5vw, 52px); line-height: 1.25; font-weight: 500; overflow-wrap: anywhere; }
+  h2 { margin: 14px 0 0; font-size: clamp(30px, 3.4vw, 50px); line-height: 1.25; font-weight: 500; overflow-wrap: anywhere; }
   .section-heading > p { max-width: 27rem; margin: 0; color: #59645b; line-height: 1.7; overflow-wrap: anywhere; }
-  .domains { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); border-top: 1px solid #bcb5a7; }
-  .domains a { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 16px; min-width: 0; min-height: 92px; padding: 16px 20px 16px 0; border-bottom: 1px solid #bcb5a7; color: #202923; font-size: clamp(17px, 1.5vw, 22px); text-decoration: none; overflow-wrap: anywhere; }
-  .domains a + a { padding-left: 20px; border-left: 1px solid #d8d1c3; }
-  .number { color: #3f604c; /* 渐变最暗端点下 4.14:1 -> 5.50:1（B 线 a11y-report.md） */ font: 11px/1.5 ui-monospace, monospace; letter-spacing: .05em; }
-  .arrow, .card-bottom span { color: #7d5730; } /* 4.40:1 -> 4.88:1（B 线像素实测，见 _work/nova-b-maint/a11y-report.md） */
+  .number { color: #3f604c; font: 11px/1.5 ui-monospace, monospace; letter-spacing: .05em; }
   .cards { display: grid; gap: 18px; }
   .three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-  .two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .card { display: flex; flex-direction: column; min-width: 0; min-height: 190px; padding: 24px; border: 1px solid #cfc6b5; color: #202923; text-decoration: none; overflow-wrap: anywhere; }
   .card-title { margin: 36px 0 20px; font-size: 23px; }
   .card-bottom { display: flex; justify-content: space-between; gap: 16px; margin-top: auto; color: #59645b; font-size: 13px; }
-  .domains a:hover, .card:hover { color: #3f604c; border-color: #8f6438; }
-  .button:focus-visible, .domains a:focus-visible, .card:focus-visible { outline: 2px solid #b78b57; outline-offset: 4px; }
-  .closing { padding-bottom: clamp(80px, 10vw, 150px); }
-  .closing .button { margin-top: 30px; }
-  /* 宽屏回到参考图的三段结构：左文案 / 中玉衡 / 右领域入口 */
-  @media (min-width: 1200px) {
-    .hero-grid {
-      grid-template-columns: minmax(240px, .78fr) minmax(0, 1.3fr) minmax(172px, .40fr);
-      grid-template-rows: auto auto auto;
-      grid-template-areas: "intro core side" "lede core side" "cta core side";
+  .card-bottom span { color: #7d5730; }
+  .card:hover { color: #3f604c; border-color: #8f6438; }
+  .button:focus-visible, .entries a:focus-visible, .card:focus-visible { outline: 2px solid #b78b57; outline-offset: 4px; }
+  .closing { padding-bottom: clamp(80px, 10vw, 140px); }
+  .closing .button { margin-top: 28px; }
+
+  /* 平板：左列 + 中央，领域入口移到下方两列 */
+  @media (max-width: 1180px) and (min-width: 861px) {
+    .stage {
+      grid-template-columns: minmax(0, 1.1fr) minmax(0, 1.5fr);
+      grid-template-areas: "left core" "domains domains";
+      row-gap: 28px;
     }
-    .hero-side { align-self: end; margin-top: 0; padding-bottom: 6px; border-top: 1px solid #c9c1b1; }
-    .hero-side .eyebrow { margin: 14px 0 4px; }
-    .hero-side .domains { display: block; border-top: 0; }
-    .hero-side .domains a { min-height: 66px; padding: 12px 0; border-left: 0; padding-left: 0; font-size: clamp(16px, 1.15vw, 19px); }
-    .hero-side .domains a + a { border-left: 0; padding-left: 0; }
+    .hero-left { grid-area: left; }
+    /* 两列布局里主视觉不再溢出格子，否则负外边距会撑出横向滚动（768 实测 sw 779 > iw 768） */
+    .hero-core { grid-area: core; margin: 0; }
+    .hero-core :global(.yuheng) { width: 100%; max-width: 100%; }
+    .hero-core :global(.yuheng-caption) { margin-top: -56px; }
+    .hero-domains { grid-area: domains; }
+    .domain-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 28px; }
+    .domain-list a { min-height: 56px; }
   }
-  @media (max-width: 900px) and (min-width: 701px) {
-    .hero-grid { grid-template-columns: minmax(240px, .9fr) minmax(0, 1.2fr); min-height: 580px; }
-    .domains { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-    .domains a:nth-child(3) { padding-left: 0; border-left: 0; }
-  }
-  @media (max-width: 700px) {
-    .hero { --core-width: min(88vw, 300px); }
-    .hero-grid { min-height: 0; align-content: start; padding: 20px 20px 32px; grid-template-columns: minmax(0, 1fr); grid-template-rows: auto; grid-template-areas: "intro" "lede" "core" "cta" "side"; gap: 0; }
-    .hero-side { margin-top: 24px; }
-    .hero-side .domains a { min-height: 52px; padding: 12px 0; }
-    .hero-intro { align-self: auto; }
-    .hero .eyebrow { font-size: 10px; }
-    h1 { margin: 9px 0 5px; font-size: clamp(36px, 10vw, 40px); line-height: 1.16; }
-    .english { font-size: 12px; }
-    .core-stage { margin-top: 4px; }
-    .core-caption { margin-top: 2px; font-size: 11px; }
-    .hero .button { justify-self: stretch; min-width: 0; margin-top: 10px; }
-    .hero-lede { margin-top: 12px; font-size: 13px; line-height: 1.6; }
-    /* 移动端把导语放在标题下、CTA 之上，避免"按钮在前、说明在后"的阅读倒错 */
-    .core-stage { order: 0; }
-    .section { padding: 64px 20px; }
+  /* 手机：单列，标题 → 主视觉 → 领域入口 → 底部入口；同一套纸色与墨绿体系 */
+  @media (max-width: 860px) {
+    .stage { grid-template-columns: minmax(0, 1fr); row-gap: clamp(18px, 3vh, 26px); padding: 20px 20px 6px; }
+    .hero-left { gap: 26px; }
+    h1 { font-size: clamp(34px, 10.4vw, 44px); margin-top: 12px; }
+    .lede { font-size: 14px; line-height: 1.75; }
+    .hero .button { align-self: stretch; min-width: 0; margin-top: 18px; }
+    .hero-core { margin: 0; }
+    .hero-core :global(.yuheng) { width: 100%; max-width: 88vw; }
+    .hero-core :global(.yuheng-caption) { margin-top: -44px; }
+    .hero-left-foot { display: flex; align-items: baseline; gap: 14px; }
+    .foot-cn { font-size: 20px; }
+    .foot-en { margin: 0; font-size: 10px; letter-spacing: .26em; }
+    .domains-title { margin-bottom: 8px; }
+    .domain-list a { min-height: 54px; }
+    /* 手机上三入口排成整齐的两列网格；space-between 换行会让第三个孤立在左端 */
+    .entries { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 20px; margin-left: 0; padding-bottom: 20px; }
+    .entries a { justify-content: flex-start; }
+    .section { padding: 56px 20px; }
     .section-heading { display: block; margin-bottom: 24px; }
     .section-heading > p { margin-top: 12px; }
-    .domains, .three, .two { grid-template-columns: minmax(0, 1fr); }
-    .domains a, .domains a + a { min-height: 56px; padding: 14px 0; border-left: 0; }
+    .three { grid-template-columns: minmax(0, 1fr); }
     .card { min-height: 150px; padding: 20px; }
     .card-title { margin: 24px 0 16px; }
-  }
-  @media (prefers-reduced-motion: reduce) {
-    *, *::before, *::after { scroll-behavior: auto; transition: none; }
   }
 </style>
