@@ -1,111 +1,58 @@
-# DIY Engineering Lab（PROJECT NOVA）
+# PROJECT NOVA · DIY 工程实验室
 
-https://www.token-xxo.cn 的源码仓库。Astro 静态站，阿里云 ESA Pages 托管，生产分支 `main`。
+**格物致知，造物有成。**
 
-## 站点结构
+PROJECT NOVA 是一个面向工程实践和 DIY 的网站，用来记录项目设计、实施和验证过程，整理可复用的工程资料，并提供可以直接在浏览器里使用的计算工具。内容涵盖船舶电气、机械设计、AI 工程和工程工具。
 
-- `src/pages/` 页面；`src/data/` 项目与文档数据（纯 TS，无 CMS）
-- `src/layouts/NovaShell.astro` 全站壳层（导航、移动菜单、跳过链接、页脚）
-- `src/components/NovaCore.astro` 玉衡静态 SVG 底图（无 JS 也可见）
-- `src/scripts/jade/` 玉衡三维模型：`build-jade.ts`（程序化几何）、`viewer.ts`（渲染与导出）、`jade-material.ts`（玉质着色器）、`procedural-textures.ts`（贴图）
-- `src/scripts/tools/` 工程计算器的纯函数与 UI 绑定
-- `tools/blender/` 玉衡离线渲染管线（GLB 导出、Blender 渲染脚本、WebP 打包）
+[访问正式网站](https://www.token-xxo.cn/)
 
-## 常用命令
+## 从哪里开始
+
+| 入口 | 可以看什么 |
+| --- | --- |
+| [项目中心](https://www.token-xxo.cn/projects/) | NOVA 网站、玉衡主视觉、工程工具箱等项目的设计和进展。 |
+| [工程知识库](https://www.token-xxo.cn/docs/) | 工程单位换算、计算记录和技术资料归档等方法。 |
+| [工程工具箱](https://www.token-xxo.cn/tools/) | 在浏览器中使用工程计算工具，例如直流线路压降计算。 |
+| [每日更新](https://www.token-xxo.cn/daily/) | 按日期浏览更新和历史归档。 |
+
+## 首页主视觉「玉衡」
+
+玉衡以青玉球体、衔尾蛇环和铜金测量环为主体。首页采用静态 WebP，浏览器根据显示尺寸选择合适的图片。三维模型和离线渲染过程另有记录，可从[玉衡项目页](https://www.token-xxo.cn/projects/yuheng-core/)或[渲染实验记录](docs/NOVA-YUHENG-20261110.md)开始阅读。
+
+<img src="public/yuheng/ref-yuheng-520.webp" alt="玉衡主视觉，青玉球体外环绕金色衔尾蛇和铜金测量环" width="320">
+
+## 在本地运行
+
+环境要求为 Node.js **22.23.4 或更高版本**，npm **9.6.5 或更高版本**。
 
 ```bash
-pnpm install
-node node_modules/astro/bin/astro.mjs dev      # 开发
-node node_modules/astro/bin/astro.mjs check    # 类型检查
-node node_modules/astro/bin/astro.mjs build    # 产出 dist/
+git clone https://github.com/the-wrong-life/mute-bread-0781.git
+cd mute-bread-0781
+npm ci
+npm run dev
 ```
 
-**注意**：本仓库的 `node_modules` 没有 `.bin` 目录，`pnpm exec astro` 会报 `Command "astro" not found`。必须用上面的 `node node_modules/astro/bin/astro.mjs` 形式。
+访问终端中显示的本地地址。若要检查正式构建的效果，执行以下命令。
 
-## 路由清单
-
-以下由 `dist/` 实际产物枚举（`Get-ChildItem dist -Recurse -Filter index.html`），不是手工维护的列表。
-
-开发分支 `nova/v1-foundation`（19 条）：
-
-```
-/                                       /projects
-/about                                  /projects/engineering-notes
-/ai                                     /projects/engineering-toolbox
-/blog                                   /projects/project-nova
-/docs                                   /projects/yuheng-core
-/docs/calculation-record                 /tools
-/docs/reusable-archives                  /marine        （领域页：船舶电气）
-/docs/static-site-deployment             /mechanical    （领域页：机械设计）
-/docs/unit-conversion                    /lab           （开发预览，不发布）
-                                         /lab-material  （开发预览，不发布）
+```bash
+npm run build
+npm run preview
 ```
 
-生产分支（15 条，不含 `/lab`、`/lab-material`、`/marine`、`/mechanical`）：以 origin/main 的构建产物为准。
+`npm run build` 先运行 Astro 检查，再生成静态产物至 `dist/`。生产站由阿里云 ESA Pages 托管，构建分支为 `main`。
 
-## 玉衡三维模型：结论的适用范围
+## 仓库结构
 
-`docs/NOVA-YUHENG-20261110.md` 里的材质与渲染结论**只对当轮的渲染条件成立**（Blender 4.5.10 + Cycles CPU + 110 samples + AgX Medium High Contrast + 固定相机与灯光）。换渲染器、换引擎、换灯光都需要重新验证。
+| 路径 | 内容 |
+| --- | --- |
+| `src/pages/` | 网站页面和路由。 |
+| `src/data/` | 项目和每日更新等内容数据。 |
+| `src/layouts/` · `src/components/` | 页面布局和可复用组件。 |
+| `src/scripts/tools/` | 工程计算和对应的页面交互。 |
+| `public/yuheng/` | 玉衡静态图片、模型和动画素材。 |
+| [`tools/blender/`](tools/blender/README.md) | 玉衡离线渲染和素材打包脚本。 |
+| `docs/` | 工程实验记录和[历史发布说明](docs/NOVA-RELEASE-20261111.md)。 |
 
-要特别避免的两个误读：
+网站使用 Astro、TypeScript 和 Three.js。玉衡三维模型、渲染图和着色器为本项目原创。
 
-1. **不是引擎能力缺失。** Three.js 的 `MeshPhysicalMaterial` 本身就提供 `thickness`、`attenuationColor`、`attenuationDistance`、`transmission`、`ior`、`clearcoat` 等参数（见 [官方文档](https://github.com/mrdoob/three.js/blob/dev/docs/pages/MeshPhysicalMaterial.html.md)）。本项目实时侧的观感问题，正确表述是「**本轮实时方案未达到目标效果**」，不能写成引擎不支持。
-2. **深色背景下 Transmission 表达不了玉**，这是在本轮背景色（#1d3a2f 系）与曝光（1.36）下得出的观察，换成暖白背景需要重测。
-
-### 复现离线渲染
-
-```powershell
-# 1. 导出 GLB：需要本地预览服务在 127.0.0.1:4340
-node _work/nova-export-glb.mjs
-
-# 2. Blender 渲染：两个环境变量必填，否则报 "Please select a file"
-$env:NOVA_GLB="<绝对路径>/yuheng-jade-core.glb"
-$env:NOVA_OUT="<输出目录>"
-& "C:\Program Files\Blender Foundation\Blender 4.5\blender.exe" -b --python tools/blender/render-yuheng.py
-```
-
-可选开关：`NOVA_GRAY=1` 灰模、`NOVA_ONLY=<子串>` 只留匹配网格、`NOVA_HIDE=<子串>` 隐藏、`NOVA_HEADS=1` 头部四机位、`NOVA_SAMPLE=1` 鳞片样段特写、`NOVA_TRANS/SSS/DENS/ROUGH/COAT/KERNEL` 材质参数、`NOVA_TAG` 输出前缀。
-
-导出注意：`jade-material.ts` 是自定义 `ShaderMaterial`，写不进 glTF 材质。`viewer.ts` 在导出前会把球壳临时换成名为 `mat-jade-shell` 的 `MeshPhysicalMaterial` 代理，`finally` 再换回；否则 Blender 侧拿到白球。
-
-### 循环动画管线
-
-首页主视觉是静态 WebP（LCP 优先），首屏稳定后才换成 8 秒循环动画，可暂停，尊重 `prefers-reduced-motion`。
-
-```powershell
-# 1. 逐帧导出姿态 GLB（需要本地预览在 127.0.0.1:4340）
-node _work/nova-export-frames.mjs 48        # → _work/nova-loop/glb/frame-000..047.glb，约 146 ms/帧
-
-# 2. 逐帧离线渲染（720² / 24 samples，约 10 s/帧）
-$env:NOVA_FRAMES="_work/nova-loop/glb"; $env:NOVA_OUT="_work/nova-loop/png-720"
-$env:NOVA_RES="720"; $env:NOVA_SAMPLES="24"
-$env:NOVA_HIDE="kernel-glow,jade-inner-core,serpent-scales-sample"
-$env:NOVA_KERNEL="14"; $env:NOVA_AXIS_EMIT="0.5"
-& "C:\Program Files\Blender Foundation\Blender 4.5\blender.exe" -b --python tools/blender/render-loop.py
-
-# 3. 打包动画 WebP（480² / 24 帧 / 4fps / q72，约 384 KB）
-python _work/nova-pack-loop.py _work/nova-loop/png-720 _work/nova-loop/out 480 4
-```
-
-渲染前必须先 `astro build`，否则 /lab 加载的是旧 bundle，导出的 GLB 不会包含最新几何。
-
-`NOVA_HIDE` 里的 `jade-inner-core` 与 `kernel-glow` 是 WebGL 侧为暖白页面加的辅助件（内层壳、加法光晕球），
-离线渲染时必须跳过：内层壳会把真实内核整个挡掉，实测 A/B/C/D 四组对照见 `docs/NOVA-YUHENG-MOTION-20261111.md`。
-
-## 测试
-
-- 全路由审计：`node _work/nova-audit-all.mjs`（开发分支，17 路由 × 4 视口）
-- 生产批次审计：`node _work/nova-audit-release.mjs`（15 路由 × 4 视口）
-- 点击与导航回归：`node _work/nova-click-regress.mjs`
-- 首页动画播放/暂停/降级：`node _work/nova-anim-check.mjs`
-- 七视口首屏几何：`node _work/nova-shots3.mjs`
-
-这些脚本需要 Playwright（`C:/Users/33126/Documents/DIY/node_modules/playwright`）与 `TEMP/TMP` 指向可写目录。截图与脚本落在 `_work/`，不进版本库。
-
-## 发布
-
-`main` 是生产分支，推送后 ESA Pages 自动构建。回滚见 `docs/NOVA-RELEASE-20261110.md`。
-
-## 许可证与素材
-
-玉衡三维模型、渲染图、着色器均为本项目原创，随本仓库发布。未引入第三方模型、贴图或字体文件。
+反馈问题时，请附上页面链接、复现步骤和实际结果。
